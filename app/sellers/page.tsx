@@ -1,0 +1,829 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import Footer from '@/components/Footer';
+
+const BRAND = '#A54AFF';
+const BRAND_GRAD = 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)';
+
+const STATS = [
+  { value: '12,000+', label: 'Active sellers' },
+  { value: '$3,200', label: 'Avg. monthly earnings' },
+  { value: '48 hrs', label: 'To first booking' },
+  { value: '4.8★', label: 'Platform rating' },
+];
+
+const BENEFITS = [
+  {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: 'Minimal commission',
+    desc: 'Keep more of what you earn. Our platform fee is among the lowest in the market.',
+  },
+  {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="18" rx="2" stroke={BRAND} strokeWidth="2"/>
+        <path d="M16 2v4M8 2v4M3 10h18" stroke={BRAND} strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+    title: 'Work on your schedule',
+    desc: 'Set your own hours and availability. Accept only the jobs that fit your life.',
+  },
+  {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: 'Instant payouts',
+    desc: 'Get paid within 24 hours of job completion — no waiting, no paperwork.',
+  },
+  {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke={BRAND} strokeWidth="2"/>
+        <path d="M12 8v4l3 3" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: 'Fast onboarding',
+    desc: 'Complete your profile in 15 minutes and receive your first lead within 48 hours.',
+  },
+  {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="9" cy="7" r="4" stroke={BRAND} strokeWidth="2"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: '750,000+ buyers',
+    desc: 'Access an existing pool of verified customers actively looking for your skills.',
+  },
+  {
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: 'Seller protection',
+    desc: 'Dispute resolution, verified reviews, and a dedicated support team on your side.',
+  },
+];
+
+const STEPS = [
+  {
+    num: '01',
+    title: 'Create your profile',
+    desc: 'List your skills, set your rates, and upload photos of past work. Takes about 15 minutes.',
+  },
+  {
+    num: '02',
+    title: 'Get matched with buyers',
+    desc: 'WhoCan surfaces your profile to buyers in your area searching for your services.',
+  },
+  {
+    num: '03',
+    title: 'Complete the job & get paid',
+    desc: 'Deliver great work, collect your 5-star review, and receive payment within 24 hours.',
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    name: 'James Thornton',
+    role: 'Electrician · 4 yrs on WhoCan',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80',
+    quote: 'I went from occasional side jobs to a full-time business. WhoCan filled my calendar within the first month.',
+    rating: 5,
+  },
+  {
+    name: 'Maria Santos',
+    role: 'Cleaning Pro · 2 yrs on WhoCan',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=72&h=72&fit=crop&auto=format&q=80',
+    quote: 'The instant payout feature is what sold me. No waiting two weeks to get paid for work I already did.',
+    rating: 5,
+  },
+  {
+    name: 'Alfonzo Schuessler',
+    role: 'Plumber · 3 yrs on WhoCan',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=72&h=72&fit=crop&auto=format&q=80',
+    quote: "The platform handles all the admin so I can focus on the work. Best decision I made for my business.",
+    rating: 5,
+  },
+];
+
+const CATEGORIES = [
+  'Cleaning', 'Electrical', 'Plumbing', 'Carpentry',
+  'Painting', 'Gardening', 'Moving', 'Appliance Repair',
+  'HVAC', 'Roofing', 'Flooring', 'Handyman',
+];
+
+function SellerNav() {
+  const router = useRouter();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <header
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        height: '68px',
+        display: 'flex',
+        alignItems: 'center',
+        background: scrolled ? 'rgba(13,1,32,0.92)' : '#0D0120',
+        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(165,74,255,0.15)' : '1px solid transparent',
+        transition: 'background 0.25s ease, border-color 0.25s ease, backdrop-filter 0.25s ease',
+      }}
+    >
+      <div
+        className="container"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+      >
+        {/* Logo */}
+        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <svg width="108" height="22" viewBox="0 0 159 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.3728 2.47801C20.6978 0.134223 23.6737 -0.692738 26.0197 0.630946C28.3657 1.95464 29.1935 4.9277 27.8685 7.27149L15.5022 29.1471C14.1772 31.4909 11.2013 32.3179 8.8553 30.9942C6.50929 29.6705 5.68154 26.6974 7.00648 24.3536L19.3728 2.47801Z" fill="#A54AFF"/>
+            <path d="M1.26277 2.15119C3.04388 -0.22362 6.41297 -0.704966 8.7878 1.07612C11.1626 2.85723 11.644 6.22632 9.86287 8.60114L9.67537 8.85114C7.89426 11.226 4.52517 11.7073 2.15034 9.92622C-0.224467 8.14511 -0.705813 4.77601 1.07527 2.40119L1.26277 2.15119Z" fill="#A54AFF"/>
+            <path d="M10.625 3.62592C10.9375 4.81342 11.0625 6.18842 12.8125 6.50092C14.125 6.68842 15.5833 6.52175 16.1875 6.31342C17.6547 5.84183 18.785 4.82845 19.3208 4.04669L19.5625 3.62592C19.5053 3.75387 19.4241 3.89597 19.3208 4.04669L14.908 11.7282C14.7975 11.9949 14.65 12.2399 14.5 12.4384L14.908 11.7282C15.3193 10.7352 15.2167 9.44123 12.8125 9.12592C9.76248 8.72592 9.1875 9.56342 8.3125 10.1259L10.625 3.62592Z" fill="#A54AFF"/>
+            <path d="M34.8734 2.47769C36.1984 0.134178 39.174 -0.692603 41.5198 0.631014C43.8658 1.95472 44.6934 4.92787 43.3685 7.27164L31.0023 29.1466C29.6774 31.4903 26.7017 32.3177 24.3558 30.9943C22.0099 29.6707 21.1814 26.6974 22.5062 24.3537L34.8734 2.47769ZM28.722 23.8859C27.3108 22.8335 25.3087 23.1174 24.2503 24.5207L24.139 24.6681C23.0806 26.0713 23.3666 28.062 24.7777 29.1144C26.1888 30.1668 28.1909 29.8827 29.2493 28.4796L29.3607 28.3322C30.419 26.929 30.1331 24.9383 28.722 23.8859Z" fill="#A54AFF"/>
+            <path d="M60.1314 11.1925C61.5301 11.1925 62.7957 11.4848 63.928 12.0694C65.0604 12.6316 65.9485 13.5086 66.5924 14.7004C67.2585 15.8922 67.5915 17.4325 67.5915 19.3214V29.7778H61.2637V20.3671C61.2637 19.0628 60.9973 18.1184 60.4644 17.5337C59.9537 16.9266 59.2322 16.623 58.2996 16.623C57.6336 16.623 57.023 16.7804 56.4679 17.0952C55.9128 17.3876 55.4799 17.8485 55.169 18.4782C54.8582 19.1078 54.7028 19.9286 54.7028 20.9405V29.7778H48.375V4.75H54.7028V16.6905L53.2374 15.1726C53.9257 13.8459 54.8693 12.8565 56.0683 12.2044C57.2672 11.5298 58.6216 11.1925 60.1314 11.1925Z" fill="white"/>
+            <path d="M80.8507 30.0814C78.8747 30.0814 77.1206 29.6766 75.5887 28.8671C74.0567 28.0575 72.8466 26.9444 71.9585 25.5278C71.0926 24.0886 70.6596 22.4471 70.6596 20.6032C70.6596 18.7593 71.0926 17.129 71.9585 15.7123C72.8466 14.2956 74.0567 13.1938 75.5887 12.4067C77.1206 11.5972 78.8747 11.1925 80.8507 11.1925C82.8268 11.1925 84.5808 11.5972 86.1128 12.4067C87.667 13.1938 88.877 14.2956 89.7429 15.7123C90.6088 17.129 91.0418 18.7593 91.0418 20.6032C91.0418 22.4471 90.6088 24.0886 89.7429 25.5278C88.877 26.9444 87.667 28.0575 86.1128 28.8671C84.5808 29.6766 82.8268 30.0814 80.8507 30.0814ZM80.8507 24.9881C81.5834 24.9881 82.2273 24.8194 82.7823 24.4821C83.3596 24.1448 83.8148 23.6501 84.1478 22.998C84.4809 22.3234 84.6474 21.5251 84.6474 20.6032C84.6474 19.6812 84.4809 18.9054 84.1478 18.2758C83.8148 17.6237 83.3596 17.129 82.7823 16.7917C82.2273 16.4544 81.5834 16.2857 80.8507 16.2857C80.1402 16.2857 79.4963 16.4544 78.9191 16.7917C78.364 17.129 77.9088 17.6237 77.5536 18.2758C77.2206 18.9054 77.054 19.6812 77.054 20.6032C77.054 21.5251 77.2206 22.3234 77.5536 22.998C77.9088 23.6501 78.364 24.1448 78.9191 24.4821C79.4963 24.8194 80.1402 24.9881 80.8507 24.9881Z" fill="white"/>
+            <path d="M105.896 30.25C104.053 30.25 102.344 29.9577 100.767 29.373C99.2129 28.7659 97.8585 27.9114 96.704 26.8095C95.5717 25.7077 94.6836 24.4147 94.0397 22.9306C93.3958 21.4239 93.0739 19.7712 93.0739 17.9722C93.0739 16.1733 93.3958 14.5317 94.0397 13.0476C94.6836 11.541 95.5717 10.2368 96.704 9.13492C97.8585 8.03307 99.2129 7.18982 100.767 6.60516C102.344 5.99802 104.053 5.69444 105.896 5.69444C108.05 5.69444 109.97 6.07672 111.658 6.84127C113.367 7.60582 114.788 8.70767 115.92 10.1468L111.724 13.9921C110.969 13.0926 110.137 12.4067 109.226 11.9345C108.338 11.4623 107.339 11.2262 106.229 11.2262C105.274 11.2262 104.397 11.3836 103.598 11.6984C102.799 12.0132 102.11 12.4742 101.533 13.0813C100.978 13.666 100.534 14.3743 100.201 15.2063C99.8901 16.0384 99.7347 16.9603 99.7347 17.9722C99.7347 18.9841 99.8901 19.9061 100.201 20.7381C100.534 21.5701 100.978 22.2897 101.533 22.8968C102.11 23.4815 102.799 23.9312 103.598 24.246C104.397 24.5608 105.274 24.7183 106.229 24.7183C107.339 24.7183 108.338 24.4821 109.226 24.0099C110.137 23.5377 110.969 22.8519 111.724 21.9524L115.92 25.7976C114.788 27.2143 113.367 28.3161 111.658 29.1032C109.97 29.8677 108.05 30.25 105.896 30.25Z" fill="white"/>
+            <path d="M129.52 29.7778V26.371L129.087 25.5278V19.254C129.087 18.2421 128.776 17.4663 128.154 16.9266C127.555 16.3644 126.589 16.0833 125.257 16.0833C124.391 16.0833 123.514 16.2295 122.626 16.5218C121.737 16.7917 120.983 17.1739 120.361 17.6687L118.229 13.3175C119.251 12.6429 120.472 12.1257 121.893 11.7659C123.336 11.3836 124.768 11.1925 126.189 11.1925C129.12 11.1925 131.385 11.8783 132.983 13.25C134.604 14.5992 135.414 16.7242 135.414 19.625V29.7778H129.52ZM124.191 30.0814C122.748 30.0814 121.527 29.834 120.527 29.3393C119.528 28.8446 118.762 28.17 118.229 27.3155C117.719 26.461 117.463 25.5053 117.463 24.4484C117.463 23.3241 117.741 22.3571 118.296 21.5476C118.873 20.7156 119.75 20.086 120.927 19.6587C122.104 19.209 123.625 18.9841 125.49 18.9841H129.753V22.3234H126.356C125.334 22.3234 124.613 22.4921 124.191 22.8294C123.791 23.1667 123.591 23.6164 123.591 24.1786C123.591 24.7407 123.802 25.1905 124.224 25.5278C124.646 25.8651 125.223 26.0337 125.956 26.0337C126.644 26.0337 127.266 25.8651 127.821 25.5278C128.398 25.168 128.82 24.6283 129.087 23.9087L129.952 26.2698C129.619 27.5291 128.964 28.4848 127.988 29.1369C127.033 29.7665 125.767 30.0814 124.191 30.0814Z" fill="white"/>
+            <path d="M151.165 11.1925C152.564 11.1925 153.829 11.4848 154.962 12.0694C156.094 12.6316 156.982 13.5086 157.626 14.7004C158.292 15.8922 158.625 17.4325 158.625 19.3214V29.7778H152.297V20.3671C152.297 19.0628 152.031 18.1184 151.498 17.5337C150.987 16.9266 150.266 16.623 149.333 16.623C148.667 16.623 148.056 16.7804 147.501 17.0952C146.946 17.3876 146.513 17.8485 146.203 18.4782C145.892 19.1078 145.736 19.9286 145.736 20.9405V29.7778H139.409V11.496H145.437V16.6905L144.271 15.1726C144.959 13.8459 145.903 12.8565 147.102 12.2044C148.301 11.5298 149.655 11.1925 151.165 11.1925Z" fill="white"/>
+          </svg>
+        </a>
+
+        {/* Right actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Get App */}
+          <button
+            onClick={() => {}}
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 600,
+              fontSize: '14px',
+              color: '#ffffff',
+              background: '#F79009',
+              border: 'none',
+              padding: '10px 18px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'background 0.18s ease, transform 0.18s ease',
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = '#DC6803';
+              el.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = '#F79009';
+              el.style.transform = 'translateY(0)';
+            }}
+          >
+            Get App
+          </button>
+
+          {/* Login */}
+          <button
+            onClick={() => router.push('/login')}
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 600,
+              fontSize: '14px',
+              color: 'rgba(255,255,255,0.75)',
+              background: 'transparent',
+              border: '1.5px solid rgba(255,255,255,0.18)',
+              padding: '10px 18px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.18s ease',
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = 'rgba(255,255,255,0.4)';
+              el.style.color = '#ffffff';
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = 'rgba(255,255,255,0.18)';
+              el.style.color = 'rgba(255,255,255,0.75)';
+            }}
+          >
+            Log in
+          </button>
+
+          {/* Register as Seller */}
+          <button
+            onClick={() => router.push('/register?role=seller')}
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 600,
+              fontSize: '14px',
+              color: '#ffffff',
+              background: BRAND_GRAD,
+              border: 'none',
+              padding: '10px 18px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.18s ease',
+              boxShadow: '0 1px 2px rgba(16,24,40,0.05)',
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = 'translateY(-1px)';
+              el.style.boxShadow = '0 4px 16px rgba(165,74,255,0.4)';
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = 'translateY(0)';
+              el.style.boxShadow = '0 1px 2px rgba(16,24,40,0.05)';
+            }}
+          >
+            Register as a Seller
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16">
+      <polygon
+        fill={filled ? '#F79009' : '#EAECF0'}
+        stroke="none"
+        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+      />
+    </svg>
+  );
+}
+
+function useAnimateOnScroll() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, visible };
+}
+
+export default function SellersPage() {
+  const router = useRouter();
+  const heroAnim = useAnimateOnScroll();
+  const statsAnim = useAnimateOnScroll();
+  const benefitsAnim = useAnimateOnScroll();
+  const stepsAnim = useAnimateOnScroll();
+  const testimonialsAnim = useAnimateOnScroll();
+  const categoriesAnim = useAnimateOnScroll();
+  const ctaAnim = useAnimateOnScroll();
+
+  return (
+    <div style={{ fontFamily: 'Poppins, sans-serif', background: '#ffffff', minHeight: '100vh' }}>
+      <SellerNav />
+
+      {/* ── Hero ──────────────────────────────────────────── */}
+      <section
+        style={{
+          background: '#0D0120',
+          padding: '148px 0 96px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Glow blobs */}
+        <div style={{ position: 'absolute', top: '-120px', right: '-80px', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(165,74,255,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '-100px', left: '-60px', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(165,74,255,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+        <div
+          ref={heroAnim.ref}
+          className="container"
+          style={{
+            maxWidth: '760px',
+            margin: '0 auto',
+            textAlign: 'center',
+            opacity: heroAnim.visible ? 1 : 0,
+            transform: heroAnim.visible ? 'translateY(0)' : 'translateY(32px)',
+            transition: 'opacity 0.65s ease, transform 0.65s ease',
+          }}
+        >
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(165,74,255,0.12)',
+              border: '1px solid rgba(165,74,255,0.3)',
+              borderRadius: '9999px',
+              padding: '6px 16px',
+              marginBottom: '28px',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#A54AFF" stroke="none"/>
+            </svg>
+            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', fontWeight: 600, color: '#BF75FF', letterSpacing: '0.04em' }}>
+              Join 12,000+ sellers on WhoCan
+            </span>
+          </div>
+
+          <h1
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 800,
+              fontSize: 'clamp(36px, 5vw, 58px)',
+              lineHeight: '1.15',
+              color: '#ffffff',
+              letterSpacing: '-0.02em',
+              marginBottom: '20px',
+            }}
+          >
+            Turn your skills into{' '}
+            <span
+              style={{
+                background: BRAND_GRAD,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              steady income
+            </span>
+          </h1>
+
+          <p
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontSize: '18px',
+              lineHeight: '1.65',
+              color: 'rgba(255,255,255,0.6)',
+              marginBottom: '40px',
+              maxWidth: '580px',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            WhoCan connects skilled professionals with verified buyers in their neighbourhood.
+            Set your own rates, work your own hours, and get paid fast.
+          </p>
+
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => router.push('/register?role=seller')}
+              style={{
+                fontFamily: 'Poppins, sans-serif',
+                fontWeight: 700,
+                fontSize: '16px',
+                color: '#ffffff',
+                background: BRAND_GRAD,
+                border: 'none',
+                padding: '16px 36px',
+                borderRadius: '9999px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 24px rgba(165,74,255,0.45)',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(165,74,255,0.6)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(165,74,255,0.45)';
+              }}
+            >
+              Register as a Seller — it's free
+            </button>
+            <button
+              onClick={() => router.push('/explore')}
+              style={{
+                fontFamily: 'Poppins, sans-serif',
+                fontWeight: 600,
+                fontSize: '16px',
+                color: 'rgba(255,255,255,0.75)',
+                background: 'rgba(255,255,255,0.07)',
+                border: '1.5px solid rgba(255,255,255,0.15)',
+                padding: '16px 32px',
+                borderRadius: '9999px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)';
+                (e.currentTarget as HTMLElement).style.color = '#ffffff';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
+                (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)';
+              }}
+            >
+              Browse the marketplace
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats bar ─────────────────────────────────────── */}
+      <section style={{ background: '#F9F5FF', borderTop: '1px solid #EDE9FE', borderBottom: '1px solid #EDE9FE', padding: '48px 0' }}>
+        <div
+          ref={statsAnim.ref}
+          className="container"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '32px',
+            textAlign: 'center',
+            opacity: statsAnim.visible ? 1 : 0,
+            transform: statsAnim.visible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 0.55s ease, transform 0.55s ease',
+          }}
+        >
+          {STATS.map((stat) => (
+            <div key={stat.label}>
+              <div
+                style={{
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 800,
+                  fontSize: '32px',
+                  color: '#101828',
+                  letterSpacing: '-0.02em',
+                  background: BRAND_GRAD,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                {stat.value}
+              </div>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#667085', marginTop: '4px', fontWeight: 500 }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Benefits grid ─────────────────────────────────── */}
+      <section style={{ padding: '96px 0', background: '#ffffff' }}>
+        <div className="container">
+          <div
+            ref={benefitsAnim.ref}
+            style={{
+              opacity: benefitsAnim.visible ? 1 : 0,
+              transform: benefitsAnim.visible ? 'translateY(0)' : 'translateY(28px)',
+              transition: 'opacity 0.6s ease, transform 0.6s ease',
+            }}
+          >
+            <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: BRAND, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', textAlign: 'center' }}>
+              Why sell on WhoCan
+            </p>
+            <h2
+              style={{
+                fontFamily: 'Poppins, sans-serif',
+                fontWeight: 700,
+                fontSize: 'clamp(28px, 4vw, 40px)',
+                color: '#101828',
+                letterSpacing: '-0.01em',
+                textAlign: 'center',
+                marginBottom: '12px',
+              }}
+            >
+              Everything you need to grow
+            </h2>
+            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', textAlign: 'center', marginBottom: '56px', maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
+              We handle discovery, payments, and reviews — so you can focus on doing great work.
+            </p>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '24px',
+              }}
+            >
+              {BENEFITS.map((b, i) => (
+                <div
+                  key={b.title}
+                  style={{
+                    background: '#ffffff',
+                    border: '1.5px solid #EAECF0',
+                    borderRadius: '20px',
+                    padding: '28px',
+                    transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
+                    animationDelay: `${i * 60}ms`,
+                  }}
+                  onMouseEnter={e => {
+                    const el = e.currentTarget as HTMLElement;
+                    el.style.borderColor = 'rgba(165,74,255,0.35)';
+                    el.style.boxShadow = '0 8px 28px rgba(165,74,255,0.1)';
+                    el.style.transform = 'translateY(-3px)';
+                  }}
+                  onMouseLeave={e => {
+                    const el = e.currentTarget as HTMLElement;
+                    el.style.borderColor = '#EAECF0';
+                    el.style.boxShadow = 'none';
+                    el.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      background: '#F9F5FF',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '16px',
+                    }}
+                  >
+                    {b.icon}
+                  </div>
+                  <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '17px', color: '#101828', marginBottom: '8px' }}>
+                    {b.title}
+                  </h3>
+                  <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', lineHeight: '1.65', margin: 0 }}>
+                    {b.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ──────────────────────────────────── */}
+      <section style={{ padding: '96px 0', background: '#0D0120', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '800px', height: '400px', background: 'radial-gradient(ellipse, rgba(165,74,255,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div
+          ref={stepsAnim.ref}
+          className="container"
+          style={{
+            opacity: stepsAnim.visible ? 1 : 0,
+            transform: stepsAnim.visible ? 'translateY(0)' : 'translateY(28px)',
+            transition: 'opacity 0.6s ease, transform 0.6s ease',
+          }}
+        >
+          <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: '#BF75FF', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', textAlign: 'center' }}>
+            Getting started
+          </p>
+          <h2
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 700,
+              fontSize: 'clamp(28px, 4vw, 40px)',
+              color: '#ffffff',
+              letterSpacing: '-0.01em',
+              textAlign: 'center',
+              marginBottom: '56px',
+            }}
+          >
+            Up and running in three steps
+          </h2>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
+            {STEPS.map((step, i) => (
+              <div
+                key={step.num}
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(165,74,255,0.2)',
+                  borderRadius: '20px',
+                  padding: '32px',
+                  transition: 'border-color 0.2s ease',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(165,74,255,0.5)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(165,74,255,0.2)'; }}
+              >
+                <div
+                  style={{
+                    fontFamily: 'Poppins, sans-serif',
+                    fontWeight: 800,
+                    fontSize: '48px',
+                    letterSpacing: '-0.03em',
+                    lineHeight: 1,
+                    background: BRAND_GRAD,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    marginBottom: '20px',
+                  }}
+                >
+                  {step.num}
+                </div>
+                <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#ffffff', marginBottom: '10px' }}>
+                  {step.title}
+                </h3>
+                <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.55)', lineHeight: '1.65', margin: 0 }}>
+                  {step.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Testimonials ──────────────────────────────────── */}
+      <section style={{ padding: '96px 0', background: '#F9F5FF' }}>
+        <div
+          ref={testimonialsAnim.ref}
+          className="container"
+          style={{
+            opacity: testimonialsAnim.visible ? 1 : 0,
+            transform: testimonialsAnim.visible ? 'translateY(0)' : 'translateY(28px)',
+            transition: 'opacity 0.6s ease, transform 0.6s ease',
+          }}
+        >
+          <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: BRAND, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', textAlign: 'center' }}>
+            Seller stories
+          </p>
+          <h2
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 700,
+              fontSize: 'clamp(28px, 4vw, 40px)',
+              color: '#101828',
+              letterSpacing: '-0.01em',
+              textAlign: 'center',
+              marginBottom: '56px',
+            }}
+          >
+            Real sellers, real results
+          </h2>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+            {TESTIMONIALS.map((t) => (
+              <div
+                key={t.name}
+                style={{
+                  background: '#ffffff',
+                  border: '1.5px solid #EDE9FE',
+                  borderRadius: '20px',
+                  padding: '28px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '20px',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <StarIcon key={i} filled={i < t.rating} />
+                  ))}
+                </div>
+                <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '15px', color: '#344054', lineHeight: '1.65', margin: 0, flex: 1 }}>
+                  "{t.quote}"
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <img
+                    src={t.avatar}
+                    alt={t.name}
+                    style={{ width: '44px', height: '44px', borderRadius: '9999px', objectFit: 'cover', objectPosition: 'top', border: '2px solid #EDE9FE' }}
+                  />
+                  <div>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '14px', color: '#101828' }}>{t.name}</div>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085', marginTop: '2px' }}>{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Categories ────────────────────────────────────── */}
+      <section style={{ padding: '80px 0', background: '#ffffff' }}>
+        <div
+          ref={categoriesAnim.ref}
+          className="container"
+          style={{
+            opacity: categoriesAnim.visible ? 1 : 0,
+            transform: categoriesAnim.visible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 0.55s ease, transform 0.55s ease',
+          }}
+        >
+          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '15px', color: '#667085', textAlign: 'center', marginBottom: '28px' }}>
+            Buyers are searching for these services right now
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+            {CATEGORIES.map((cat) => (
+              <span
+                key={cat}
+                style={{
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: '#6941C6',
+                  background: '#F9F5FF',
+                  border: '1px solid #E9D7FE',
+                  borderRadius: '9999px',
+                  padding: '8px 18px',
+                }}
+              >
+                {cat}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Bottom CTA ────────────────────────────────────── */}
+      <section
+        style={{
+          padding: '96px 0',
+          background: '#0D0120',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(165,74,255,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div
+          ref={ctaAnim.ref}
+          className="container"
+          style={{
+            maxWidth: '640px',
+            margin: '0 auto',
+            textAlign: 'center',
+            opacity: ctaAnim.visible ? 1 : 0,
+            transform: ctaAnim.visible ? 'translateY(0)' : 'translateY(28px)',
+            transition: 'opacity 0.65s ease, transform 0.65s ease',
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 800,
+              fontSize: 'clamp(28px, 4vw, 44px)',
+              color: '#ffffff',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.2',
+              marginBottom: '16px',
+            }}
+          >
+            Ready to start earning?
+          </h2>
+          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: 'rgba(255,255,255,0.55)', marginBottom: '40px', lineHeight: '1.65' }}>
+            Join thousands of skilled professionals already growing their business on WhoCan.
+            Registration is free — no subscription, no upfront cost.
+          </p>
+          <button
+            onClick={() => router.push('/register?role=seller')}
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 700,
+              fontSize: '17px',
+              color: '#ffffff',
+              background: BRAND_GRAD,
+              border: 'none',
+              padding: '18px 48px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 28px rgba(165,74,255,0.5)',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 36px rgba(165,74,255,0.65)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 28px rgba(165,74,255,0.5)';
+            }}
+          >
+            Get started for free
+          </button>
+          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.35)', marginTop: '16px' }}>
+            No credit card required · Set up in 15 minutes
+          </p>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+}

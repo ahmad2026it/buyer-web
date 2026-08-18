@@ -1,0 +1,473 @@
+@import "tailwindcss";
+@import "sweetalert2/dist/sweetalert2.min.css";
+
+/* WhoCan — Global Styles */
+
+:root {
+  --brand-25:  #FDFAFF;
+  --brand-50:  #F8F0FF;
+  --brand-100: #EFDBFF;
+  --brand-200: #DFBAFF;
+  --brand-300: #CA90FF;
+  --brand-400: #B86CFF;
+  --brand-500: #A54AFF;
+  --brand-600: #8C2EE8;
+  --brand-700: #7220CC;
+  --brand-gradient: linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #C985FF 0%, #B05AFF 50%, #9040EE 100%);
+  --gray-25:  #FCFCFD;
+  --gray-50:  #F9FAFB;
+  --gray-100: #F2F4F7;
+  --gray-200: #EAECF0;
+  --gray-300: #D0D5DD;
+  --gray-400: #98A2B3;
+  --gray-500: #667085;
+  --gray-600: #475467;
+  --gray-700: #344054;
+  --gray-800: #1D2939;
+  --gray-900: #101828;
+  --shadow-sm: 0px 1px 3px rgba(16, 24, 40, 0.10), 0px 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.10), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08), 0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+  --shadow-2xl: 0px 24px 48px -12px rgba(165, 74, 255, 0.15);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  background: #ffffff;
+  color: #101828;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { text-decoration: none; color: inherit; }
+button { border: none; background: none; cursor: pointer; font-family: inherit; }
+img { display: block; max-width: 100%; }
+
+/* ── Keyframe Animations ──────────────────────────────────────────────── */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-14px); }
+}
+
+@keyframes blobPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.04); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Scroll-triggered animations ─────────────────────────────────────── */
+/*
+  Elements are fully visible by default so nothing is blank on page load.
+  Once ScrollAnimator adds 'animate-ready' to <body> (after the initial
+  IntersectionObserver pass), elements that aren't yet in view become
+  opacity:0 — they're below the fold at that point so the user never sees
+  the transition to hidden. Replay (remove in-view on exit) stays intact.
+*/
+
+body.animate-ready [data-animate] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.animate-ready [data-animate].in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.animate-ready [data-animate="fade"] {
+  opacity: 0;
+  transform: none;
+}
+body.animate-ready [data-animate="fade"].in-view {
+  opacity: 1;
+}
+
+body.animate-ready [data-animate="slide-left"] {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+body.animate-ready [data-animate="slide-left"].in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+body.animate-ready [data-animate="slide-right"] {
+  opacity: 0;
+  transform: translateX(28px);
+}
+body.animate-ready [data-animate="slide-right"].in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+body.animate-ready [data-animate="scale"] {
+  opacity: 0;
+  transform: scale(0.94);
+}
+body.animate-ready [data-animate="scale"].in-view {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger delays for child elements */
+[data-delay="1"] { transition-delay: 0.08s; }
+[data-delay="2"] { transition-delay: 0.16s; }
+[data-delay="3"] { transition-delay: 0.24s; }
+[data-delay="4"] { transition-delay: 0.32s; }
+[data-delay="5"] { transition-delay: 0.40s; }
+[data-delay="6"] { transition-delay: 0.48s; }
+[data-delay="7"] { transition-delay: 0.56s; }
+[data-delay="8"] { transition-delay: 0.64s; }
+
+/* ── Hero animations (auto-play) ──────────────────────────────────────── */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-blob {
+  animation: blobPulse 5s ease-in-out infinite;
+}
+
+.hero-text-1 { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.hero-text-2 { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+.hero-text-3 { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both; }
+.hero-text-4 { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.46s both; }
+.hero-image  { animation: slideInRight 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+.hero-nav    { animation: fadeIn 0.5s ease 0s both; }
+
+/* ── Utility ──────────────────────────────────────────────────────────── */
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.gradient-text {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card hover lift */
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* ── Marquee / infinite scroll ────────────────────────────────────────── */
+
+@keyframes marqueeLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes marqueeRight {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+.marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: max-content;
+}
+
+.marquee-left  { animation: marqueeLeft  34s linear infinite; }
+.marquee-right { animation: marqueeRight 34s linear infinite; }
+
+.marquee-left:hover,
+.marquee-right:hover { animation-play-state: paused; }
+
+/* ── Responsive helpers ───────────────────────────────────────────────── */
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .container { padding: 0 16px; }
+}
+
+/* Google Places autocomplete above modals */
+.pac-container {
+  z-index: 10050 !important;
+}
+
+/* ── WhoCan SweetAlert theme ──────────────────────────────────────────── */
+
+@keyframes swal2-show {
+  0%   { opacity: 0; transform: scale(0.94); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes swal2-hide {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.96); }
+}
+
+@keyframes swal2-backdrop-show {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.swal2-container {
+  z-index: 10060 !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.swal2-container.swal2-backdrop-show,
+.swal2-container.swal2-noanimation {
+  background: rgba(16, 24, 40, 0.52) !important;
+}
+
+.swal2-popup,
+.whocan-swal-popup {
+  width: 360px !important;
+  max-width: calc(100vw - 40px) !important;
+  padding: 32px 28px 28px !important;
+  border-radius: 24px !important;
+  background: #ffffff !important;
+  box-shadow: 0 24px 48px rgba(16, 24, 40, 0.18) !important;
+  font-family: 'Poppins', system-ui, sans-serif !important;
+}
+
+.swal2-title,
+.whocan-swal-title {
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+  font-family: 'Poppins', system-ui, sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  color: #101828 !important;
+}
+
+.swal2-html-container,
+.whocan-swal-html {
+  margin: 0 0 28px !important;
+  padding: 0 !important;
+  font-family: 'Poppins', system-ui, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.6 !important;
+  color: #667085 !important;
+}
+
+.whocan-swal-html p {
+  margin: 0;
+}
+
+.whocan-swal-html strong {
+  color: #344054;
+  font-weight: 600;
+}
+
+.whocan-swal-sub {
+  margin-top: 2px !important;
+  color: #98A2B3;
+}
+
+.swal2-icon,
+.whocan-swal-icon {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  margin: 0 auto 20px !important;
+  border: none !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.swal2-icon::before,
+.swal2-icon::after,
+.swal2-icon .swal2-success-ring,
+.swal2-icon .swal2-success-fix,
+.swal2-icon [class^='swal2-success-line'],
+.swal2-icon [class^='swal2-success-circular-line'],
+.swal2-icon .swal2-x-mark,
+.swal2-icon .swal2-icon-content .swal2-x-mark {
+  display: none !important;
+}
+
+.swal2-icon .swal2-icon-content {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  line-height: 0 !important;
+}
+
+.whocan-swal-icon--success,
+.swal2-icon.swal2-success {
+  background: #F8F0FF !important;
+  color: #A54AFF !important;
+}
+
+.whocan-swal-icon--info,
+.swal2-icon.swal2-info,
+.swal2-icon.swal2-question {
+  background: #F8F0FF !important;
+  color: #A54AFF !important;
+}
+
+.whocan-swal-icon--warning,
+.swal2-icon.swal2-warning {
+  background: #FFFAEB !important;
+  color: #DC6803 !important;
+}
+
+.whocan-swal-icon--error,
+.whocan-swal-icon--danger,
+.swal2-icon.swal2-error {
+  background: #FEF3F2 !important;
+  color: #D92D20 !important;
+}
+
+.swal2-actions,
+.whocan-swal-actions {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 12px;
+  display: flex !important;
+}
+
+.swal2-styled,
+.whocan-swal-btn {
+  flex: 1;
+  margin: 0 !important;
+  padding: 12px 16px !important;
+  border-radius: 9999px !important;
+  font-family: 'Poppins', system-ui, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+  transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.swal2-styled:focus,
+.whocan-swal-btn:focus {
+  box-shadow: none !important;
+  outline: none;
+}
+
+.swal2-styled:focus-visible,
+.whocan-swal-btn:focus-visible {
+  box-shadow: 0 0 0 4px rgba(165, 74, 255, 0.18) !important;
+}
+
+.swal2-confirm,
+.whocan-swal-btn-brand {
+  color: #ffffff !important;
+  background: var(--brand-gradient) !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+.swal2-confirm:hover,
+.whocan-swal-btn-brand:hover {
+  opacity: 0.92;
+}
+
+.swal2-confirm.whocan-swal-btn-danger,
+.whocan-swal-btn-danger {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #F97066, #D92D20) !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+.whocan-swal-btn-danger:hover {
+  opacity: 0.92;
+}
+
+.whocan-swal-btn-warning {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #FDB022, #DC6803) !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+.swal2-cancel,
+.swal2-deny,
+.whocan-swal-btn-cancel {
+  color: #344054 !important;
+  background: #ffffff !important;
+  border: 1.5px solid #D0D5DD !important;
+}
+
+.swal2-cancel:hover,
+.swal2-deny:hover,
+.whocan-swal-btn-cancel:hover {
+  background: #F9FAFB !important;
+  border-color: #98A2B3 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swal2-popup {
+    animation: none !important;
+  }
+}
