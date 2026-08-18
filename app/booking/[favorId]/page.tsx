@@ -49,7 +49,7 @@ const FAVOR = {
   ],
 };
 
-const LOCS = [
+const LOCS: BookingLocation[] = [
   { id: 'work', label: 'Work', address: '12 Street, Apt. 4, Lower lake, Downtown, TX', lat: 32.7767, lng: -96.797 },
   { id: 'home', label: 'Home', address: '45 Oak Avenue, Westside, TX', lat: 32.7791, lng: -96.8003 },
 ];
@@ -305,23 +305,22 @@ export default function BookingPage() {
   const holderName = user?.fullName || 'Cardholder';
   const favor = favorResponse?.data?.favor;
 
-  const bookingLocations = useMemo<BookingLocation[]>(() => {
-    const fromApi = (locationsResponse?.data?.locations ?? [])
-      .map((item) => {
-        const lat = toCoordNumber(item.lat);
-        const lng = toCoordNumber(item.lng);
-        if (lat === null || lng === null) return null;
-        const detail = item.locationDetail?.trim();
-        return {
-          id: String(item.id),
-          label: item.label?.trim() || 'Location',
-          address: detail ? `${item.location}, ${detail}` : item.location,
-          lat,
-          lng,
-          isSelected: Boolean(item.isSelected),
-        };
-      })
-      .filter((item): item is BookingLocation => item !== null);
+  const bookingLocations = useMemo((): BookingLocation[] => {
+    const fromApi: BookingLocation[] = [];
+    for (const item of locationsResponse?.data?.locations ?? []) {
+      const lat = toCoordNumber(item.lat);
+      const lng = toCoordNumber(item.lng);
+      if (lat === null || lng === null) continue;
+      const detail = item.locationDetail?.trim();
+      fromApi.push({
+        id: String(item.id),
+        label: item.label?.trim() || 'Location',
+        address: detail ? `${item.location}, ${detail}` : item.location,
+        lat,
+        lng,
+        isSelected: Boolean(item.isSelected),
+      });
+    }
 
     return fromApi.length ? fromApi : LOCS;
   }, [locationsResponse]);

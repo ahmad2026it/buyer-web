@@ -697,12 +697,10 @@ export default function Navbar() {
     'Failed to load notifications.',
   );
 
-  const locationsErrorMessage =
-    locationsQueryError && 'data' in locationsQueryError
-      ? String((locationsQueryError.data as { message?: string } | undefined)?.message || 'Failed to load locations')
-      : locationsQueryError && 'error' in locationsQueryError
-        ? String(locationsQueryError.error)
-        : 'Failed to load locations';
+  const locationsErrorMessage = getMutationErrorMessage(
+    locationsQueryError,
+    'Failed to load locations',
+  );
 
   const notifRef    = useRef<HTMLDivElement>(null);
   const profileRef  = useRef<HTMLDivElement>(null);
