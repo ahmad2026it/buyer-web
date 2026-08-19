@@ -98,35 +98,58 @@ function AddCardForm({
   const canSubmit = Boolean(stripe && elements && ready) && !submitting;
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div style={{ minHeight: 120, position: 'relative' }}>
-        {!ready && (
-          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', marginBottom: 12 }}>
-            Loading secure card form…
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+    >
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
+          padding: '0 24px 12px',
+        }}
+      >
+        <div style={{ minHeight: 120, position: 'relative' }}>
+          {!ready && (
+            <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', marginBottom: 12 }}>
+              Loading secure card form…
+            </p>
+          )}
+          <PaymentElement
+            onReady={() => setReady(true)}
+            options={{
+              layout: 'tabs',
+              wallets: { applePay: 'never', googlePay: 'never' },
+              defaultValues: {
+                billingDetails: {
+                  name: billingName,
+                  email: billingEmail,
+                },
+              },
+            }}
+          />
+        </div>
+
+        {formError && (
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20', marginTop: 12, marginBottom: 8 }}>
+            {formError}
           </p>
         )}
-        <PaymentElement
-          onReady={() => setReady(true)}
-          options={{
-            layout: 'tabs',
-            wallets: { applePay: 'never', googlePay: 'never' },
-            defaultValues: {
-              billingDetails: {
-                name: billingName,
-                email: billingEmail,
-              },
-            },
-          }}
-        />
       </div>
 
-      {formError && (
-        <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20', marginTop: 12 }}>
-          {formError}
-        </p>
-      )}
-
-      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 10,
+          flexShrink: 0,
+          padding: '16px 24px 20px',
+          borderTop: '1px solid #F2F4F7',
+          background: '#fff',
+        }}
+      >
         <button
           type="button"
           onClick={onClose}
@@ -195,11 +218,12 @@ export default function AddPaymentMethodModal({
         inset: 0,
         background: 'rgba(16,24,40,0.5)',
         backdropFilter: 'blur(4px)',
-        zIndex: 1000,
+        zIndex: 10050,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))',
+        overflow: 'hidden',
       }}
     >
       <div
@@ -210,10 +234,13 @@ export default function AddPaymentMethodModal({
           boxShadow: '0 20px 64px rgba(16,24,40,0.18)',
           width: '100%',
           maxWidth: 440,
+          maxHeight: 'calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+          display: 'flex',
+          flexDirection: 'column',
           overflow: 'hidden',
         }}
       >
-        <div style={{ padding: '24px 24px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '24px 24px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div
             style={{
               width: 44,
@@ -247,15 +274,17 @@ export default function AddPaymentMethodModal({
           </button>
         </div>
 
-        <div style={{ padding: '16px 24px 28px' }}>
+        <div style={{ padding: '16px 24px 16px', flexShrink: 0 }}>
           <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 4 }}>
             Add payment method
           </h2>
-          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', marginBottom: 20 }}>
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085' }}>
             Card details are encrypted and sent directly to Stripe.
           </p>
+        </div>
 
-          {key ? (
+        {key ? (
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
             <Elements stripe={getStripe(key)} options={options}>
               <AddCardForm
                 billingName={billingName}
@@ -264,12 +293,12 @@ export default function AddPaymentMethodModal({
                 onSuccess={onSuccess}
               />
             </Elements>
-          ) : (
-            <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20' }}>
-              Stripe is not configured. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to your environment.
-            </p>
-          )}
-        </div>
+          </div>
+        ) : (
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20', padding: '0 24px 24px' }}>
+            Stripe is not configured. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to your environment.
+          </p>
+        )}
       </div>
     </div>
   );

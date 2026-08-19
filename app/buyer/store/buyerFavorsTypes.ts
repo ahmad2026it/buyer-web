@@ -162,9 +162,11 @@ export type BuyerFavor = {
   createdAt: string;
   updatedAt: string;
   reviewCount: number;
+  totalReviews?: number;
   averageRating: number | null;
   distanceMiles: number | null;
   isFavorite: boolean;
+  favorImage?: string | null;
   seller: BuyerFavorSeller | null;
 };
 
@@ -212,6 +214,28 @@ export type GetBuyerFavorByIdResponse = {
       sellerOtherFavors: BuyerRelatedFavor[];
       sameTypeOtherSellerFavor: BuyerRelatedFavor | BuyerRelatedFavor[] | null;
     };
+  };
+};
+
+export type MarkBuyerFavoriteResponse = {
+  success: boolean;
+  status?: number;
+  message?: string;
+  data?: unknown;
+};
+
+export type GetBuyerFavoritesParams = {
+  page?: number;
+  limit?: number;
+};
+
+export type GetBuyerFavoritesResponse = {
+  success: boolean;
+  status: number;
+  message: string;
+  data: {
+    favors: BuyerFavor[];
+    pagination: BuyerFavorsPagination;
   };
 };
 

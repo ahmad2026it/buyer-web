@@ -20,6 +20,7 @@ import {
 import type { BuyerNotification } from '@/app/buyer/store/buyerNotificationsTypes';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout as logoutAuth } from '@/app/auth/store/authSlice';
+import { disconnectBuyerSocket } from '@/lib/buyerSocket';
 import { confirmDelete, showError } from '@/lib/swal';
 
 const LocationMapPicker = dynamic(() => import('@/components/LocationMapPicker'), {
@@ -859,6 +860,7 @@ export default function Navbar() {
   };
   const logout = () => {
     localStorage.removeItem('whoCan_loggedIn');
+    disconnectBuyerSocket();
     dispatch(logoutAuth());
     setIsLoggedIn(false);
     setProfileOpen(false);

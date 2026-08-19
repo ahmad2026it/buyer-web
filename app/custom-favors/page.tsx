@@ -1,92 +1,45 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import AuthGateModal from '@/components/AuthGateModal';
+import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import {
+  BUYER_CUSTOM_FAVORS_LIST_PARAMS,
+  useGetBuyerCustomFavorsQuery,
+} from '@/app/buyer/store/buyerCustomFavorsAPI';
+import {
+  formatCustomFavorBudget,
+  formatCustomFavorCategory,
+  formatCustomFavorDueDate,
+  getCustomFavorHires,
+  getCustomFavorRequestCount,
+  getCustomFavorSellersRequired,
+  resolveCustomFavorStatus,
+  type BuyerCustomFavor,
+  type BuyerCustomFavorOfferStatus,
+  type CustomFavorListStatus,
+} from '@/app/buyer/store/buyerCustomFavorsTypes';
+import { useAppSelector } from '@/store/hooks';
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const PILL  = '9999px';
 const FONT  = 'Poppins, sans-serif';
 
-interface CustomFavor {
-  id: string;
+type CustomFavorCard = {
+  id: number;
   title: string;
   category: string;
-  budget: number;
+  budget: string;
   dueDate: string;
   requests: number;
   hires: number;
   sellersRequired: number;
-  status: 'Active' | 'Completed' | 'Expired' | 'Cancelled';
-  image: string;
-}
-
-const ACTIVE_FAVORS: CustomFavor[] = [
-  {
-    id: '1',
-    title: 'I need a car wash at my doorsteps',
-    category: 'Cleaning',
-    budget: 200,
-    dueDate: 'Jan 2, 2025',
-    requests: 2,
-    hires: 1,
-    sellersRequired: 2,
-    status: 'Active',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=160&h=160&fit=crop&auto=format&q=75',
-  },
-  {
-    id: '2',
-    title: 'I need a deep clean of my kitchen',
-    category: 'Cleaning',
-    budget: 200,
-    dueDate: 'Jan 2, 2025',
-    requests: 0,
-    hires: 0,
-    sellersRequired: 1,
-    status: 'Active',
-    image: 'https://images.unsplash.com/photo-1527515637462-cff94ebb8b4c?w=160&h=160&fit=crop&auto=format&q=75',
-  },
-  {
-    id: '3',
-    title: 'Need someone to assemble IKEA furniture',
-    category: 'Assembly',
-    budget: 120,
-    dueDate: 'Jan 10, 2025',
-    requests: 5,
-    hires: 3,
-    sellersRequired: 3,
-    status: 'Active',
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=160&h=160&fit=crop&auto=format&q=75',
-  },
-];
-
-const HISTORY_FAVORS: CustomFavor[] = [
-  {
-    id: '4',
-    title: 'Fix the leaking pipe in my kitchen',
-    category: 'Plumbing',
-    budget: 350,
-    dueDate: 'Dec 5, 2024',
-    requests: 3,
-    hires: 1,
-    sellersRequired: 1,
-    status: 'Completed',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=160&h=160&fit=crop&auto=format&q=75',
-  },
-  {
-    id: '5',
-    title: 'Paint the living room walls',
-    category: 'Painting',
-    budget: 500,
-    dueDate: 'Nov 20, 2024',
-    requests: 1,
-    hires: 0,
-    sellersRequired: 2,
-    status: 'Expired',
-    image: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=160&h=160&fit=crop&auto=format&q=75',
-  },
-];
+  status: CustomFavorListStatus;
+  image: string | null;
+};
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   Completed: { bg: '#ECFDF3', color: '#079455', border: '#A9EFC5' },
@@ -94,7 +47,22 @@ const STATUS_COLORS: Record<string, { bg: string; color: string; border: string 
   Cancelled: { bg: '#FEF3F2', color: '#D92D20', border: '#FECDCA' },
 };
 
-function ActiveFavorCard({ favor }: { favor: CustomFavor }) {
+function toCustomFavorCard(favor: BuyerCustomFavor): CustomFavorCard {
+  return {
+    id: favor.id,
+    title: favor.title,
+    category: formatCustomFavorCategory(favor.type),
+    budget: formatCustomFavorBudget(favor.budget),
+    dueDate: formatCustomFavorDueDate(favor.dateTime),
+    requests: getCustomFavorRequestCount(favor),
+    hires: getCustomFavorHires(favor),
+    sellersRequired: getCustomFavorSellersRequired(favor),
+    status: resolveCustomFavorStatus(favor),
+    image: pickFavorImage(favor.images),
+  };
+}
+
+function ActiveFavorCard({ favor }: { favor: CustomFavorCard }) {
   const router = useRouter();
   const hasRequests = favor.requests > 0;
   const isFull = favor.hires >= favor.sellersRequired;
@@ -110,12 +78,10 @@ function ActiveFavorCard({ favor }: { favor: CustomFavor }) {
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = BRAND; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(165,74,255,0.1)'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#EAECF0'; (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(16,24,40,0.04)'; }}
     >
-      {/* Info row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 16px 14px' }}>
-        <img
-          src={favor.image} alt={favor.title}
-          style={{ width: 80, height: 72, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '1px solid #EAECF0' }}
-        />
+        <div style={{ width: 80, height: 72, borderRadius: 10, overflow: 'hidden', flexShrink: 0, border: '1px solid #EAECF0' }}>
+          <FavorImage src={favor.image} alt={favor.title} />
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 16, color: '#101828', marginBottom: 4, lineHeight: 1.35 }}>
             {favor.title}
@@ -124,7 +90,7 @@ function ActiveFavorCard({ favor }: { favor: CustomFavor }) {
             Category: <span style={{ color: '#344054', fontWeight: 500 }}>{favor.category}</span>
           </p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-            <span style={{ fontFamily: FONT, fontWeight: 800, fontSize: 22, color: BRAND }}>${favor.budget}</span>
+            <span style={{ fontFamily: FONT, fontWeight: 800, fontSize: 22, color: BRAND }}>{favor.budget}</span>
             <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>
               Favor due: <span style={{ color: '#DC6803', fontWeight: 600 }}>{favor.dueDate}</span>
             </span>
@@ -132,7 +98,6 @@ function ActiveFavorCard({ favor }: { favor: CustomFavor }) {
         </div>
       </div>
 
-      {/* Hires progress */}
       <div style={{ padding: '0 16px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ flex: 1, height: 6, background: '#F2F4F7', borderRadius: PILL, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${Math.min((favor.hires / favor.sellersRequired) * 100, 100)}%`, background: isFull ? '#079455' : BRAND, borderRadius: PILL, transition: 'width 0.3s' }} />
@@ -142,10 +107,8 @@ function ActiveFavorCard({ favor }: { favor: CustomFavor }) {
         </span>
       </div>
 
-      {/* Divider */}
       <div style={{ height: 1, background: '#F2F4F7' }} />
 
-      {/* CTA button */}
       <div style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
         <button
           onClick={() => router.push(`/custom-favors/${favor.id}`)}
@@ -182,7 +145,7 @@ function ActiveFavorCard({ favor }: { favor: CustomFavor }) {
   );
 }
 
-function HistoryFavorCard({ favor }: { favor: CustomFavor }) {
+function HistoryFavorCard({ favor }: { favor: CustomFavorCard }) {
   const router = useRouter();
   const s = STATUS_COLORS[favor.status] || STATUS_COLORS.Expired;
 
@@ -198,10 +161,9 @@ function HistoryFavorCard({ favor }: { favor: CustomFavor }) {
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#EAECF0'; (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(16,24,40,0.04)'; }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px' }}>
-        <img
-          src={favor.image} alt={favor.title}
-          style={{ width: 80, height: 72, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '1px solid #EAECF0' }}
-        />
+        <div style={{ width: 80, height: 72, borderRadius: 10, overflow: 'hidden', flexShrink: 0, border: '1px solid #EAECF0' }}>
+          <FavorImage src={favor.image} alt={favor.title} />
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
             <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 16, color: '#101828', lineHeight: 1.35, margin: 0, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -219,7 +181,7 @@ function HistoryFavorCard({ favor }: { favor: CustomFavor }) {
             Category: <span style={{ color: '#344054', fontWeight: 500 }}>{favor.category}</span>
           </p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-            <span style={{ fontFamily: FONT, fontWeight: 800, fontSize: 20, color: '#98A2B3' }}>${favor.budget}</span>
+            <span style={{ fontFamily: FONT, fontWeight: 800, fontSize: 20, color: '#98A2B3' }}>{favor.budget}</span>
             <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>
               Due: <span style={{ fontWeight: 500 }}>{favor.dueDate}</span>
             </span>
@@ -254,18 +216,80 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
   );
 }
 
+function FavorCardSkeleton() {
+  return (
+    <div style={{ background: '#fff', borderRadius: 16, border: '1.5px solid #EAECF0', overflow: 'hidden', padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ width: 80, height: 72, borderRadius: 10, background: '#F2F4F7', flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ width: '70%', height: 16, borderRadius: 4, background: '#F2F4F7', marginBottom: 10 }} />
+          <div style={{ width: '40%', height: 12, borderRadius: 4, background: '#F2F4F7', marginBottom: 12 }} />
+          <div style={{ width: 64, height: 18, borderRadius: 4, background: '#F2F4F7' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CustomFavorsPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<'active' | 'history'>('active');
+  const [tab, setTab] = useState<BuyerCustomFavorOfferStatus>('active');
+  const [pages, setPages] = useState<Record<BuyerCustomFavorOfferStatus, number>>({
+    active: 1,
+    history: 1,
+  });
+  const [authOpen, setAuthOpen] = useState(false);
+  const token = useAppSelector((state) => state.auth.token);
+  const skip = !token;
+  const page = pages[tab];
 
+  const activeQuery = useGetBuyerCustomFavorsQuery(
+    { status: 'active', page: tab === 'active' ? page : 1, limit: BUYER_CUSTOM_FAVORS_LIST_PARAMS.limit },
+    { skip },
+  );
+  const historyQuery = useGetBuyerCustomFavorsQuery(
+    { status: 'history', page: tab === 'history' ? page : 1, limit: BUYER_CUSTOM_FAVORS_LIST_PARAMS.limit },
+    { skip },
+  );
+
+  const currentQuery = tab === 'active' ? activeQuery : historyQuery;
+  const { data, isLoading, isFetching, isError, refetch } = currentQuery;
+
+  const favors = useMemo(
+    () => (data?.data?.offers ?? []).map(toCustomFavorCard),
+    [data],
+  );
+  const activeCount = activeQuery.data?.data?.pagination?.total ?? 0;
+  const pagination = data?.data?.pagination;
+  const hasMore = pagination ? favors.length < pagination.total : false;
   const isActive = tab === 'active';
+
+  const openCreate = () => {
+    if (skip) {
+      setAuthOpen(true);
+      return;
+    }
+    router.push('/custom-favors/new');
+  };
+
+  const switchTab = (next: BuyerCustomFavorOfferStatus) => {
+    setTab(next);
+  };
+
+  const loadMore = () => {
+    setPages((current) => ({ ...current, [tab]: current[tab] + 1 }));
+  };
 
   return (
     <>
       <Navbar />
+      {authOpen && (
+        <AuthGateModal
+          onClose={() => setAuthOpen(false)}
+          message="Sign in to view and manage your custom favors."
+        />
+      )}
       <main style={{ minHeight: '100vh', background: '#FAFAFA' }}>
-
-        {/* Header band */}
         <div style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: 104, paddingBottom: 28 }}>
           <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
@@ -278,7 +302,7 @@ export default function CustomFavorsPage() {
                 </p>
               </div>
               <button
-                onClick={() => router.push('/custom-favors/new')}
+                onClick={openCreate}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 22px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s', whiteSpace: 'nowrap', flexShrink: 0 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
@@ -290,12 +314,11 @@ export default function CustomFavorsPage() {
               </button>
             </div>
 
-            {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginTop: 24, borderBottom: '2px solid #EAECF0', paddingBottom: 0 }}>
               {(['active', 'history'] as const).map(t => (
                 <button
                   key={t}
-                  onClick={() => setTab(t)}
+                  onClick={() => switchTab(t)}
                   style={{
                     fontFamily: FONT, fontWeight: 600, fontSize: 14,
                     color: tab === t ? BRAND : '#667085',
@@ -308,9 +331,9 @@ export default function CustomFavorsPage() {
                   }}
                 >
                   {t === 'active' ? 'Active' : 'History'}
-                  {t === 'active' && ACTIVE_FAVORS.length > 0 && (
+                  {t === 'active' && activeCount > 0 && (
                     <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20, height: 20, borderRadius: PILL, background: tab === 'active' ? BRAND : '#EAECF0', color: tab === 'active' ? '#fff' : '#667085', fontSize: 11, fontWeight: 700, padding: '0 6px' }}>
-                      {ACTIVE_FAVORS.length}
+                      {activeCount}
                     </span>
                   )}
                 </button>
@@ -319,26 +342,64 @@ export default function CustomFavorsPage() {
           </div>
         </div>
 
-        {/* Content */}
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '36px 24px 80px' }}>
-          {isActive ? (
-            ACTIVE_FAVORS.length === 0 ? (
-              <EmptyState onCreate={() => router.push('/custom-favors/new')} />
+          {skip ? (
+            <div style={{ textAlign: 'center', padding: '80px 24px' }}>
+              <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>
+                Sign in to see your custom favors.
+              </p>
+              <button
+                onClick={() => setAuthOpen(true)}
+                style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 24px', cursor: 'pointer' }}
+              >
+                Sign in
+              </button>
+            </div>
+          ) : isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {[0, 1, 2].map((key) => <FavorCardSkeleton key={key} />)}
+            </div>
+          ) : isError ? (
+            <div style={{ textAlign: 'center', padding: '80px 24px' }}>
+              <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>
+                Couldn’t load your custom favors. Please try again.
+              </p>
+              <button
+                onClick={() => { void refetch(); }}
+                style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 24px', cursor: 'pointer' }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : favors.length === 0 ? (
+            isActive ? (
+              <EmptyState onCreate={openCreate} />
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {ACTIVE_FAVORS.map(f => <ActiveFavorCard key={f.id} favor={f} />)}
-              </div>
-            )
-          ) : (
-            HISTORY_FAVORS.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '80px 24px' }}>
                 <p style={{ fontFamily: FONT, fontSize: 15, color: '#98A2B3' }}>No history yet.</p>
               </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {HISTORY_FAVORS.map(f => <HistoryFavorCard key={f.id} favor={f} />)}
-              </div>
             )
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {favors.map((favor) =>
+                isActive
+                  ? <ActiveFavorCard key={favor.id} favor={favor} />
+                  : <HistoryFavorCard key={favor.id} favor={favor} />,
+              )}
+              {hasMore && (
+                <button
+                  onClick={loadMore}
+                  disabled={isFetching}
+                  style={{
+                    marginTop: 8, fontFamily: FONT, fontWeight: 700, fontSize: 14,
+                    color: BRAND, background: '#fff', border: `1.5px solid ${BRAND}`,
+                    borderRadius: PILL, padding: '12px 20px', cursor: isFetching ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {isFetching ? 'Loading…' : 'Load more'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </main>

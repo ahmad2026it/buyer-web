@@ -14,13 +14,13 @@ import {
   type BuyerBookingReport,
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
+import FavorImage from '@/components/FavorImage';
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const PILL  = '9999px';
 const FONT  = 'Poppins, sans-serif';
 const PAGE_SIZE = 50;
-const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop&auto=format&q=80';
 
 function formatCategory(type?: string | null): string {
   if (!type) return 'Service';
@@ -239,8 +239,8 @@ export default function DisputeDetailPage() {
                   Disputed Favor
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <img
-                    src={dispute.disputedFavor?.coverImage || PLACEHOLDER_IMG}
+                  <FavorImage
+                    src={dispute.disputedFavor?.coverImage}
                     alt={dispute.disputedFavor?.title || 'Reported favor'}
                     style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', flexShrink: 0, border: '1px solid #EAECF0' }}
                   />

@@ -1,8 +1,13 @@
 "use client";
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useRef, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useRegisterBuyerMutation } from "@/app/auth/store/authAPI";
 import { showSuccess } from "@/lib/swal";
+import {
+  COUNTRY_DIAL_CODES,
+  countryFlag,
+  getCountryByIso,
+} from "@/lib/countryCodes";
 
 const GRAD = "linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)";
 const BRAND = "#A54AFF";
@@ -62,6 +67,29 @@ function WhoCanLogo({ size = 120 }: { size?: number }) {
   );
 }
 
+function EyeIcon({ off }: { off?: boolean }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+      {off && (
+        <path
+          d="M3 3l18 18"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  );
+}
+
 /* ── Pill input ────────────────────────────────────────── */
 function PillInput({
   label,
@@ -77,6 +105,10 @@ function PillInput({
   onChange: (v: string) => void;
 }) {
   const [focused, setFocused] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const isPassword = type === "password";
+  const inputType = isPassword ? (visible ? "text" : "password") : type;
+
   return (
     <div>
       <label
@@ -91,30 +123,624 @@ function PillInput({
       >
         {label}
       </label>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+      <div style={{ position: "relative" }}>
+        <input
+          type={inputType}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          autoComplete={isPassword ? "new-password" : undefined}
+          style={{
+            width: "100%",
+            fontFamily: "Poppins,sans-serif",
+            fontSize: "15px",
+            color: "#101828",
+            background: "#ffffff",
+            border: `1.5px solid ${focused ? BRAND : "#D0D5DD"}`,
+            borderRadius: PILL,
+            padding: isPassword ? "12px 48px 12px 20px" : "12px 20px",
+            outline: "none",
+            boxSizing: "border-box",
+            boxShadow: focused
+              ? `0 0 0 4px rgba(165,74,255,0.12)`
+              : "0 1px 2px rgba(16,24,40,0.05)",
+            transition: "border-color 0.15s,box-shadow 0.15s",
+          }}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setVisible((prev) => !prev)}
+            aria-label={visible ? "Hide password" : "Show password"}
+            style={{
+              position: "absolute",
+              right: "14px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              padding: 0,
+              border: "none",
+              background: "transparent",
+              color: focused ? BRAND : "#667085",
+              cursor: "pointer",
+              borderRadius: "50%",
+            }}
+          >
+            <EyeIcon off={visible} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const CALENDAR_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const CALENDAR_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+function pad2(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function toIsoDate(date: Date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function parseIsoDate(value: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+  return date;
+}
+
+function formatDobLabel(value: string) {
+  const date = parseIsoDate(value);
+  if (!date) return "";
+  return `${date.getDate()} ${CALENDAR_MONTHS[date.getMonth()].slice(0, 3)} ${date.getFullYear()}`;
+}
+
+function CountryCodeSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (iso: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const selected = getCountryByIso(value) ?? COUNTRY_DIAL_CODES.find((c) => c.iso === "US")!;
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return COUNTRY_DIAL_CODES;
+    return COUNTRY_DIAL_CODES.filter(
+      (country) =>
+        country.name.toLowerCase().includes(q) ||
+        country.iso.toLowerCase().includes(q) ||
+        country.dial.includes(q) ||
+        country.dial.replace("+", "").includes(q.replace("+", "")),
+    );
+  }, [query]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) searchRef.current?.focus();
+  }, [open]);
+
+  return (
+    <div ref={containerRef} style={{ position: "relative", flexShrink: 0 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "12px 14px",
+          background: "#ffffff",
+          border: `1.5px solid ${open ? BRAND : "#D0D5DD"}`,
+          borderRadius: PILL,
+          cursor: "pointer",
+          boxShadow: open ? "0 0 0 4px rgba(165,74,255,0.12)" : "none",
+          transition: "border-color 0.15s, box-shadow 0.15s",
+        }}
+      >
+        <span style={{ fontSize: "18px", lineHeight: 1 }}>
+          {countryFlag(selected.iso)}
+        </span>
+        <span
+          style={{
+            fontFamily: "Poppins,sans-serif",
+            fontSize: "14px",
+            color: "#344054",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {selected.iso} {selected.dial}
+        </span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M6 9l6 6 6-6"
+            stroke="#667085"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            left: 0,
+            zIndex: 40,
+            width: "280px",
+            background: "#ffffff",
+            border: "1px solid #EAECF0",
+            borderRadius: "16px",
+            boxShadow:
+              "0px 12px 16px -4px rgba(16,24,40,0.08), 0px 4px 6px -2px rgba(16,24,40,0.03)",
+            overflow: "hidden",
+          }}
+        >
+          <div style={{ padding: "10px 10px 6px" }}>
+            <input
+              ref={searchRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search country"
+              style={{
+                width: "100%",
+                fontFamily: "Poppins,sans-serif",
+                fontSize: "13px",
+                color: "#101828",
+                background: "#F9FAFB",
+                border: "1px solid #E4E7EC",
+                borderRadius: "10px",
+                padding: "8px 12px",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div
+            role="listbox"
+            style={{ maxHeight: "240px", overflowY: "auto", padding: "4px 0 8px" }}
+          >
+            {filtered.length === 0 && (
+              <p
+                style={{
+                  fontFamily: "Poppins,sans-serif",
+                  fontSize: "13px",
+                  color: "#667085",
+                  padding: "12px 16px",
+                  margin: 0,
+                }}
+              >
+                No countries found
+              </p>
+            )}
+            {filtered.map((country) => {
+              const isActive = country.iso === selected.iso;
+              return (
+                <button
+                  key={country.iso}
+                  type="button"
+                  role="option"
+                  aria-selected={isActive}
+                  onClick={() => {
+                    onChange(country.iso);
+                    setOpen(false);
+                    setQuery("");
+                  }}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "8px 14px",
+                    border: "none",
+                    background: isActive ? "#F4EBFF" : "transparent",
+                    cursor: "pointer",
+                    textAlign: "left",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.background = "#F9FAFB";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = isActive
+                      ? "#F4EBFF"
+                      : "transparent";
+                  }}
+                >
+                  <span style={{ fontSize: "18px", lineHeight: 1 }}>
+                    {countryFlag(country.iso)}
+                  </span>
+                  <span
+                    style={{
+                      flex: 1,
+                      fontFamily: "Poppins,sans-serif",
+                      fontSize: "13px",
+                      color: "#101828",
+                    }}
+                  >
+                    {country.name}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "Poppins,sans-serif",
+                      fontSize: "13px",
+                      color: "#667085",
+                    }}
+                  >
+                    {country.dial}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BirthDatePicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (isoDate: string) => void;
+}) {
+  const selected = parseIsoDate(value);
+  const today = new Date();
+  const maxDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const minYear = today.getFullYear() - 120;
+  const maxYear = today.getFullYear();
+  const defaultView = selected ?? new Date(today.getFullYear() - 18, 0, 1);
+
+  const [open, setOpen] = useState(false);
+  const [viewDate, setViewDate] = useState(defaultView);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [open]);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (Date | null)[] = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+
+  const years: number[] = [];
+  for (let y = maxYear; y >= minYear; y--) years.push(y);
+
+  const isDisabled = (date: Date) => date > maxDate;
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={() => {
+          setViewDate(selected ?? new Date(today.getFullYear() - 18, 0, 1));
+          setOpen((prev) => !prev);
+        }}
+        aria-haspopup="dialog"
+        aria-expanded={open}
         style={{
           width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
           fontFamily: "Poppins,sans-serif",
-          fontSize: "15px",
-          color: "#101828",
+          fontSize: "14px",
+          color: selected ? "#101828" : "#98A2B3",
           background: "#ffffff",
-          border: `1.5px solid ${focused ? BRAND : "#D0D5DD"}`,
+          border: `1.5px solid ${open ? BRAND : "#D0D5DD"}`,
           borderRadius: PILL,
-          padding: "12px 20px",
+          padding: "12px 14px 12px 18px",
           outline: "none",
           boxSizing: "border-box",
-          boxShadow: focused
-            ? `0 0 0 4px rgba(165,74,255,0.12)`
-            : "0 1px 2px rgba(16,24,40,0.05)",
-          transition: "border-color 0.15s,box-shadow 0.15s",
+          cursor: "pointer",
+          textAlign: "left",
+          boxShadow: open ? "0 0 0 4px rgba(165,74,255,0.12)" : "none",
+          transition: "border-color 0.15s, box-shadow 0.15s",
         }}
-      />
+      >
+        {selected ? formatDobLabel(value) : "Select"}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <rect
+            x="3"
+            y="4"
+            width="18"
+            height="18"
+            rx="2"
+            stroke="#98A2B3"
+            strokeWidth="2"
+          />
+          <line
+            x1="16"
+            y1="2"
+            x2="16"
+            y2="6"
+            stroke="#98A2B3"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <line
+            x1="8"
+            y1="2"
+            x2="8"
+            y2="6"
+            stroke="#98A2B3"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <line
+            x1="3"
+            y1="10"
+            x2="21"
+            y2="10"
+            stroke="#98A2B3"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            left: 0,
+            zIndex: 40,
+            width: "280px",
+            background: "#ffffff",
+            border: "1px solid #EAECF0",
+            borderRadius: "16px",
+            boxShadow:
+              "0px 12px 16px -4px rgba(16,24,40,0.08), 0px 4px 6px -2px rgba(16,24,40,0.03)",
+            padding: "12px",
+            fontFamily: "Poppins,sans-serif",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              marginBottom: "12px",
+            }}
+          >
+            <button
+              type="button"
+              aria-label="Previous month"
+              onClick={() =>
+                setViewDate(new Date(year, month - 1, 1))
+              }
+              style={{
+                width: "32px",
+                height: "32px",
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                color: "#667085",
+                borderRadius: "50%",
+                flexShrink: 0,
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M15 18l-6-6 6-6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <select
+              value={month}
+              onChange={(e) =>
+                setViewDate(new Date(year, Number(e.target.value), 1))
+              }
+              style={{
+                flex: 1,
+                fontFamily: "Poppins,sans-serif",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#344054",
+                border: "1px solid #E4E7EC",
+                borderRadius: "8px",
+                padding: "6px 8px",
+                outline: "none",
+                background: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              {CALENDAR_MONTHS.map((label, index) => (
+                <option key={label} value={index}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={year}
+              onChange={(e) =>
+                setViewDate(new Date(Number(e.target.value), month, 1))
+              }
+              style={{
+                width: "84px",
+                fontFamily: "Poppins,sans-serif",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#344054",
+                border: "1px solid #E4E7EC",
+                borderRadius: "8px",
+                padding: "6px 8px",
+                outline: "none",
+                background: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              aria-label="Next month"
+              onClick={() =>
+                setViewDate(new Date(year, month + 1, 1))
+              }
+              style={{
+                width: "32px",
+                height: "32px",
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                color: "#667085",
+                borderRadius: "50%",
+                flexShrink: 0,
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M9 18l6-6-6-6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              marginBottom: "4px",
+            }}
+          >
+            {CALENDAR_DAYS.map((day) => (
+              <div
+                key={day}
+                style={{
+                  height: "28px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  color: "#667085",
+                }}
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: "2px",
+            }}
+          >
+            {cells.map((date, index) => {
+              if (!date) return <div key={`empty-${index}`} />;
+              const iso = toIsoDate(date);
+              const isSelected = value === iso;
+              const disabled = isDisabled(date);
+              const isToday = toIsoDate(maxDate) === iso;
+              return (
+                <button
+                  key={iso}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => {
+                    onChange(iso);
+                    setOpen(false);
+                  }}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    margin: "0 auto",
+                    border: isToday && !isSelected ? `1px solid ${BRAND}` : "none",
+                    borderRadius: "50%",
+                    background: isSelected ? BRAND : "transparent",
+                    color: disabled
+                      ? "#D0D5DD"
+                      : isSelected
+                        ? "#ffffff"
+                        : "#344054",
+                    fontFamily: "Poppins,sans-serif",
+                    fontSize: "13px",
+                    fontWeight: isSelected || isToday ? 600 : 400,
+                    cursor: disabled ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {date.getDate()}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -220,11 +846,124 @@ type AccountFormData = {
   password: string;
 };
 
+type Step1Draft = {
+  fullName: string;
+  email: string;
+  countryIso: string;
+  phone: string;
+  dateOfBirth: string;
+  gender: string;
+  password: string;
+  confirm: string;
+};
+
 type LocationFormData = {
   location: string;
   locationDetail: string;
   label: string;
 };
+
+type SignupStep = 1 | 2 | 3;
+
+const SIGNUP_DRAFT_KEY = "whoCan_signupDraft";
+const EMPTY_DRAFT: Step1Draft = {
+  fullName: "",
+  email: "",
+  countryIso: "US",
+  phone: "",
+  dateOfBirth: "",
+  gender: "",
+  password: "",
+  confirm: "",
+};
+
+function parseSignupStep(value: string | null): SignupStep {
+  if (value === "2" || value === "3") return Number(value) as SignupStep;
+  return 1;
+}
+
+function loadSignupDraft(): {
+  draft: Step1Draft;
+  account: AccountFormData | null;
+} | null {
+  try {
+    const raw = sessionStorage.getItem(SIGNUP_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      draft?: Step1Draft;
+      account?: AccountFormData | null;
+    };
+    if (!parsed?.draft) return null;
+    return {
+      draft: { ...EMPTY_DRAFT, ...parsed.draft },
+      account: parsed.account ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveSignupDraft(draft: Step1Draft, account: AccountFormData | null) {
+  sessionStorage.setItem(
+    SIGNUP_DRAFT_KEY,
+    JSON.stringify({ draft, account }),
+  );
+}
+
+function clearSignupDraft() {
+  sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
+}
+
+function StepBackButton({
+  onClick,
+  disabled,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label="Back"
+      style={{
+        position: "absolute",
+        top: "24px",
+        left: "32px",
+        zIndex: 2,
+        width: "44px",
+        height: "44px",
+        background: "#ffffff",
+        border: "1px solid #EAECF0",
+        borderRadius: "16px",
+        cursor: disabled ? "not-allowed" : "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: disabled ? 0.6 : 1,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        transition: "border-color 0.15s, box-shadow 0.15s",
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) e.currentTarget.style.borderColor = BRAND;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "#EAECF0";
+      }}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M19 12H5M5 12l7 7M5 12l7-7"
+          stroke="#344054"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
+}
 
 function getRegisterErrorMessage(error: unknown): string {
   if (typeof error === "object" && error !== null && "data" in error) {
@@ -237,14 +976,21 @@ function getRegisterErrorMessage(error: unknown): string {
 /* ══════════════════════════════════════════════════════════
    STEP 1 — Sign Up form
 ══════════════════════════════════════════════════════════ */
-function Step1({ onNext }: { onNext: (data: AccountFormData) => void }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [dob, setDob] = useState("");
-  const [gender, setGender] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+function Step1({
+  initial,
+  onNext,
+}: {
+  initial: Step1Draft;
+  onNext: (draft: Step1Draft, account: AccountFormData) => void;
+}) {
+  const [name, setName] = useState(initial.fullName);
+  const [email, setEmail] = useState(initial.email);
+  const [countryIso, setCountryIso] = useState(initial.countryIso);
+  const [phone, setPhone] = useState(initial.phone);
+  const [dob, setDob] = useState(initial.dateOfBirth);
+  const [gender, setGender] = useState(initial.gender);
+  const [password, setPassword] = useState(initial.password);
+  const [confirm, setConfirm] = useState(initial.confirm);
   const [formError, setFormError] = useState("");
 
   const handleContinue = () => {
@@ -264,15 +1010,24 @@ function Step1({ onNext }: { onNext: (data: AccountFormData) => void }) {
       return;
     }
 
-    const trimmedPhone = phone.trim();
-    setFormError("");
-    onNext({
+    const country = getCountryByIso(countryIso) ?? COUNTRY_DIAL_CODES.find((c) => c.iso === "US")!;
+    const national = phone.replace(/[^\d]/g, "").replace(/^0+/, "");
+    const draft: Step1Draft = {
       fullName: name.trim(),
       email: email.trim(),
-      phoneNumber: trimmedPhone.startsWith("+")
-        ? trimmedPhone
-        : `+1${trimmedPhone}`,
+      countryIso,
+      phone,
       dateOfBirth: dob.trim(),
+      gender,
+      password,
+      confirm,
+    };
+    setFormError("");
+    onNext(draft, {
+      fullName: draft.fullName,
+      email: draft.email,
+      phoneNumber: `${country.dial}${national}`,
+      dateOfBirth: draft.dateOfBirth,
       gender,
       password,
     });
@@ -350,39 +1105,7 @@ function Step1({ onNext }: { onNext: (data: AccountFormData) => void }) {
             Phone number
           </label>
           <div style={{ display: "flex", gap: "8px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "12px 14px",
-                background: "#ffffff",
-                border: "1.5px solid #D0D5DD",
-                borderRadius: PILL,
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ fontSize: "18px" }}>🇺🇸</span>
-              <span
-                style={{
-                  fontFamily: "Poppins,sans-serif",
-                  fontSize: "14px",
-                  color: "#344054",
-                }}
-              >
-                +1
-              </span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M6 9l6 6 6-6"
-                  stroke="#667085"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
+            <CountryCodeSelect value={countryIso} onChange={setCountryIso} />
             <input
               type="tel"
               placeholder="Type here"
@@ -429,83 +1152,7 @@ function Step1({ onNext }: { onNext: (data: AccountFormData) => void }) {
             >
               Date of birth
             </label>
-            <div style={{ position: "relative" }}>
-              <input
-                type="text"
-                placeholder="Select"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                style={{
-                  width: "100%",
-                  fontFamily: "Poppins,sans-serif",
-                  fontSize: "14px",
-                  color: "#101828",
-                  background: "#ffffff",
-                  border: "1.5px solid #D0D5DD",
-                  borderRadius: PILL,
-                  padding: "12px 40px 12px 18px",
-                  outline: "none",
-                  boxSizing: "border-box",
-                  transition: "border-color 0.15s",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = BRAND;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "#D0D5DD";
-                }}
-              />
-              <svg
-                style={{
-                  position: "absolute",
-                  right: "14px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  pointerEvents: "none",
-                }}
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <rect
-                  x="3"
-                  y="4"
-                  width="18"
-                  height="18"
-                  rx="2"
-                  stroke="#98A2B3"
-                  strokeWidth="2"
-                />
-                <line
-                  x1="16"
-                  y1="2"
-                  x2="16"
-                  y2="6"
-                  stroke="#98A2B3"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="8"
-                  y1="2"
-                  x2="8"
-                  y2="6"
-                  stroke="#98A2B3"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="3"
-                  y1="10"
-                  x2="21"
-                  y2="10"
-                  stroke="#98A2B3"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
+            <BirthDatePicker value={dob} onChange={setDob} />
           </div>
           <div style={{ flex: 1 }}>
             <label
@@ -1670,17 +2317,52 @@ function Step3({
 /* ══════════════════════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════════════════════ */
-export default function SignupPage() {
+function SignupFlow() {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const searchParams = useSearchParams();
+  const requestedStep = parseSignupStep(searchParams.get("step"));
+  const [draft, setDraft] = useState<Step1Draft>(EMPTY_DRAFT);
   const [account, setAccount] = useState<AccountFormData | null>(null);
+  const [ready, setReady] = useState(false);
   const [apiError, setApiError] = useState("");
   const [registerBuyer, { isLoading }] = useRegisterBuyerMutation();
+
+  useEffect(() => {
+    const saved = loadSignupDraft();
+    if (saved) {
+      setDraft(saved.draft);
+      setAccount(saved.account);
+    }
+    setReady(true);
+  }, []);
+
+  const step: SignupStep =
+    ready && requestedStep > 1 && !account ? 1 : requestedStep;
+
+  useEffect(() => {
+    if (!ready) return;
+    if (requestedStep > 1 && !account) {
+      router.replace("/auth/signup?step=1", { scroll: false });
+    }
+  }, [ready, requestedStep, account, router]);
+
+  const goToStep = (next: SignupStep, mode: "push" | "replace" = "push") => {
+    const href = `/auth/signup?step=${next}`;
+    if (mode === "replace") {
+      router.replace(href, { scroll: false });
+      return;
+    }
+    router.push(href, { scroll: false });
+  };
+
+  const goBack = () => {
+    goToStep(step === 3 ? 2 : 1, "replace");
+  };
 
   const completeSignup = async (location?: LocationFormData) => {
     if (!account) {
       setApiError("Please complete the sign up form first.");
-      setStep(1);
+      goToStep(1);
       return;
     }
 
@@ -1692,6 +2374,7 @@ export default function SignupPage() {
       }).unwrap();
 
       localStorage.setItem("whoCan_loggedIn", "true");
+      clearSignupDraft();
 
       await showSuccess("Success", result.message || "User registered successfully");
 
@@ -1735,6 +2418,10 @@ export default function SignupPage() {
           }}
         />
 
+        {step > 1 && (
+          <StepBackButton onClick={goBack} disabled={isLoading} />
+        )}
+
         {/* Step indicator — steps 2 and 3 */}
         {step > 1 && (
           <div
@@ -1771,21 +2458,32 @@ export default function SignupPage() {
             justifyContent: "center",
           }}
         >
-          {step === 1 && (
-            <Step1
-              onNext={(data) => {
-                setAccount(data);
-                setApiError("");
-                setStep(2);
+          {ready && (
+            <div
+              style={{
+                display: step === 1 ? "flex" : "none",
+                justifyContent: "center",
+                width: "100%",
               }}
-            />
+            >
+              <Step1
+                initial={draft}
+                onNext={(nextDraft, data) => {
+                  setDraft(nextDraft);
+                  setAccount(data);
+                  saveSignupDraft(nextDraft, data);
+                  setApiError("");
+                  goToStep(2);
+                }}
+              />
+            </div>
           )}
           {step === 2 && (
             <Step2
               onAllow={() => completeSignup()}
               onAddManual={() => {
                 setApiError("");
-                setStep(3);
+                goToStep(3);
               }}
               onSkip={() => completeSignup()}
               isLoading={isLoading}
@@ -1803,5 +2501,22 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: "100vh",
+            background: "#ffffff",
+          }}
+        />
+      }
+    >
+      <SignupFlow />
+    </Suspense>
   );
 }

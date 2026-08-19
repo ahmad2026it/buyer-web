@@ -20,6 +20,7 @@ import {
 import { useAppSelector } from '@/store/hooks';
 import { showSuccess } from '@/lib/swal';
 import { showToast } from '@/lib/toast';
+import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 
 const AddPaymentMethodModal = dynamic(
   () => import('@/components/AddPaymentMethodModal'),
@@ -207,7 +208,7 @@ function FavorMiniCard({
   price,
 }: {
   title: string;
-  image: string;
+  image: string | null;
   seller: string;
   sellerAvatar: string;
   badge: string;
@@ -215,7 +216,7 @@ function FavorMiniCard({
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 16, marginBottom: 24 }}>
-      <img src={image} alt={title} style={{ width: 80, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+      <FavorImage src={image} alt={title} style={{ width: 80, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{title}</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -337,7 +338,7 @@ export default function BookingPage() {
 
   const favorCard = {
     title: favor?.title || FAVOR.title,
-    image: favor?.images?.[0] || favor?.favorImage || FAVOR.image,
+    image: pickFavorImage(favor?.images, favor?.favorImage),
     seller: favor?.seller?.fullName || favor?.user?.fullName || FAVOR.seller,
     sellerAvatar: favor?.seller?.profileImage || favor?.user?.profileImage || FAVOR.sellerAvatar,
     badge: FAVOR.badge,

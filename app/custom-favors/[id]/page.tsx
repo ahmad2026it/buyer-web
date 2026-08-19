@@ -1,117 +1,161 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import AuthGateModal from '@/components/AuthGateModal';
+import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import {
+  useAcceptBuyerCustomFavorRequestMutation,
+  useGetBuyerCustomFavorByIdQuery,
+  useRejectBuyerCustomFavorRequestMutation,
+} from '@/app/buyer/store/buyerCustomFavorsAPI';
+import {
+  formatCustomFavorBudget,
+  formatCustomFavorCategory,
+  formatCustomFavorDueDate,
+  formatCustomFavorTime,
+  getCustomFavorLocationLabel,
+  type BuyerCustomFavor,
+  type BuyerCustomFavorRequest,
+} from '@/app/buyer/store/buyerCustomFavorsTypes';
+import {
+  useCreateStripeSetupIntentMutation,
+  useGetBuyerStripeCardsQuery,
+} from '@/app/buyer/store/buyerStripeAPI';
+import { useAppSelector } from '@/store/hooks';
+import { showSuccess } from '@/lib/swal';
+import { showToast } from '@/lib/toast';
+
+const AddPaymentMethodModal = dynamic(
+  () => import('@/components/AddPaymentMethodModal'),
+  { ssr: false },
+);
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const PILL  = '9999px';
 const FONT  = 'Poppins, sans-serif';
 
-/* ── Mock data ── */
-interface FavorData {
-  id: string;
+type FavorView = {
+  id: number;
   title: string;
   category: string;
-  budget: number;
+  budget: string;
   dueDate: string;
-  location: string;
   time: string;
+  location: string;
   description: string;
-  image: string;
+  image: string | null;
   photos: string[];
-  requests: number;
-}
-
-const FAVORS: Record<string, FavorData> = {
-  '1': {
-    id: '1',
-    title: 'I need a car wash at my doorsteps',
-    category: 'Cleaning',
-    budget: 200,
-    dueDate: 'Jan 2, 2025',
-    location: '12 Street, Apt. 4, Lower lake, Downtown, TX',
-    time: '9:00 AM',
-    description: 'Looking for a professional car wash service that can come to my home address. The car is a mid-size SUV. Please bring your own supplies including water if needed. Exterior wash, interior vacuum, and window cleaning required.',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=360&fit=crop&auto=format&q=80',
-    photos: [
-      'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=200&h=160&fit=crop&auto=format&q=75',
-      'https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=200&h=160&fit=crop&auto=format&q=75',
-    ],
-    requests: 2,
-  },
-  '2': {
-    id: '2',
-    title: 'I need a deep clean of my kitchen',
-    category: 'Cleaning',
-    budget: 200,
-    dueDate: 'Jan 2, 2025',
-    location: '45 Oak Avenue, Westside, TX',
-    time: '10:00 AM',
-    description: 'Need a thorough deep clean of a medium-sized kitchen. Includes oven, fridge exterior, countertops, cabinets, sink, and floors. Please bring your own cleaning supplies.',
-    image: 'https://images.unsplash.com/photo-1527515637462-cff94ebb8b4c?w=600&h=360&fit=crop&auto=format&q=80',
-    photos: [],
-    requests: 0,
-  },
-  '3': {
-    id: '3',
-    title: 'Need someone to assemble IKEA furniture',
-    category: 'Assembly',
-    budget: 120,
-    dueDate: 'Jan 10, 2025',
-    location: '12 Street, Apt. 4, Lower lake, Downtown, TX',
-    time: '11:00 AM',
-    description: 'Have 3 flat-pack IKEA pieces that need assembly: a KALLAX shelf, a MALM dresser, and a BILLY bookcase. All parts and instructions included.',
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&h=360&fit=crop&auto=format&q=80',
-    photos: [],
-    requests: 5,
-  },
 };
 
-interface RequestItem {
-  id: string;
+type RequestItem = {
+  id: number;
+  sellerId: number;
   name: string;
-  avatar: string;
-  badge: 'Pro' | 'Team';
-  distance: string;
+  avatar: string | null;
+  badge?: 'Pro' | 'Team';
+  distance?: string;
   shortText: string;
   fullText: string;
   price: number;
+  sellerAmount: number;
+  platformFee: number;
+  totalPrice: number;
+};
+
+const toMoney = (value: string | number | null | undefined): number => {
+  const amount = Number(value);
+  return Number.isFinite(amount) ? amount : 0;
+};
+
+const formatMoney = (value: number): string =>
+  value % 1 === 0 ? `$${value}` : `$${value.toFixed(2)}`;
+
+function toFavorView(favor: BuyerCustomFavor): FavorView {
+  const photos = (favor.images ?? []).filter(Boolean);
+  return {
+    id: favor.id,
+    title: favor.title,
+    category: formatCustomFavorCategory(favor.type),
+    budget: formatCustomFavorBudget(favor.budget),
+    dueDate: formatCustomFavorDueDate(favor.dateTime),
+    time: formatCustomFavorTime(favor.dateTime),
+    location: getCustomFavorLocationLabel(favor),
+    description: favor.description || 'No description provided.',
+    image: pickFavorImage(photos),
+    photos,
+  };
 }
 
-const MOCK_REQUESTS: RequestItem[] = [
-  {
-    id: 'r1',
-    name: 'Alfonzo Schuessler',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&auto=format&q=80',
-    badge: 'Pro',
-    distance: '8 miles away',
-    shortText: 'Professional deep cleaning of the selected area using standard cleaning supplies.\n\nDusting and wiping of all accessible surfaces, furniture, and fixtures....',
-    fullText: 'Professional deep cleaning of the selected area using standard cleaning supplies.\n\nDusting and wiping of all accessible surfaces, furniture, and fixtures. I bring all equipment and eco-friendly products. I have 6 years of experience and 300+ satisfied customers. Available on your requested date and happy to arrive early if needed.',
-    price: 185,
-  },
-  {
-    id: 'r2',
-    name: 'The Bright Services',
-    avatar: 'https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=100&h=100&fit=crop&auto=format&q=80',
-    badge: 'Team',
-    distance: '8 miles away',
-    shortText: 'Professional deep cleaning of the selected area using standard cleaning supplies.\n\nDusting and wiping of all accessible surfaces, furniture, and fixtures.',
-    fullText: 'Professional deep cleaning of the selected area using standard cleaning supplies.\n\nDusting and wiping of all accessible surfaces, furniture, and fixtures. Our team of 2 will complete the job in under 2 hours. We are fully insured and background-checked. We supply all cleaning materials and guarantee satisfaction or re-clean for free.',
-    price: 195,
-  },
-  {
-    id: 'r3',
-    name: 'Maria Santos',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&auto=format&q=80',
-    badge: 'Pro',
-    distance: '5 miles away',
-    shortText: 'I specialize in home and vehicle cleaning services with 4 years experience.\n\nAll supplies included, flexible schedule...',
-    fullText: 'I specialize in home and vehicle cleaning services with 4 years experience. All supplies included, flexible schedule. I can accommodate same-day requests if needed. My rates are competitive and I pride myself on attention to detail. Previous clients include several local businesses and residential properties.',
-    price: 175,
-  },
-];
+function toRequestItem(item: BuyerCustomFavorRequest): RequestItem {
+  const details = item.details?.trim() || 'No additional details provided.';
+  return {
+    id: item.id,
+    sellerId: item.seller?.id ?? item.sellerUserId,
+    name: item.seller?.fullName || 'Seller',
+    avatar: item.seller?.profileImage ?? null,
+    shortText: details,
+    fullText: details,
+    price: toMoney(item.sellerAmount || item.totalPrice),
+    sellerAmount: toMoney(item.sellerAmount),
+    platformFee: toMoney(item.platformFeeAmount),
+    totalPrice: toMoney(item.totalPrice),
+  };
+}
+
+function CardIcon({ brand }: { brand: string }) {
+  const key = brand.toLowerCase();
+  if (key === 'visa') {
+    return (
+      <div style={{ width: 38, height: 26, borderRadius: 5, background: '#1A56DB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <span style={{ fontFamily: FONT, fontWeight: 800, fontSize: 11, color: '#fff', letterSpacing: '0.03em' }}>VISA</span>
+      </div>
+    );
+  }
+  if (key === 'mastercard' || key === 'master') {
+    return (
+      <div style={{ width: 38, height: 26, borderRadius: 5, background: '#1A1A2E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#EB001B', position: 'absolute', left: 6 }} />
+        <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#F79E1B', position: 'absolute', left: 16, opacity: 0.9 }} />
+      </div>
+    );
+  }
+  if (key === 'amex' || key === 'american_express') {
+    return (
+      <div style={{ width: 38, height: 26, borderRadius: 5, background: '#006FCF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <span style={{ fontFamily: FONT, fontWeight: 800, fontSize: 8, color: '#fff', letterSpacing: '0.02em' }}>AMEX</span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ width: 38, height: 26, borderRadius: 5, background: '#344054', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span style={{ fontFamily: FONT, fontWeight: 800, fontSize: 8, color: '#fff' }}>{brand.slice(0, 4).toUpperCase()}</span>
+    </div>
+  );
+}
+
+function SellerAvatar({ src, name, size }: { src: string | null; name: string; size: number }) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
+      />
+    );
+  }
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: '#F2F4F7', border: '2px solid #fff', boxShadow: '0 1px 4px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <svg width={size * 0.42} height={size * 0.42} viewBox="0 0 24 24" fill="none">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#98A2B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="12" cy="7" r="4" stroke="#98A2B3" strokeWidth="2"/>
+      </svg>
+    </div>
+  );
+}
 
 function SectionCard({ title, children, style }: { title?: string; children: React.ReactNode; style?: React.CSSProperties }) {
   return (
@@ -143,15 +187,19 @@ function RequestCard({ req, onView }: { req: RequestItem; onView: (r: RequestIte
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <div style={{ position: 'relative', flexShrink: 0 }}>
-          <img src={req.avatar} alt={req.name} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }} />
+          <SellerAvatar src={req.avatar} name={req.name} size={44} />
           <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: '50%', background: '#22C55E', border: '1.5px solid #fff' }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#101828' }}>{req.name}</span>
-            <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: '#fff', background: req.badge === 'Pro' ? '#A54AFF' : '#344054', borderRadius: PILL, padding: '2px 8px' }}>{req.badge}</span>
+            {req.badge && (
+              <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: '#fff', background: req.badge === 'Pro' ? '#A54AFF' : '#344054', borderRadius: PILL, padding: '2px 8px' }}>{req.badge}</span>
+            )}
           </div>
-          <p style={{ fontFamily: FONT, fontSize: 12, color: '#DC6803', fontWeight: 500, marginTop: 2 }}>{req.distance}</p>
+          {req.distance && (
+            <p style={{ fontFamily: FONT, fontSize: 12, color: '#DC6803', fontWeight: 500, marginTop: 2 }}>{req.distance}</p>
+          )}
         </div>
       </div>
       {/* Text */}
@@ -163,7 +211,7 @@ function RequestCard({ req, onView }: { req: RequestItem; onView: (r: RequestIte
 }
 
 /* ── Request detail modal ── */
-function RequestModal({ req, onClose, onHire }: { req: RequestItem; onClose: () => void; onHire: (r: RequestItem) => void }) {
+function RequestModal({ req, onClose, onHire, onDecline }: { req: RequestItem; onClose: () => void; onHire: (r: RequestItem) => void; onDecline: (r: RequestItem) => void }) {
   return (
     <div
       onClick={onClose}
@@ -185,20 +233,23 @@ function RequestModal({ req, onClose, onHire }: { req: RequestItem; onClose: () 
           {/* Profile row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <img src={req.avatar} alt={req.name} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 1px 6px rgba(0,0,0,0.14)' }} />
+              <SellerAvatar src={req.avatar} name={req.name} size={56} />
               <div style={{ position: 'absolute', bottom: 2, right: 2, width: 12, height: 12, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                 <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: 16, color: '#101828' }}>{req.name}</span>
-                <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: '#fff', background: req.badge === 'Pro' ? '#A54AFF' : '#344054', borderRadius: PILL, padding: '2px 8px' }}>{req.badge}</span>
+                {req.badge && (
+                  <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: '#fff', background: req.badge === 'Pro' ? '#A54AFF' : '#344054', borderRadius: PILL, padding: '2px 8px' }}>{req.badge}</span>
+                )}
               </div>
-              <p style={{ fontFamily: FONT, fontSize: 13, color: '#DC6803', fontWeight: 500, marginTop: 3 }}>{req.distance}</p>
+              {req.distance && (
+                <p style={{ fontFamily: FONT, fontSize: 13, color: '#DC6803', fontWeight: 500, marginTop: 3 }}>{req.distance}</p>
+              )}
             </div>
           </div>
 
-          {/* View profile link */}
-          <a href={`/seller/s1`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: BRAND, textDecoration: 'none', marginBottom: 18 }}>
+          <a href={`/seller/${req.sellerId}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: BRAND, textDecoration: 'none', marginBottom: 18 }}>
             View profile
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H7M17 7v10" stroke={BRAND} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
@@ -214,13 +265,13 @@ function RequestModal({ req, onClose, onHire }: { req: RequestItem; onClose: () 
           {/* Price offered */}
           <div style={{ background: '#F9F5FF', border: '1px solid rgba(165,74,255,0.15)', borderRadius: 14, padding: '14px 18px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontFamily: FONT, fontSize: 14, color: '#667085', fontWeight: 500 }}>Offered price</span>
-            <span style={{ fontFamily: FONT, fontSize: 22, fontWeight: 800, color: BRAND }}>${req.price}</span>
+            <span style={{ fontFamily: FONT, fontSize: 22, fontWeight: 800, color: BRAND }}>{formatMoney(req.totalPrice || req.price)}</span>
           </div>
 
           {/* CTAs */}
           <div style={{ display: 'flex', gap: 12 }}>
             <button
-              onClick={onClose}
+              onClick={() => onDecline(req)}
               style={{ flex: 1, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#D92D20', background: '#FEF3F2', border: 'none', borderRadius: PILL, padding: 14, cursor: 'pointer', transition: 'opacity 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
@@ -242,42 +293,264 @@ function RequestModal({ req, onClose, onHire }: { req: RequestItem; onClose: () 
   );
 }
 
-/* ── Payment modal ── */
-function PaymentModal({ req, favor, onClose, onConfirm }: { req: RequestItem; favor: FavorData; onClose: () => void; onConfirm: () => void }) {
-  const serviceFee = Math.round(req.price * 0.05);
-  const total      = req.price + serviceFee;
+const DECLINE_REASONS = ['Price too high', 'Seller not a good fit', 'Changed my mind', 'Other'];
+
+function DeclineModal({
+  req,
+  favorId,
+  onClose,
+  onSuccess,
+}: {
+  req: RequestItem;
+  favorId: number;
+  onClose: () => void;
+  onSuccess: (sellerName: string) => void;
+}) {
+  const [reason, setReason] = useState('');
+  const [note, setNote] = useState('');
+  const [rejectRequest, { isLoading: isRejecting }] = useRejectBuyerCustomFavorRequestMutation();
+  const cancelReason = (reason === 'Other' ? note : reason).trim();
+  const canSubmit = Boolean(cancelReason) && !isRejecting;
+
+  const handleSubmit = async () => {
+    if (!canSubmit) {
+      showToast('Please tell us why you are declining this request.', 'error');
+      return;
+    }
+
+    try {
+      const response = await rejectRequest({
+        booking_id: req.id,
+        cancel_reason: cancelReason,
+        favorId,
+      }).unwrap();
+
+      if (response.success === false) {
+        showToast(response.message || 'Could not decline this request. Please try again.', 'error');
+        return;
+      }
+
+      onSuccess(req.name);
+    } catch {
+      // axios interceptor already toasts API errors
+    }
+  };
 
   return (
     <div
-      onClick={onClose}
+      onClick={() => { if (!isRejecting) onClose(); }}
+      style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(16,24,40,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 480, boxShadow: '0 24px 64px rgba(16,24,40,0.18)' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #F2F4F7' }}>
+          <h2 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 20, color: '#101828' }}>Decline request</h2>
+          <button
+            onClick={onClose}
+            disabled={isRejecting}
+            style={{ width: 32, height: 32, borderRadius: '50%', background: '#F2F4F7', border: 'none', cursor: isRejecting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isRejecting ? 0.6 : 1 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#344054" strokeWidth="2.5" strokeLinecap="round"/></svg>
+          </button>
+        </div>
+
+        <div style={{ padding: 24 }}>
+          <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085', lineHeight: 1.65, marginBottom: 18 }}>
+            Tell {req.name} why you are declining this offer. This reason will be sent with the rejection.
+          </p>
+
+          <p style={{ fontFamily: FONT, fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 10 }}>Select reason</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+            {DECLINE_REASONS.map((item) => {
+              const selected = reason === item;
+              return (
+                <button
+                  key={item}
+                  type="button"
+                  disabled={isRejecting}
+                  onClick={() => setReason(item)}
+                  style={{ fontFamily: FONT, fontWeight: 600, fontSize: 13, color: selected ? '#fff' : '#344054', background: selected ? BRAND : '#F9FAFB', border: `1.5px solid ${selected ? BRAND : '#EAECF0'}`, borderRadius: PILL, padding: '8px 14px', cursor: isRejecting ? 'not-allowed' : 'pointer' }}
+                >
+                  {item}
+                </button>
+              );
+            })}
+          </div>
+
+          {reason === 'Other' && (
+            <>
+              <p style={{ fontFamily: FONT, fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 8 }}>Type your reason</p>
+              <textarea
+                value={note}
+                disabled={isRejecting}
+                onChange={e => setNote(e.target.value)}
+                placeholder="e.g. Price too high"
+                style={{ width: '100%', minHeight: 90, fontFamily: FONT, fontSize: 14, color: '#101828', border: '1px solid #D0D5DD', borderRadius: 12, padding: '12px 14px', outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 20, display: 'block' }}
+                onFocus={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = BRAND; el.style.boxShadow = '0 0 0 4px rgba(165,74,255,0.12)'; }}
+                onBlur={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#D0D5DD'; el.style.boxShadow = 'none'; }}
+              />
+            </>
+          )}
+
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isRejecting}
+              style={{ flex: 1, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#344054', background: '#fff', border: '1.5px solid #D0D5DD', borderRadius: PILL, padding: 14, cursor: isRejecting ? 'not-allowed' : 'pointer', opacity: isRejecting ? 0.6 : 1 }}
+            >
+              Keep request
+            </button>
+            <button
+              type="button"
+              onClick={() => { void handleSubmit(); }}
+              disabled={!canSubmit}
+              style={{ flex: 1, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: '#D92D20', border: 'none', borderRadius: PILL, padding: 14, cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.5 }}
+            >
+              {isRejecting ? 'Declining…' : 'Decline'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Payment modal ── */
+function PaymentModal({
+  req,
+  favor,
+  favorId,
+  onClose,
+  onSuccess,
+}: {
+  req: RequestItem;
+  favor: FavorView;
+  favorId: number;
+  onClose: () => void;
+  onSuccess: (sellerName: string) => void;
+}) {
+  const sellerOffer = req.sellerAmount || req.price;
+  const serviceFee = req.platformFee;
+  const total = req.totalPrice || sellerOffer + serviceFee;
+
+  const token = useAppSelector((state) => state.auth.token);
+  const user = useAppSelector((state) => state.auth.user);
+  const holderName = user?.fullName || 'Cardholder';
+
+  const [cardId, setCardId] = useState('');
+  const [setupSession, setSetupSession] = useState<{ clientSecret: string; publishableKey?: string } | null>(null);
+
+  const [createSetupIntent, { isLoading: isCreatingIntent }] = useCreateStripeSetupIntentMutation();
+  const [acceptRequest, { isLoading: isHiring }] = useAcceptBuyerCustomFavorRequestMutation();
+  const {
+    data: cardsResponse,
+    isLoading: isLoadingCards,
+    isError: isCardsError,
+    refetch: refetchCards,
+  } = useGetBuyerStripeCardsQuery(undefined, { skip: !token });
+
+  const cards = cardsResponse?.data?.cards ?? [];
+
+  useEffect(() => {
+    const list = cardsResponse?.data?.cards ?? [];
+    if (!list.length) {
+      setCardId('');
+      return;
+    }
+    setCardId((current) => {
+      if (current && list.some((card) => card.id === current)) return current;
+      return (list.find((card) => card.is_default) ?? list[0]).id;
+    });
+  }, [cardsResponse]);
+
+  const handleAddPaymentMethod = async () => {
+    if (isHiring) return;
+    try {
+      const response = await createSetupIntent().unwrap();
+      const clientSecret = response.data?.client_secret;
+      if (!response.success || !clientSecret) {
+        showToast(response.message || 'Could not start card setup. Please try again.', 'error');
+        return;
+      }
+      setSetupSession({
+        clientSecret,
+        publishableKey: response.data.publishableKey || response.data.publishable_key,
+      });
+    } catch {
+      // axios interceptor already toasts API errors
+    }
+  };
+
+  const handleCardSaved = async () => {
+    setSetupSession(null);
+    await refetchCards();
+    await showSuccess('Card added', 'Your payment method has been saved.');
+  };
+
+  const handleConfirm = async () => {
+    if (isHiring) return;
+    if (!cardId) {
+      showToast('Please select a payment method.', 'error');
+      return;
+    }
+
+    try {
+      const response = await acceptRequest({
+        booking_id: req.id,
+        payment_method_id: cardId,
+        favorId,
+      }).unwrap();
+
+      if (response.success === false) {
+        showToast(response.message || 'Could not hire this seller. Please try again.', 'error');
+        return;
+      }
+
+      onSuccess(req.name);
+    } catch {
+      // axios interceptor already toasts API errors
+    }
+  };
+
+  return (
+    <div
+      onClick={() => { if (!isHiring) onClose(); }}
       style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(16,24,40,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 500, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(16,24,40,0.18)' }}
       >
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #F2F4F7' }}>
           <h2 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 20, color: '#101828' }}>Confirm & Pay</h2>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: '#F2F4F7', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button
+            onClick={onClose}
+            disabled={isHiring}
+            style={{ width: 32, height: 32, borderRadius: '50%', background: '#F2F4F7', border: 'none', cursor: isHiring ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isHiring ? 0.6 : 1 }}
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#344054" strokeWidth="2.5" strokeLinecap="round"/></svg>
           </button>
         </div>
 
         <div style={{ padding: 24 }}>
-          {/* Seller summary */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: '14px 16px', background: '#F9FAFB', borderRadius: 14, border: '1px solid #EAECF0' }}>
-            <img src={req.avatar} alt={req.name} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', flexShrink: 0 }} />
+            <SellerAvatar src={req.avatar} name={req.name} size={44} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#101828' }}>{req.name}</span>
-                <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: '#fff', background: req.badge === 'Pro' ? '#A54AFF' : '#344054', borderRadius: PILL, padding: '2px 8px' }}>{req.badge}</span>
+                {req.badge && (
+                  <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: '#fff', background: req.badge === 'Pro' ? '#A54AFF' : '#344054', borderRadius: PILL, padding: '2px 8px' }}>{req.badge}</span>
+                )}
               </div>
-              <p style={{ fontFamily: FONT, fontSize: 12, color: '#DC6803', fontWeight: 500, marginTop: 2 }}>{req.distance}</p>
+              {req.distance && (
+                <p style={{ fontFamily: FONT, fontSize: 12, color: '#DC6803', fontWeight: 500, marginTop: 2 }}>{req.distance}</p>
+              )}
             </div>
           </div>
 
-          {/* Favor summary */}
           <div style={{ background: '#FAFAFA', border: '1px solid #EAECF0', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid #F2F4F7' }}>
               <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 13, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>Favor details</p>
@@ -294,12 +567,11 @@ function PaymentModal({ req, favor, onClose, onConfirm }: { req: RequestItem; fa
               ))}
             </div>
 
-            {/* Price breakdown */}
             <div style={{ padding: '14px 16px' }}>
               <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 13, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>Price summary</p>
               {[
-                { label: "Seller's offer",   value: `$${req.price}` },
-                { label: 'Service fee (5%)', value: `$${serviceFee}` },
+                { label: "Seller's offer",   value: formatMoney(sellerOffer) },
+                { label: 'Service fee', value: formatMoney(serviceFee) },
               ].map(r => (
                 <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
                   <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>{r.label}</span>
@@ -309,60 +581,106 @@ function PaymentModal({ req, favor, onClose, onConfirm }: { req: RequestItem; fa
               <div style={{ height: 1, background: '#EAECF0', margin: '12px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                 <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 700, color: '#101828' }}>Total</span>
-                <span style={{ fontFamily: FONT, fontSize: 20, fontWeight: 800, color: BRAND }}>${total}</span>
+                <span style={{ fontFamily: FONT, fontSize: 20, fontWeight: 800, color: BRAND }}>{formatMoney(total)}</span>
               </div>
             </div>
           </div>
 
-          {/* Payment method */}
           <div style={{ border: '1.5px solid #EAECF0', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
             <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 13, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>Payment method</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 24, background: 'linear-gradient(135deg,#1A1F71,#0066B3)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontFamily: FONT, fontSize: 8, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>VISA</span>
-              </div>
-              <span style={{ fontFamily: FONT, fontSize: 14, color: '#101828', fontWeight: 500 }}>•••• •••• •••• 4242</span>
-              <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085', marginLeft: 'auto' }}>Change</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+              {isLoadingCards ? (
+                [0, 1].map((i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', background: '#F9FAFB', border: '1.5px solid #EAECF0', borderRadius: 12 }}>
+                    <div style={{ width: 38, height: 26, borderRadius: 5, background: '#EAECF0', flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ width: 120, height: 12, borderRadius: 4, background: '#EAECF0', marginBottom: 8 }} />
+                      <div style={{ width: 90, height: 10, borderRadius: 4, background: '#EAECF0' }} />
+                    </div>
+                  </div>
+                ))
+              ) : isCardsError ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                  <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', margin: 0 }}>
+                    Could not load your payment methods.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { void refetchCards(); }}
+                    style={{ fontFamily: FONT, fontWeight: 600, fontSize: 13, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
+                    Try again
+                  </button>
+                </div>
+              ) : cards.length === 0 ? (
+                <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', margin: 0 }}>
+                  No cards saved yet. Add a payment method to continue.
+                </p>
+              ) : (
+                cards.map((card) => {
+                  const selected = cardId === card.id;
+                  return (
+                    <div
+                      key={card.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => { if (!isHiring) setCardId(card.id); }}
+                      onKeyDown={(e) => { if (!isHiring && (e.key === 'Enter' || e.key === ' ')) setCardId(card.id); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', background: selected ? '#F9F5FF' : '#F9FAFB', border: `1.5px solid ${selected ? BRAND : '#EAECF0'}`, borderRadius: 12, cursor: isHiring ? 'not-allowed' : 'pointer', transition: 'all 0.15s' }}
+                    >
+                      <CardIcon brand={card.brand} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontFamily: FONT, fontWeight: 600, fontSize: 13, color: '#101828', marginBottom: 2 }}>
+                          {holderName}
+                        </p>
+                        <p style={{ fontFamily: FONT, fontSize: 12, color: '#667085', letterSpacing: '0.05em' }}>
+                          {'•'.repeat(12)}{card.last4}
+                        </p>
+                      </div>
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${selected ? BRAND : '#D0D5DD'}`, background: selected ? BRAND : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                        {selected && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
+            <button
+              type="button"
+              disabled={isCreatingIntent || isHiring}
+              onClick={() => { void handleAddPaymentMethod(); }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontWeight: 600, fontSize: 13, color: BRAND, background: 'none', border: 'none', cursor: isCreatingIntent || isHiring ? 'not-allowed' : 'pointer', padding: '4px 0', opacity: isCreatingIntent || isHiring ? 0.6 : 1 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={BRAND} strokeWidth="2" strokeLinecap="round"/></svg>
+              {isCreatingIntent ? 'Starting…' : 'Add payment method'}
+            </button>
           </div>
 
-          {/* Confirm button */}
           <button
-            onClick={onConfirm}
-            style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 16, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: 16, cursor: 'pointer', boxShadow: '0 4px 16px rgba(165,74,255,0.3)', transition: 'opacity 0.15s', marginBottom: 10 }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+            onClick={() => { void handleConfirm(); }}
+            disabled={isHiring || isLoadingCards}
+            style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 16, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: 16, cursor: isHiring || isLoadingCards ? 'not-allowed' : 'pointer', boxShadow: '0 4px 16px rgba(165,74,255,0.3)', transition: 'opacity 0.15s', marginBottom: 10, opacity: isHiring || isLoadingCards ? 0.75 : 1 }}
+            onMouseEnter={e => { if (!isHiring && !isLoadingCards) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = isHiring || isLoadingCards ? '0.75' : '1'; }}
           >
-            Confirm &amp; Pay ${total}
+            {isHiring ? 'Hiring…' : `Confirm & Pay ${formatMoney(total)}`}
           </button>
           <p style={{ fontFamily: FONT, fontSize: 12, color: '#98A2B3', textAlign: 'center', lineHeight: 1.5 }}>
             By confirming you agree to our Terms of Service. Payment is held in escrow until the favor is completed.
           </p>
         </div>
       </div>
-    </div>
-  );
-}
 
-/* ── Success overlay ── */
-function SuccessModal({ sellerName, onClose }: { sellerName: string; onClose: () => void }) {
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(16,24,40,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ background: '#fff', borderRadius: 24, padding: '48px 40px', maxWidth: 440, width: '100%', textAlign: 'center', boxShadow: '0 24px 64px rgba(16,24,40,0.18)' }}>
-        <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#ECFDF3', border: '2px solid #A9EFC5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#079455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </div>
-        <h2 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 22, color: '#101828', marginBottom: 10 }}>Booking Confirmed!</h2>
-        <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085', lineHeight: 1.7, marginBottom: 28 }}>
-          <strong style={{ color: '#344054' }}>{sellerName}</strong> has been hired for your custom favor. You will receive a confirmation shortly.
-        </p>
-        <button
-          onClick={onClose}
-          style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: 14, cursor: 'pointer', boxShadow: '0 4px 14px rgba(165,74,255,0.28)' }}
-        >
-          Go to My Favors
-        </button>
-      </div>
+      {setupSession && (
+        <AddPaymentMethodModal
+          clientSecret={setupSession.clientSecret}
+          publishableKey={setupSession.publishableKey}
+          billingName={user?.fullName || undefined}
+          billingEmail={user?.email || undefined}
+          onClose={() => setSetupSession(null)}
+          onSuccess={handleCardSaved}
+        />
+      )}
     </div>
   );
 }
@@ -371,31 +689,61 @@ function SuccessModal({ sellerName, onClose }: { sellerName: string; onClose: ()
 export default function CustomFavorDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id     = Array.isArray(params.id) ? params.id[0] : (params.id ?? '1');
-  const favor  = FAVORS[id] ?? FAVORS['1'];
+  const rawId = Array.isArray(params.id) ? params.id[0] : (params.id ?? '');
+  const favorId = Number(rawId);
+  const skipId = !Number.isFinite(favorId) || favorId <= 0;
+  const token = useAppSelector((state) => state.auth.token);
+  const skip = skipId || !token;
 
-  const requests = MOCK_REQUESTS.slice(0, Math.min(favor.requests, MOCK_REQUESTS.length));
+  const { data, isLoading, isError, refetch } = useGetBuyerCustomFavorByIdQuery(favorId, { skip });
+  const apiFavor = data?.data?.favor;
+  const favor = useMemo(() => (apiFavor ? toFavorView(apiFavor) : null), [apiFavor]);
+  const requests = useMemo(
+    () =>
+      (data?.data?.requests ?? [])
+        .filter((item) => !['declined', 'rejected', 'cancelled', 'canceled'].includes((item.status ?? '').toLowerCase()))
+        .map(toRequestItem),
+    [data],
+  );
 
-  const [viewReq,   setViewReq]   = useState<RequestItem | null>(null);
-  const [hireReq,   setHireReq]   = useState<RequestItem | null>(null);
-  const [success,   setSuccess]   = useState(false);
-  const [dotsOpen,  setDotsOpen]  = useState(false);
+  const [viewReq,    setViewReq]    = useState<RequestItem | null>(null);
+  const [hireReq,    setHireReq]    = useState<RequestItem | null>(null);
+  const [declineReq, setDeclineReq] = useState<RequestItem | null>(null);
+  const [dotsOpen,   setDotsOpen]   = useState(false);
   const [closed,    setClosed]    = useState(false);
   const [closeConf, setCloseConf] = useState(false);
+  const [authOpen,  setAuthOpen]  = useState(false);
 
   const handleHire = (req: RequestItem) => {
     setViewReq(null);
     setHireReq(req);
   };
 
-  const handleConfirmPay = () => {
+  const handleDecline = (req: RequestItem) => {
+    setViewReq(null);
+    setDeclineReq(req);
+  };
+
+  const handleHireSuccess = (sellerName: string) => {
     setHireReq(null);
-    setSuccess(true);
+    showToast(`${sellerName} has been hired for your custom favor.`, 'success');
+    router.push('/custom-favors');
+  };
+
+  const handleDeclineSuccess = (sellerName: string) => {
+    setDeclineReq(null);
+    showToast(`Request from ${sellerName} was declined.`, 'success');
   };
 
   return (
     <>
       <Navbar />
+      {authOpen && (
+        <AuthGateModal
+          onClose={() => setAuthOpen(false)}
+          message="Sign in to view this custom favor."
+        />
+      )}
       <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px 80px' }}>
 
@@ -469,23 +817,48 @@ export default function CustomFavorDetailPage() {
           )}
 
           {/* Two-column grid: 2fr | 1fr */}
+          {skip && !token ? (
+            <div style={{ textAlign: 'center', padding: '80px 24px', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20 }}>
+              <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>Sign in to view this custom favor.</p>
+              <button
+                onClick={() => setAuthOpen(true)}
+                style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 24px', cursor: 'pointer' }}
+              >
+                Sign in
+              </button>
+            </div>
+          ) : isLoading ? (
+            <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: 24 }}>
+              <div style={{ height: 220, borderRadius: 16, background: '#F2F4F7', marginBottom: 20 }} />
+              <div style={{ width: '60%', height: 22, borderRadius: 6, background: '#F2F4F7', marginBottom: 12 }} />
+              <div style={{ width: '40%', height: 14, borderRadius: 6, background: '#F2F4F7' }} />
+            </div>
+          ) : isError || !favor ? (
+            <div style={{ textAlign: 'center', padding: '80px 24px', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20 }}>
+              <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>Couldn’t load this custom favor. Please try again.</p>
+              <button
+                onClick={() => { void refetch(); }}
+                style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 24px', cursor: 'pointer' }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 28, alignItems: 'flex-start' }}>
 
             {/* ── Left: favor info ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
               {/* Hero image */}
-              {favor.image && (
-                <div style={{ borderRadius: 20, overflow: 'hidden', border: '1.5px solid #EAECF0', height: 260 }}>
-                  <img src={favor.image} alt={favor.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-              )}
+              <div style={{ borderRadius: 20, overflow: 'hidden', border: '1.5px solid #EAECF0', height: 260 }}>
+                <FavorImage src={favor.image} alt={favor.title} />
+              </div>
 
               {/* Title + budget */}
               <SectionCard>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
                   <h1 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 22, color: '#101828', lineHeight: 1.3, flex: 1, minWidth: 0 }}>{favor.title}</h1>
-                  <span style={{ fontFamily: FONT, fontWeight: 800, fontSize: 26, color: BRAND, flexShrink: 0 }}>${favor.budget}</span>
+                  <span style={{ fontFamily: FONT, fontWeight: 800, fontSize: 26, color: BRAND, flexShrink: 0 }}>{favor.budget}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: BRAND, background: '#F4EBFF', borderRadius: PILL, padding: '4px 12px' }}>{favor.category}</span>
@@ -501,7 +874,7 @@ export default function CustomFavorDetailPage() {
                 <InfoRow label="Category" value={favor.category} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                   <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Budget</span>
-                  <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 800, color: BRAND }}>${favor.budget}</span>
+                  <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 800, color: BRAND }}>{favor.budget}</span>
                 </div>
               </SectionCard>
 
@@ -511,12 +884,12 @@ export default function CustomFavorDetailPage() {
               </SectionCard>
 
               {/* Photos */}
-              {favor.photos.length > 0 && (
+              {favor.photos.length > 1 && (
                 <SectionCard title="Attached photos">
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    {favor.photos.map((src, i) => (
-                      <div key={i} style={{ width: 160, height: 120, borderRadius: 12, overflow: 'hidden', border: '1px solid #EAECF0', flexShrink: 0 }}>
-                        <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {favor.photos.slice(1).map((src, i) => (
+                      <div key={`${src}-${i}`} style={{ width: 160, height: 120, borderRadius: 12, overflow: 'hidden', border: '1px solid #EAECF0', flexShrink: 0 }}>
+                        <FavorImage src={src} alt="" />
                       </div>
                     ))}
                   </div>
@@ -572,6 +945,7 @@ export default function CustomFavorDetailPage() {
               </div>
             </div>
           </div>
+          )}
         </div>
       </main>
       <Footer />
@@ -582,24 +956,27 @@ export default function CustomFavorDetailPage() {
           req={viewReq}
           onClose={() => setViewReq(null)}
           onHire={handleHire}
+          onDecline={handleDecline}
+        />
+      )}
+
+      {declineReq && (
+        <DeclineModal
+          req={declineReq}
+          favorId={favorId}
+          onClose={() => setDeclineReq(null)}
+          onSuccess={handleDeclineSuccess}
         />
       )}
 
       {/* Payment modal */}
-      {hireReq && (
+      {hireReq && favor && (
         <PaymentModal
           req={hireReq}
           favor={favor}
+          favorId={favorId}
           onClose={() => setHireReq(null)}
-          onConfirm={handleConfirmPay}
-        />
-      )}
-
-      {/* Success */}
-      {success && (
-        <SuccessModal
-          sellerName={hireReq?.name ?? ''}
-          onClose={() => { setSuccess(false); router.push('/custom-favors'); }}
+          onSuccess={handleHireSuccess}
         />
       )}
     </>

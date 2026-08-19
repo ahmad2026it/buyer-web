@@ -6,6 +6,8 @@ export const injectStore = (store: AppStore): void => {
   appStore = store;
 };
 
+export const getAppStore = (): AppStore | undefined => appStore;
+
 const readPersistedToken = (): string | null => {
   if (typeof window === 'undefined') return null;
 

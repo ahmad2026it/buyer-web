@@ -15,8 +15,10 @@ import { buyerBillingAPI } from '@/app/buyer/store/buyerBillingAPI';
 import { buyerBookingsAPI } from '@/app/buyer/store/buyerBookingsAPI';
 import { buyerConversationsAPI } from '@/app/buyer/store/buyerConversationsAPI';
 import { buyerCategoriesAPI } from '@/app/buyer/store/buyerCategoriesAPI';
+import { buyerCustomFavorsAPI } from '@/app/buyer/store/buyerCustomFavorsAPI';
 import { buyerFavorsAPI } from '@/app/buyer/store/buyerFavorsAPI';
 import { buyerLocationsAPI } from '@/app/buyer/store/buyerLocationsAPI';
+import { buyerSellersAPI } from '@/app/buyer/store/buyerSellersAPI';
 import { buyerNotificationsAPI } from '@/app/buyer/store/buyerNotificationsAPI';
 import { buyerStripeAPI } from '@/app/buyer/store/buyerStripeAPI';
 
@@ -51,8 +53,10 @@ const rootReducer = combineReducers({
   [buyerBookingsAPI.reducerPath]: buyerBookingsAPI.reducer,
   [buyerConversationsAPI.reducerPath]: buyerConversationsAPI.reducer,
   [buyerCategoriesAPI.reducerPath]: buyerCategoriesAPI.reducer,
+  [buyerCustomFavorsAPI.reducerPath]: buyerCustomFavorsAPI.reducer,
   [buyerFavorsAPI.reducerPath]: buyerFavorsAPI.reducer,
   [buyerLocationsAPI.reducerPath]: buyerLocationsAPI.reducer,
+  [buyerSellersAPI.reducerPath]: buyerSellersAPI.reducer,
   [buyerNotificationsAPI.reducerPath]: buyerNotificationsAPI.reducer,
   [buyerStripeAPI.reducerPath]: buyerStripeAPI.reducer,
 });
@@ -73,8 +77,10 @@ export const makeStore = () => {
         buyerBookingsAPI.middleware,
         buyerConversationsAPI.middleware,
         buyerCategoriesAPI.middleware,
+        buyerCustomFavorsAPI.middleware,
         buyerFavorsAPI.middleware,
         buyerLocationsAPI.middleware,
+        buyerSellersAPI.middleware,
         buyerNotificationsAPI.middleware,
         buyerStripeAPI.middleware,
       ),

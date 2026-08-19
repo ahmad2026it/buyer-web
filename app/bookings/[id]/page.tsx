@@ -25,6 +25,7 @@ import type {
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { isAwaitingCompleteBookingStatus, isFinishedBookingStatus } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
+import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const BRAND = '#A54AFF';
@@ -39,7 +40,7 @@ interface Addon        { label: string; price: number; }
 
 interface DetailedBooking {
   id: string; status: Status;
-  title: string; category: string; image: string; price: number;
+  title: string; category: string; image: string | null; price: number;
   date: string; dateIso: string; time: string; location: string; address: string;
   isTeam: boolean;
   sellerName: string; sellerAvatar: string; sellerBadge: 'Pro' | 'Team'; sellerDistance?: number;
@@ -57,7 +58,6 @@ interface DetailedBooking {
   boostDiscount: number;
 }
 
-const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=360&fit=crop&auto=format&q=75';
 const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80';
 
 function normalizeStatus(status: string): string {
@@ -130,7 +130,7 @@ function toDetailedBooking(item: BuyerBooking, review: BuyerBookingReview): Deta
     status: mappedStatus === 'Complete' && hasReview ? 'Completed' : mappedStatus,
     title: item.favor?.title || 'Booking',
     category: displayCategory(item.favor?.type || ''),
-    image: item.favor?.images?.[0] || item.favor?.favorImage || PLACEHOLDER_IMG,
+    image: pickFavorImage(item.favor?.images, item.favor?.favorImage, item.images),
     price: Number(item.totalPrice) || 0,
     date: formatFavorDate(item.favorDate),
     dateIso: item.favorDate,
@@ -1242,7 +1242,6 @@ export default function BookingDetailPage() {
     return toDetailedBooking(item, data?.data?.review ?? null);
   }, [data]);
 
-  const [started, setStarted]         = useState(false);
   const [authOpen, setAuthOpen]       = useState(false);
   const [showEdit,        setShowEdit]        = useState(false);
   const [showPreCancel,   setShowPreCancel]   = useState(false);
@@ -1253,9 +1252,7 @@ export default function BookingDetailPage() {
   const [showMessage,     setShowMessage]     = useState<{ name: string; conversationId: number; canSend: boolean } | null>(null);
   const [showWithdraw,    setShowWithdraw]    = useState(false);
 
-  const booking = started && mapped && mapped.status !== 'InProgress'
-    ? { ...mapped, status: 'InProgress' as const }
-    : mapped;
+  const booking = mapped;
 
   if (!token) return (
     <>
@@ -1338,7 +1335,7 @@ export default function BookingDetailPage() {
     </>
   );
 
-  const isLive    = booking.status === 'InProgress' || started;
+  const isLive    = booking.status === 'InProgress';
   const isAwaitingComplete = booking.status === 'Complete';
   const days      = getDaysUntil(booking.dateIso || booking.date);
   const canWithdraw = booking.status === 'Pending';
@@ -1558,7 +1555,7 @@ export default function BookingDetailPage() {
                 </div>
               )}
 
-              {/* ── Upcoming: days pill / Start Favor + three-dot ── */}
+              {/* ── Upcoming: days pill + three-dot ── */}
               {!isLive && booking.status==='Upcoming' && (
                 <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
                   {days > 0 && (
@@ -1567,14 +1564,6 @@ export default function BookingDetailPage() {
                         Favor will start in {days} {days===1?'day':'days'}
                       </span>
                     </div>
-                  )}
-                  {days === 0 && (
-                    <button onClick={() => setStarted(true)}
-                      style={{ display:'inline-flex', alignItems:'center', gap:7, fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:'#fff', background:GRAD, border:'none', borderRadius:PILL, padding:'11px 22px', cursor:'pointer', whiteSpace:'nowrap', boxShadow:'0 4px 14px rgba(165,74,255,0.35)', transition:'opacity 0.15s' }}
-                      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity='0.9';}}
-                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity='1';}}>
-                      Start Favor
-                    </button>
                   )}
                   <UpcomingActionsMenu onEdit={() => setShowEdit(true)} onCancel={() => setShowPreCancel(true)} />
                 </div>
@@ -1592,7 +1581,7 @@ export default function BookingDetailPage() {
               <div style={{ position:'sticky', top:104, display:'flex', flexDirection:'column', gap:20 }}>
                 <Section title="Favor">
                   <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-                    <img src={booking.image} alt={booking.title} style={{ width:100, height:72, borderRadius:12, objectFit:'cover', flexShrink:0 }}/>
+                    <FavorImage src={booking.image} alt={booking.title} style={{ width:100, height:72, borderRadius:12, objectFit:'cover', flexShrink:0 }}/>
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:16, color:'#101828', marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{booking.title}</p>
                       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -1755,7 +1744,7 @@ export default function BookingDetailPage() {
               <div style={{ position:'sticky', top:104, display:'flex', flexDirection:'column', gap:20 }}>
                 <Section title="Favor">
                   <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-                    <img src={booking.image} alt={booking.title} style={{ width:100, height:72, borderRadius:12, objectFit:'cover', flexShrink:0 }}/>
+                    <FavorImage src={booking.image} alt={booking.title} style={{ width:100, height:72, borderRadius:12, objectFit:'cover', flexShrink:0 }}/>
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:16, color:'#101828', marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{booking.title}</p>
                       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -1912,7 +1901,7 @@ export default function BookingDetailPage() {
               <div style={{ position:'sticky', top:104, display:'flex', flexDirection:'column', gap:20 }}>
                 <Section title="Favor">
                   <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-                    <img src={booking.image} alt={booking.title} style={{ width:100, height:72, borderRadius:12, objectFit:'cover', flexShrink:0 }}/>
+                    <FavorImage src={booking.image} alt={booking.title} style={{ width:100, height:72, borderRadius:12, objectFit:'cover', flexShrink:0 }}/>
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:16, color:'#101828', marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{booking.title}</p>
                       <div style={{ display:'flex', alignItems:'center', gap:8 }}>

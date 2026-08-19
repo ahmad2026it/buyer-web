@@ -6,16 +6,12 @@ import {
   BUYER_CONVERSATION_MESSAGES_LIMIT,
   BUYER_CONVERSATIONS_LIST_PARAMS,
   buyerConversationsAPI,
-  newClientMsgId,
   useGetBuyerConversationMessagesQuery,
   useGetBuyerConversationsQuery,
   useMarkBuyerConversationReadMutation,
-  useSendBuyerConversationMessageMutation,
 } from '@/app/buyer/store/buyerConversationsAPI';
-import type {
-  BuyerConversation,
-  BuyerConversationMessage,
-} from '@/app/buyer/store/buyerConversationsTypes';
+import type { BuyerConversation } from '@/app/buyer/store/buyerConversationsTypes';
+import { useConversationRealtime } from '@/lib/useConversationRealtime';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
 const BRAND = '#A54AFF';
@@ -155,7 +151,6 @@ function ChatPageInner() {
     pollingInterval: token ? 20000 : 0,
   });
 
-  const [sendMessage, { isLoading: sending }] = useSendBuyerConversationMessageMutation();
   const [markConversationRead] = useMarkBuyerConversationReadMutation();
 
   const conversations = conversationsResponse?.data?.conversations ?? [];
@@ -173,6 +168,14 @@ function ChatPageInner() {
   }, [conversations, search]);
 
   const active = conversations.find((conv) => conv.id === activeId) ?? null;
+  const myUserId = user?.id ?? active?.buyerUserId ?? null;
+
+  const { sending, joined, otherUserTyping, sendTextMessage, notifyTyping, stopTyping } =
+    useConversationRealtime({
+      enabled: Boolean(token && activeId != null),
+      conversationId: activeId,
+      myUserId,
+    });
 
   const {
     data: messagesResponse,
@@ -183,7 +186,7 @@ function ChatPageInner() {
     { conversationId: activeId ?? 0, limit: BUYER_CONVERSATION_MESSAGES_LIMIT },
     {
       skip: !token || activeId == null,
-      pollingInterval: token && activeId != null ? 10000 : 0,
+      pollingInterval: token && activeId != null && !joined ? 10000 : 0,
     },
   );
 
@@ -206,7 +209,7 @@ function ChatPageInner() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeId, messages.length]);
+  }, [activeId, messages.length, otherUserTyping]);
 
   useEffect(() => {
     if (!token || activeId == null) return;
@@ -252,43 +255,13 @@ function ChatPageInner() {
     }
     if (!active.canSend) return;
 
-    const clientMsgId = newClientMsgId();
-    const now = new Date().toISOString();
-    const optimistic: BuyerConversationMessage = {
-      id: -Date.now(),
-      conversationId: active.id,
-      senderUserId: user?.id ?? active.buyerUserId,
-      body: text,
-      attachments: [],
-      clientMsgId,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    dispatch(
-      buyerConversationsAPI.util.updateQueryData(
-        'getBuyerConversationMessages',
-        { conversationId: active.id, limit: BUYER_CONVERSATION_MESSAGES_LIMIT },
-        (draft) => {
-          if (!draft.data?.messages) return;
-          if (draft.data.messages.some((msg) => msg.clientMsgId === clientMsgId)) return;
-          draft.data.messages.push(optimistic);
-        },
-      ),
-    );
+    stopTyping();
     setInput('');
     inputRef.current?.focus();
 
-    try {
-      await sendMessage({
-        conversationId: active.id,
-        body: text,
-        clientMsgId,
-      }).unwrap();
-      void refetchMessages();
-    } catch {
+    const result = await sendTextMessage(text);
+    if (!result.ok) {
       setInput(text);
-      void refetchMessages();
     }
   };
 
@@ -297,7 +270,6 @@ function ChatPageInner() {
   const threadImage = messagesResponse?.data?.otherParticipant?.image || active?.otherParticipant?.profileImage || null;
   const threadOnline = messagesResponse?.data?.otherParticipant?.isOnline ?? active?.otherParticipant?.isOnline ?? false;
   const threadSpecialty = active ? conversationSubtitle(active) : '';
-  const myUserId = user?.id ?? active?.buyerUserId;
   const firstName = threadName.split(' ')[0] || 'them';
   const canSend = Boolean(active?.canSend);
   const profileSrc = user?.profileImage || PROFILE_FALLBACK;
@@ -590,6 +562,17 @@ function ChatPageInner() {
                   );
                 })}
 
+                {otherUserTyping && (
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+                    <div style={{ width: 32, flexShrink: 0 }}>
+                      <Avatar src={threadImage} name={threadName} size={32} />
+                    </div>
+                    <p style={{ fontFamily: F, fontSize: '12px', color: '#98A2B3', margin: 0 }}>
+                      {firstName} is typing…
+                    </p>
+                  </div>
+                )}
+
                 <div ref={messagesEndRef} />
               </div>
 
@@ -623,7 +606,10 @@ function ChatPageInner() {
                       placeholder={canSend ? `Message ${firstName}...` : 'Messaging unavailable'}
                       value={input}
                       disabled={!canSend || sending}
-                      onChange={e => setInput(e.target.value)}
+                      onChange={e => {
+                        setInput(e.target.value);
+                        if (e.target.value.trim()) notifyTyping();
+                      }}
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void sendMsg(); } }}
                       style={{ flex: 1, border: 'none', outline: 'none', fontFamily: F, fontSize: '14px', color: '#101828', background: 'transparent' }}
                     />

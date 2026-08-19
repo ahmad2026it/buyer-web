@@ -13,13 +13,13 @@ import {
   type BuyerBookingReport,
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
+import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const PILL  = '9999px';
 const FONT  = 'Poppins, sans-serif';
 const PAGE_SIZE = 20;
-const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=120&h=120&fit=crop&auto=format&q=80';
 
 type DisputeStatus = 'Pending' | 'Closed';
 
@@ -29,7 +29,7 @@ interface Dispute {
   status: DisputeStatus;
   createdAt: string;
   reportDue: string;
-  favorImage: string;
+  favorImage: string | null;
   favorTitle: string;
   favorCategory: string;
   favorPrice: string;
@@ -53,7 +53,7 @@ function toDisputeCard(report: BuyerBookingReport): Dispute {
     status: formatBuyerReportStatusLabel(report.status),
     createdAt: formatBuyerReportDate(report.createdAt),
     reportDue: getBuyerReportDueDate(report.createdAt),
-    favorImage: report.disputedFavor?.coverImage || PLACEHOLDER_IMG,
+    favorImage: pickFavorImage(report.disputedFavor?.coverImage),
     favorTitle: report.disputedFavor?.title || 'Reported favor',
     favorCategory: formatCategory(report.disputedFavor?.type),
     favorPrice: formatPrice(report.disputedFavor?.budget ?? report.booking?.totalPrice),
@@ -142,7 +142,7 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
       </div>
 
       <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <img
+        <FavorImage
           src={dispute.favorImage}
           alt={dispute.favorTitle}
           style={{ width: 56, height: 56, borderRadius: 12, objectFit: 'cover', flexShrink: 0, border: '1px solid #EAECF0' }}

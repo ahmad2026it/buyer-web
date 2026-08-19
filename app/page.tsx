@@ -19,73 +19,15 @@ import {
   type BuyerBooking,
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
+import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const BRAND = '#A54AFF';
 const PILL  = '9999px';
-const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=360&fit=crop&auto=format&q=75';
 const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80';
 const HOME_BOOKINGS_LIMIT = 4;
 
 type HomeBookingStatus = 'InProgress' | 'Upcoming' | 'Complete';
-
-/* ── Mock: recently viewed favors ─────────────────────────── */
-const RECENTLY_VIEWED = [
-  {
-    id: '1',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop&auto=format&q=75',
-    title: 'I will deep clean your home',
-    price: 253, category: 'Cleaning',
-    seller: 'Alfonzo Schuessler', sellerBadge: 'Pro',
-    sellerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80',
-    rating: '4.8', reviews: '8,890',
-  },
-  {
-    id: '2',
-    image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=600&h=400&fit=crop&auto=format&q=75',
-    title: 'I will fix all your electrical issues',
-    price: 180, category: 'Electrical',
-    seller: 'James Thornton', sellerBadge: 'Team',
-    sellerAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=72&h=72&fit=crop&auto=format&q=80',
-    rating: '4.9', reviews: '5,214',
-  },
-  {
-    id: '3',
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&h=400&fit=crop&auto=format&q=75',
-    title: 'Professional furniture assembly service',
-    price: 95, category: 'Assembly',
-    seller: 'Maria Santos', sellerBadge: 'Pro',
-    sellerAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=72&h=72&fit=crop&auto=format&q=80',
-    rating: '4.7', reviews: '3,102',
-  },
-  {
-    id: '4',
-    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop&auto=format&q=75',
-    title: 'I will landscape your garden beautifully',
-    price: 120, category: 'Gardening',
-    seller: 'Sam Smith', sellerBadge: 'Team',
-    sellerAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=72&h=72&fit=crop&auto=format&q=80',
-    rating: '4.8', reviews: '2,341',
-  },
-  {
-    id: '5',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop&auto=format&q=75',
-    title: 'Interior painting & wall finishing',
-    price: 300, category: 'Painting',
-    seller: 'Liam Jones', sellerBadge: 'Pro',
-    sellerAvatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=72&h=72&fit=crop&auto=format&q=80',
-    rating: '4.9', reviews: '4,102',
-  },
-  {
-    id: '6',
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=400&fit=crop&auto=format&q=75',
-    title: 'Professional plumbing repair service',
-    price: 150, category: 'Plumbing',
-    seller: 'Sophie Lee', sellerBadge: 'Team',
-    sellerAvatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=72&h=72&fit=crop&auto=format&q=80',
-    rating: '4.6', reviews: '1,876',
-  },
-];
 
 const STATUS_CFG = {
   InProgress: { label: 'In Progress', bg: '#FFF4ED', color: '#C4320A', border: '#F9DBAF', dot: '#C4320A' },
@@ -124,7 +66,7 @@ function toHomeBooking(item: BuyerBooking) {
     id: String(item.id),
     status: mapHomeStatus(item.status),
     title: item.favor?.title || 'Booking',
-    image: item.images?.[0] || item.favor?.images?.[0] || item.favor?.favorImage || PLACEHOLDER_IMG,
+    image: pickFavorImage(item.images, item.favor?.images, item.favor?.favorImage),
     date: formatFavorDate(item.favorDate),
     time: formatFavorTime(item.favorTime),
     sellerName: item.seller?.fullName || 'Seller',
@@ -240,7 +182,6 @@ export default function Home() {
         .scroll-row::-webkit-scrollbar { display: none; }
         .scroll-row { scrollbar-width: none; -ms-overflow-style: none; }
         .bk-card:hover { border-color: rgba(165,74,255,0.3) !important; box-shadow: 0 8px 24px rgba(165,74,255,0.1) !important; }
-        .rv-card:hover { border-color: rgba(165,74,255,0.3) !important; box-shadow: 0 8px 24px rgba(165,74,255,0.1) !important; }
       `}</style>
       <Navbar />
       <main style={{ background: '#F9FAFB', minHeight: '100vh' }}>
@@ -392,7 +333,7 @@ export default function Home() {
                         {/* Image */}
                         <div style={{ position: 'relative', padding: '10px 10px 0' }}>
                           <div style={{ height: 152, borderRadius: 14, overflow: 'hidden' }}>
-                            <img src={bk.image} alt={bk.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                            <FavorImage src={bk.image} alt={bk.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
                           </div>
 
                           {/* Status badge */}
@@ -419,74 +360,6 @@ export default function Home() {
                               <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, fontWeight: 600, color: '#344054', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bk.sellerName}</span>
                             </div>
                             <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 15, color: BRAND, flexShrink: 0, marginLeft: 8 }}>{formatPrice(bk.price)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
-
-            {/* ── Recently Viewed ──────────────────────────────── */}
-            <section style={{ padding: '8px 0 0' }}>
-              <div className="container">
-
-                {/* Section header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <div>
-                    <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 22, color: '#101828', margin: 0 }}>Recently Viewed</h2>
-                    <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', margin: '4px 0 0' }}>Pick up where you left off</p>
-                  </div>
-                  <button onClick={() => router.push('/explore/search')}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: BRAND, background: 'none', border: `1.5px solid ${BRAND}`, borderRadius: PILL, padding: '9px 18px', cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0 }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F4EBFF'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}>
-                    Explore More
-                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke={BRAND} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </button>
-                </div>
-
-                {/* 4-column grid — exactly 4 cards, no scroll */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, paddingBottom: 24 }}>
-                  {RECENTLY_VIEWED.slice(0, 4).map(fav => {
-                    const isPro = fav.sellerBadge === 'Pro';
-                    return (
-                      <div key={fav.id}
-                        className="rv-card"
-                        onClick={() => router.push(`/favor/${fav.id}`)}
-                        style={{ background: '#fff', borderRadius: 20, border: '1.5px solid #EAECF0', cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'border-color 0.2s, box-shadow 0.2s' }}>
-
-                        {/* Image */}
-                        <div style={{ position: 'relative', padding: '10px 10px 0', flexShrink: 0 }}>
-                          <div style={{ height: 148, borderRadius: 14, overflow: 'hidden' }}>
-                            <img src={fav.image} alt={fav.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s' }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
-                              onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
-                            />
-                          </div>
-                          {/* Category badge */}
-                          <span style={{ position: 'absolute', top: 20, left: 20, fontFamily: 'Poppins,sans-serif', fontSize: 11, fontWeight: 600, color: '#6941C6', background: '#F9F5FF', border: '1px solid #E9D7FE', borderRadius: PILL, padding: '3px 10px' }}>{fav.category}</span>
-                        </div>
-
-                        {/* Card body */}
-                        <div style={{ padding: '12px 14px 14px', display: 'flex', flexDirection: 'column', flex: 1, gap: 8 }}>
-                          <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fav.title}</h3>
-
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 18, color: BRAND }}>${fav.price}</span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <svg viewBox="0 0 24 24" width="12" height="12"><polygon fill="#F79009" stroke="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                              <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, fontWeight: 600, color: '#101828' }}>{fav.rating}</span>
-                              <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#D0D5DD' }}>·</span>
-                              <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 11, color: '#667085' }}>{fav.reviews}</span>
-                            </div>
-                          </div>
-
-                          <div style={{ paddingTop: 8, borderTop: '1px solid #EAECF0', display: 'flex', alignItems: 'center', gap: 7 }}>
-                            <img src={fav.sellerAvatar} alt={fav.seller} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', border: '2px solid #DFBAFF', flexShrink: 0 }}/>
-                            <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, fontWeight: 600, color: '#344054', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{fav.seller}</span>
-                            <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 11, fontWeight: 700, background: isPro ? '#A54AFF' : '#344054', color: '#fff', borderRadius: PILL, padding: '2px 7px', flexShrink: 0 }}>{fav.sellerBadge}</span>
                           </div>
                         </div>
                       </div>

@@ -1,7 +1,12 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import type {
+  AuthMessageResponse,
+  ForgotPasswordRequest,
+  ResetOtpRequest,
+  ResetPasswordRequest,
   UpdateBuyerProfileRequest,
   UpdateBuyerProfileResponse,
+  VerifyOtpRequest,
 } from "./authTypes";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
 
@@ -116,8 +121,44 @@ export const authAPI = createApi({
         body: buildUpdateProfileFormData(payload),
       }),
     }),
+    forgotPassword: builder.mutation<AuthMessageResponse, ForgotPasswordRequest>(
+      {
+        query: (body) => ({
+          url: "/api/buyer/auth/forgot-password",
+          method: "POST",
+          body,
+        }),
+      },
+    ),
+    verifyOtp: builder.mutation<AuthMessageResponse, VerifyOtpRequest>({
+      query: (body) => ({
+        url: "/api/buyer/auth/verify-otp",
+        method: "POST",
+        body,
+      }),
+    }),
+    resetOtp: builder.mutation<AuthMessageResponse, ResetOtpRequest>({
+      query: (body) => ({
+        url: "/api/buyer/auth/reset-otp",
+        method: "POST",
+        body,
+      }),
+    }),
+    resetPassword: builder.mutation<AuthMessageResponse, ResetPasswordRequest>({
+      query: (body) => ({
+        url: "/api/buyer/auth/reset-password",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
-export const { useRegisterBuyerMutation, useUpdateBuyerProfileMutation } =
-  authAPI;
+export const {
+  useRegisterBuyerMutation,
+  useUpdateBuyerProfileMutation,
+  useForgotPasswordMutation,
+  useVerifyOtpMutation,
+  useResetOtpMutation,
+  useResetPasswordMutation,
+} = authAPI;

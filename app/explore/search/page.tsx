@@ -10,6 +10,7 @@ import { useGetBuyerCategoriesQuery } from '@/app/buyer/store/buyerCategoriesAPI
 import { useGetBuyerFavorsQuery } from '@/app/buyer/store/buyerFavorsAPI';
 import type { BuyerCategory } from '@/app/buyer/store/buyerCategoriesTypes';
 import type { BuyerFavor } from '@/app/buyer/store/buyerFavorsTypes';
+import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 import {
   DEFAULT_FAVOR_FILTERS,
   isFavorFiltersActive,
@@ -24,7 +25,6 @@ const AVA = [
   'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=72&h=72&fit=crop&auto=format&q=80',
 ];
 
-const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop&auto=format&q=75';
 const PLACEHOLDER_AVATAR = AVA[0];
 
 const ALL_SELLERS = Array.from({ length: 20 }, (_, i) => ({
@@ -62,7 +62,7 @@ function displayCategory(type: string, categories: BuyerCategory[]): string {
 function toFavorCard(favor: BuyerFavor, categories: BuyerCategory[]): FavorCard {
   return {
     id: String(favor.id),
-    image: favor.images?.[0] || PLACEHOLDER_IMG,
+    image: pickFavorImage(favor.images, favor.favorImage),
     title: favor.title,
     price: Number(favor.budget) || 0,
     badge: favor.seller?.isOnline ? 'Online' : '',
@@ -399,10 +399,7 @@ function SearchContent() {
                           {/* Image zone */}
                           <div style={{ position: 'relative', padding: '10px 10px 0', flexShrink: 0 }}>
                             <div style={{ height: '200px', borderRadius: '14px', overflow: 'hidden' }}>
-                              <img src={favor.image} alt={favor.title}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
-                                onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
-                                onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }} />
+                              <FavorImage src={favor.image} alt={favor.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             </div>
                             {/* Heart — top-right */}
                             <button

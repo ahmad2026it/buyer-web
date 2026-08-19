@@ -15,6 +15,7 @@ import {
   type BuyerBookingListTab,
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
+import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const BRAND = '#A54AFF';
@@ -25,7 +26,7 @@ type Status = 'InProgress' | 'Upcoming' | 'Pending' | 'Declined' | 'Cancelled' |
 interface Booking {
   id: string;
   title: string;
-  image: string;
+  image: string | null;
   seller: string;
   sellerAvatar: string;
   badge?: 'Pro' | 'Team';
@@ -38,7 +39,6 @@ interface Booking {
   rating?: number;
 }
 
-const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop&auto=format&q=75';
 const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80';
 const PAGE_SIZE = 10;
 
@@ -77,7 +77,7 @@ function toBookingCard(item: BuyerBooking, tab: BuyerBookingListTab): Booking {
   return {
     id: String(item.id),
     title: item.favor?.title || 'Booking',
-    image: item.images?.[0] || item.favor?.images?.[0] || item.favor?.favorImage || PLACEHOLDER_IMG,
+    image: pickFavorImage(item.images, item.favor?.images, item.favor?.favorImage),
     seller: item.seller?.fullName || 'Seller',
     sellerAvatar: item.seller?.profileImage || PLACEHOLDER_AVATAR,
     badge: favorType.includes('team') ? 'Team' : 'Pro',
@@ -211,7 +211,7 @@ function BookingCard({ booking, onRemove }: { booking: Booking; onRemove: () => 
 
       {/* Top: image + info + kebab */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <img src={booking.image} alt={booking.title}
+        <FavorImage src={booking.image} alt={booking.title}
           style={{ width: 82, height: 68, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 5 }}>

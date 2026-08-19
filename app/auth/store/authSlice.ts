@@ -56,10 +56,16 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
-        state.error = action.payload ?? 'Login failed. Please try again.';
+        state.error = action.payload?.message ?? 'Login failed. Please try again.';
       });
   },
 });
 
 export const { logout, clearAuthError, setUser } = authSlice.actions;
 export default authSlice.reducer;
+
+type AuthRootState = { auth: AuthState };
+
+export const selectAuthToken = (state: AuthRootState) => state.auth.token;
+export const selectAuthUser = (state: AuthRootState) => state.auth.user;
+export const selectIsAuthenticated = (state: AuthRootState) => state.auth.isAuthenticated;

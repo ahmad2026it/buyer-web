@@ -45,6 +45,11 @@ export type LoginBuyerRequest = {
   deviceType?: string;
 };
 
+export type AuthApiError = {
+  message: string;
+  fieldErrors: Record<string, string>;
+};
+
 export type LoginBuyerResponse = {
   success: boolean;
   status: number;
@@ -70,4 +75,29 @@ export type UpdateBuyerProfileResponse = {
   data: {
     user: AuthUser;
   };
+};
+
+export type AuthMessageResponse = {
+  success: boolean;
+  status: number;
+  message: string;
+  data?: unknown;
+};
+
+export type ForgotPasswordRequest = {
+  email: string;
+};
+
+export type VerifyOtpRequest = {
+  email: string;
+  otp: string;
+};
+
+export type ResetOtpRequest = {
+  email: string;
+};
+
+export type ResetPasswordRequest = {
+  email: string;
+  newPassword: string;
 };

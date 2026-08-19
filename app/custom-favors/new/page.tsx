@@ -1,8 +1,15 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import AuthGateModal from '@/components/AuthGateModal';
+import { useCreateBuyerCustomFavorMutation } from '@/app/buyer/store/buyerCustomFavorsAPI';
+import { useGetBuyerCategoriesQuery } from '@/app/buyer/store/buyerCategoriesAPI';
+import { useGetBuyerFavorsQuery } from '@/app/buyer/store/buyerFavorsAPI';
+import { useGetBuyerLocationsQuery } from '@/app/buyer/store/buyerLocationsAPI';
+import { useAppSelector } from '@/store/hooks';
+import { showToast } from '@/lib/toast';
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
@@ -15,17 +22,61 @@ const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct
 const YEARS  = [2025,2026,2027,2028,2029];
 const HOURS  = ['1','2','3','4','5','6','7','8','9','10','11','12'];
 
-const LOCS = [
-  { id: 'work', label: 'Work', address: '12 Street, Apt. 4, Lower lake, Downtown, TX' },
-  { id: 'home', label: 'Home', address: '45 Oak Avenue, Westside, TX' },
-];
+type MediaItem = {
+  file: File;
+  url: string;
+};
 
-const REC_SELLERS = [
-  { id: 's1', name: 'The Bright Services', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&auto=format&q=80', badge: 'Pro',  rating: '4.8', reviews: '8,89', distance: '8 miles away' },
-  { id: 's2', name: 'Kyle Stanford',       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80', badge: 'Pro',  rating: '4.8', reviews: '8,89', distance: '8 miles away' },
-  { id: 's3', name: 'Bright Team Co.',     avatar: 'https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=80&h=80&fit=crop&auto=format&q=80', badge: 'Team', rating: '4.9', reviews: '5,21', distance: '12 miles away' },
-  { id: 's4', name: 'Maria Santos',        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&auto=format&q=80', badge: 'Pro',  rating: '4.7', reviews: '3,10', distance: '5 miles away' },
-];
+type SavedLocation = {
+  id: number;
+  label: string;
+  address: string;
+  lat: number;
+  lng: number;
+  isSelected?: boolean;
+};
+
+type RecSeller = {
+  id: number;
+  name: string;
+  avatar: string | null;
+  badge: string;
+  rating: string;
+  reviews: string;
+  distance: string;
+};
+
+type InvitedMember = {
+  id: string;
+  sellerId?: number;
+  name: string;
+  email: string;
+  avatar?: string;
+};
+
+function toCoordNumber(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function toDateTimeISO(year: number, month: number, day: number, hour: string, period: 'AM' | 'PM'): string {
+  let h = Number(hour);
+  if (!Number.isFinite(h)) h = 8;
+  if (period === 'AM') {
+    if (h === 12) h = 0;
+  } else if (h !== 12) {
+    h += 12;
+  }
+  return new Date(year, month, day, h, 0, 0).toISOString();
+}
+
+function parseSellerId(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const id = Number(trimmed);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
 
 function getCalDays(year: number, month: number): (number | null)[] {
   const first = new Date(year, month, 1).getDay();
@@ -97,6 +148,7 @@ function SectionCard({ children, style }: { children: React.ReactNode; style?: R
 export default function NewCustomFavorPage() {
   const router  = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const mediaRef = useRef<MediaItem[]>([]);
 
   const today = new Date();
   const [step,        setStep]        = useState(1);
@@ -106,21 +158,108 @@ export default function NewCustomFavorPage() {
   const [description,      setDescription]      = useState('');
   const [budget,           setBudget]           = useState('');
   const [sellersRequired,  setSellersRequired]  = useState('1');
-  const [media,       setMedia]       = useState<string[]>([]);
+  const [media,       setMedia]       = useState<MediaItem[]>([]);
   const [calYear,     setCalYear]     = useState(today.getFullYear());
   const [calMonth,    setCalMonth]    = useState(today.getMonth());
   const [selDay,      setSelDay]      = useState<number | null>(null);
   const [hour,        setHour]        = useState('8');
   const [period,      setPeriod]      = useState<'AM'|'PM'>('AM');
-  const [locId,       setLocId]       = useState('work');
+  const [locId,       setLocId]       = useState<number | null>(null);
   const [inviteInput, setInviteInput] = useState('');
-  const [invitedList, setInvitedList] = useState<Array<{ id: string; name: string; email: string; avatar?: string }>>([]);
-  const [invitedSellers, setInvitedSellers] = useState<Set<string>>(new Set());
+  const [invitedList, setInvitedList] = useState<InvitedMember[]>([]);
+  const [invitedSellers, setInvitedSellers] = useState<Set<number>>(new Set());
   const [done,        setDone]        = useState(false);
+  const [authOpen,    setAuthOpen]    = useState(false);
+
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const token = useAppSelector((state) => state.auth.token);
+  const [createCustomFavor, { isLoading: isCreating }] = useCreateBuyerCustomFavorMutation();
+  const { data: categoriesResponse } = useGetBuyerCategoriesQuery(undefined, { skip: !token });
+  const { data: locationsResponse } = useGetBuyerLocationsQuery(undefined, { skip: !token });
+
+  const serviceTypes = useMemo(() => {
+    const names = (categoriesResponse?.data?.categories ?? [])
+      .map((item) => item.name.trim())
+      .filter(Boolean);
+    const unique = Array.from(new Set(names));
+    if (!unique.length) return SERVICE_TYPES;
+    return unique.includes('Others') ? unique : [...unique, 'Others'];
+  }, [categoriesResponse]);
+
+  const typeValue = (serviceType === 'Others' ? customType : serviceType).trim().toLowerCase();
+
+  const { data: favorsResponse } = useGetBuyerFavorsQuery(
+    { type: typeValue || undefined, page: 1, limit: 15 },
+    { skip: !token },
+  );
+
+  const savedLocations = useMemo((): SavedLocation[] => {
+    const fromApi: SavedLocation[] = [];
+    for (const item of locationsResponse?.data?.locations ?? []) {
+      const lat = toCoordNumber(item.lat);
+      const lng = toCoordNumber(item.lng);
+      if (lat === null || lng === null) continue;
+      const detail = item.locationDetail?.trim();
+      fromApi.push({
+        id: item.id,
+        label: item.label?.trim() || 'Location',
+        address: detail ? `${item.location}, ${detail}` : item.location,
+        lat,
+        lng,
+        isSelected: Boolean(item.isSelected),
+      });
+    }
+    return fromApi;
+  }, [locationsResponse]);
+
+  const recSellers = useMemo((): RecSeller[] => {
+    const seen = new Set<number>();
+    const list: RecSeller[] = [];
+    for (const favor of favorsResponse?.data?.favors ?? []) {
+      const seller = favor.seller;
+      if (!seller || seen.has(seller.id)) continue;
+      seen.add(seller.id);
+      const reviews = favor.totalReviews ?? favor.reviewCount ?? 0;
+      const miles = favor.distanceMiles;
+      list.push({
+        id: seller.id,
+        name: seller.fullName,
+        avatar: seller.profileImage,
+        badge: 'Pro',
+        rating: favor.averageRating != null ? Number(favor.averageRating).toFixed(1) : '—',
+        reviews: String(reviews),
+        distance: miles != null ? `${Number(miles).toFixed(1)} miles away` : 'Nearby',
+      });
+    }
+    return list.slice(0, 4);
+  }, [favorsResponse]);
+
+  useEffect(() => {
+    if (!savedLocations.length) {
+      setLocId(null);
+      return;
+    }
+    setLocId((current) => {
+      if (current != null && savedLocations.some((item) => item.id === current)) return current;
+      return (savedLocations.find((item) => item.isSelected) ?? savedLocations[0]).id;
+    });
+  }, [savedLocations]);
+
+  useEffect(() => {
+    mediaRef.current = media;
+  }, [media]);
+
+  useEffect(() => {
+    return () => {
+      mediaRef.current.forEach((item) => URL.revokeObjectURL(item.url));
+    };
+  }, []);
 
   const days  = getCalDays(calYear, calMonth);
-  const loc   = LOCS.find(l => l.id === locId)!;
+  const loc   = savedLocations.find(l => l.id === locId) ?? savedLocations[0] ?? null;
   const dateStr = selDay ? `${MONTHS_SHORT[calMonth]} ${selDay}, ${calYear}` : '—';
+  const canDescribe = Boolean(title.trim() && typeValue && budget && description.trim());
+  const canSchedule = Boolean(selDay && loc);
 
   const prevMo = () => {
     if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else setCalMonth(m => m - 1);
@@ -130,30 +269,122 @@ export default function NewCustomFavorPage() {
   };
 
   const addMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setMedia(prev => [...prev, URL.createObjectURL(file)]);
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    setMedia((prev) => [
+      ...prev,
+      ...files.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    ]);
     e.target.value = '';
+  };
+
+  const removeMedia = (index: number) => {
+    setMedia((prev) => {
+      const next = [...prev];
+      const [removed] = next.splice(index, 1);
+      if (removed) URL.revokeObjectURL(removed.url);
+      return next;
+    });
+  };
+
+  const resetForm = () => {
+    media.forEach((item) => URL.revokeObjectURL(item.url));
+    setDone(false);
+    setStep(1);
+    setTitle('');
+    setDescription('');
+    setBudget('');
+    setMedia([]);
+    setSelDay(null);
+    setInvitedList([]);
+    setInvitedSellers(new Set());
+    setServiceType('');
+    setCustomType('');
+    setSellersRequired('1');
   };
 
   const handleInviteByInput = () => {
     const val = inviteInput.trim();
     if (!val) return;
-    const alreadyInvited = invitedList.some(i => i.email === val || i.name === val);
+    const sellerId = parseSellerId(val);
+    if (!sellerId) {
+      showToast('Enter a numeric seller ID to invite.', 'error');
+      return;
+    }
+    const alreadyInvited = invitedList.some(i => i.email === val || i.name === val || i.sellerId === sellerId);
     if (alreadyInvited) return;
+    if (sellerId && invitedSellers.has(sellerId)) return;
     setInvitedList(prev => [...prev, {
-      id: `manual-${Date.now()}`,
-      name: val.includes('@') ? '' : val,
-      email: val.includes('@') ? val : `${val}@example.com`,
+      id: sellerId ? String(sellerId) : `manual-${Date.now()}`,
+      sellerId: sellerId ?? undefined,
+      name: sellerId ? `Seller #${sellerId}` : (val.includes('@') ? '' : val),
+      email: val,
     }]);
+    if (sellerId) {
+      setInvitedSellers(prev => new Set(prev).add(sellerId));
+    }
     setInviteInput('');
   };
 
-  const toggleSellerInvite = (id: string) => {
+  const toggleSellerInvite = (id: number) => {
     setInvitedSellers(prev => {
       const s = new Set(prev);
       if (s.has(id)) s.delete(id); else s.add(id);
       return s;
     });
+  };
+
+  const handleCreateFavor = async () => {
+    if (!isAuthenticated || !token) {
+      setAuthOpen(true);
+      return;
+    }
+    if (isCreating) return;
+    if (!typeValue) {
+      showToast('Please select a service type.', 'error');
+      setStep(1);
+      return;
+    }
+    if (!title.trim() || !description.trim() || !budget) {
+      showToast('Please complete the task details.', 'error');
+      setStep(1);
+      return;
+    }
+    if (!selDay) {
+      showToast('Please select a due date.', 'error');
+      setStep(2);
+      return;
+    }
+    if (!loc) {
+      showToast('Please select a saved location.', 'error');
+      setStep(2);
+      return;
+    }
+
+    const invitedSellerIds = Array.from(new Set([
+      ...invitedSellers,
+      ...invitedList.map((member) => member.sellerId).filter((id): id is number => Boolean(id)),
+    ]));
+
+    try {
+      await createCustomFavor({
+        type: typeValue,
+        title: title.trim(),
+        description: description.trim(),
+        budget,
+        dateTime: toDateTimeISO(calYear, calMonth, selDay, hour, period),
+        lat: loc.lat,
+        lng: loc.lng,
+        locationId: loc.id,
+        invitedSellerIds,
+        images: media.filter((item) => item.file.type.startsWith('image/')).map((item) => item.file),
+        videos: media.filter((item) => item.file.type.startsWith('video/')).map((item) => item.file),
+        sellersRequired: Number(sellersRequired) || 1,
+      }).unwrap();
+      setDone(true);
+    } catch {
+      // axios interceptor already toasts API errors
+    }
   };
 
   /* ── Success state ── */
@@ -180,7 +411,7 @@ export default function NewCustomFavorPage() {
             View My Favors
           </button>
           <button
-            onClick={() => { setDone(false); setStep(1); setTitle(''); setDescription(''); setBudget(''); setMedia([]); setSelDay(null); setInvitedList([]); setInvitedSellers(new Set()); setServiceType(''); setCustomType(''); }}
+            onClick={() => { setDone(false); resetForm(); }}
             style={{ width: '100%', fontFamily: FONT, fontWeight: 600, fontSize: 14, color: '#667085', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: PILL, padding: 13, cursor: 'pointer', transition: 'background 0.15s' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}
@@ -189,6 +420,12 @@ export default function NewCustomFavorPage() {
           </button>
         </div>
       </main>
+      {authOpen && (
+        <AuthGateModal
+          onClose={() => setAuthOpen(false)}
+          message="Sign in to post a custom favor."
+        />
+      )}
       <Footer />
     </>
   );
@@ -240,7 +477,7 @@ export default function NewCustomFavorPage() {
                         onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = '#D0D5DD'; }}
                       >
                         <option value="" disabled>Select a category</option>
-                        {SERVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        {serviceTypes.map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
                       <svg style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
@@ -327,14 +564,18 @@ export default function NewCustomFavorPage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={BRAND} strokeWidth="2.5" strokeLinecap="round"/></svg>
                   Upload
                 </button>
-                <input ref={fileRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={addMedia} />
+                <input ref={fileRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={addMedia} />
                 {media.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                    {media.map((src, i) => (
-                      <div key={i} style={{ position: 'relative', width: 88, height: 80, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
-                        <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {media.map((item, i) => (
+                      <div key={item.url} style={{ position: 'relative', width: 88, height: 80, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
+                        {item.file.type.startsWith('video/') ? (
+                          <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <img src={item.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
                         <button
-                          onClick={() => setMedia(prev => prev.filter((_, idx) => idx !== i))}
+                          onClick={() => removeMedia(i)}
                           style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/></svg>
@@ -348,9 +589,9 @@ export default function NewCustomFavorPage() {
               {/* Next button */}
               <button
                 onClick={() => setStep(2)}
-                disabled={!title || !serviceType || !budget}
-                style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: (!title || !serviceType || !budget) ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 14, cursor: (!title || !serviceType || !budget) ? 'not-allowed' : 'pointer', boxShadow: (!title || !serviceType || !budget) ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
-                onMouseEnter={e => { if (title && serviceType && budget) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+                disabled={!canDescribe}
+                style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: !canDescribe ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 14, cursor: !canDescribe ? 'not-allowed' : 'pointer', boxShadow: !canDescribe ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
+                onMouseEnter={e => { if (canDescribe) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
               >
                 Next: Schedule
@@ -392,6 +633,12 @@ export default function NewCustomFavorPage() {
           </div>
         </div>
       </main>
+      {authOpen && (
+        <AuthGateModal
+          onClose={() => setAuthOpen(false)}
+          message="Sign in to post a custom favor."
+        />
+      )}
       <Footer />
     </>
   );
@@ -410,7 +657,11 @@ export default function NewCustomFavorPage() {
               <SectionCard>
                 <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 17, color: '#101828', marginBottom: 20 }}>Select location</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {LOCS.map(l => (
+                  {savedLocations.length === 0 ? (
+                    <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', lineHeight: 1.6 }}>
+                      No saved locations yet. Add one from your profile, then come back to schedule this favor.
+                    </p>
+                  ) : savedLocations.map(l => (
                     <div
                       key={l.id}
                       onClick={() => setLocId(l.id)}
@@ -438,7 +689,7 @@ export default function NewCustomFavorPage() {
                   { label: 'Service', value: serviceType === 'Others' ? (customType || '—') : (serviceType || '—') },
                   { label: 'Date', value: dateStr },
                   { label: 'Time', value: `${hour}:00 ${period}` },
-                  { label: 'Location', value: loc.label },
+                  { label: 'Location', value: loc?.label ?? '—' },
                   { label: 'Budget', value: budget ? `$${budget}` : '—' },
                 ].map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid #F2F4F7' }}>
@@ -454,8 +705,8 @@ export default function NewCustomFavorPage() {
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}>
                   Back
                 </button>
-                <button onClick={() => setStep(3)} disabled={!selDay} style={{ flex: 2, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: !selDay ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 13, cursor: !selDay ? 'not-allowed' : 'pointer', boxShadow: !selDay ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
-                  onMouseEnter={e => { if (selDay) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+                <button onClick={() => setStep(3)} disabled={!canSchedule} style={{ flex: 2, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: !canSchedule ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 13, cursor: !canSchedule ? 'not-allowed' : 'pointer', boxShadow: !canSchedule ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
+                  onMouseEnter={e => { if (canSchedule) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
                   Next: Invite Sellers
                 </button>
@@ -529,6 +780,12 @@ export default function NewCustomFavorPage() {
           </div>
         </div>
       </main>
+      {authOpen && (
+        <AuthGateModal
+          onClose={() => setAuthOpen(false)}
+          message="Sign in to post a custom favor."
+        />
+      )}
       <Footer />
     </>
   );
@@ -547,7 +804,7 @@ export default function NewCustomFavorPage() {
               <SectionCard>
                 <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 17, color: '#101828', marginBottom: 6 }}>Invite a seller <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 14, color: '#98A2B3' }}>(optional)</span></h3>
                 <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', marginBottom: 16, lineHeight: 1.5 }}>
-                  Invite seller(s) to apply for this favor. Use comma to separate the users.
+                  Invite seller(s) to apply for this favor. Enter a seller ID.
                 </p>
 
                 {/* Search row */}
@@ -557,7 +814,7 @@ export default function NewCustomFavorPage() {
                       value={inviteInput}
                       onChange={e => setInviteInput(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleInviteByInput(); }}
-                      placeholder="Type Email or User ID here"
+                      placeholder="Type seller ID here"
                       style={{ width: '100%', fontFamily: FONT, fontSize: 14, color: '#101828', background: '#fff', border: '1.5px solid #D0D5DD', borderRadius: PILL, padding: '11px 40px 11px 16px', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
                       onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = BRAND; }}
                       onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = '#D0D5DD'; }}
@@ -571,22 +828,20 @@ export default function NewCustomFavorPage() {
                 </div>
 
                 {/* Matched result (mock: show if typed something) */}
-                {inviteInput.length > 2 && (
+                {inviteInput.length > 0 && (
                   <div style={{ border: '1.5px solid #EAECF0', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: '#fff' }}>
-                      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&auto=format&q=80" alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#EAECF0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#98A2B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="#98A2B3" strokeWidth="2"/></svg>
+                      </div>
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#101828', marginBottom: 2 }}>James Doe</p>
+                        <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#101828', marginBottom: 2 }}>
+                          {parseSellerId(inviteInput) ? `Seller #${parseSellerId(inviteInput)}` : 'Invite seller'}
+                        </p>
                         <p style={{ fontFamily: FONT, fontSize: 12, color: '#667085' }}>{inviteInput}</p>
                       </div>
                       <button
-                        onClick={() => {
-                          setInvitedList(prev => {
-                            if (prev.some(p => p.email === inviteInput)) return prev;
-                            return [...prev, { id: 'james-doe', name: 'James Doe', email: inviteInput, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&auto=format&q=80' }];
-                          });
-                          setInviteInput('');
-                        }}
+                        onClick={handleInviteByInput}
                         style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0', flexShrink: 0 }}
                       >
                         Invite
@@ -629,12 +884,13 @@ export default function NewCustomFavorPage() {
                   Back
                 </button>
                 <button
-                  onClick={() => setDone(true)}
-                  style={{ flex: 2, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: 13, cursor: 'pointer', boxShadow: '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+                  onClick={handleCreateFavor}
+                  disabled={isCreating}
+                  style={{ flex: 2, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: isCreating ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 13, cursor: isCreating ? 'not-allowed' : 'pointer', boxShadow: isCreating ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
+                  onMouseEnter={e => { if (!isCreating) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
                 >
-                  Create Favor
+                  {isCreating ? 'Creating…' : 'Create Favor'}
                 </button>
               </div>
             </div>
@@ -643,13 +899,24 @@ export default function NewCustomFavorPage() {
             <div>
               <SectionCard>
                 <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#101828', marginBottom: 16 }}>Recommended sellers</p>
+                {recSellers.length === 0 ? (
+                  <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', lineHeight: 1.6 }}>
+                    No recommended sellers yet. You can still post this favor or invite a seller by ID.
+                  </p>
+                ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  {REC_SELLERS.map(seller => {
+                  {recSellers.map(seller => {
                     const isInvited = invitedSellers.has(seller.id);
                     return (
                       <div key={seller.id} style={{ background: '#F9FAFB', borderRadius: 16, padding: '16px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, border: `1.5px solid ${isInvited ? BRAND : '#EAECF0'}`, transition: 'border-color 0.15s' }}>
                         <div style={{ position: 'relative' }}>
-                          <img src={seller.avatar} alt={seller.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
+                          {seller.avatar ? (
+                            <img src={seller.avatar} alt={seller.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
+                          ) : (
+                            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#EAECF0', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#98A2B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="#98A2B3" strokeWidth="2"/></svg>
+                            </div>
+                          )}
                           <div style={{ position: 'absolute', bottom: 2, right: 2, width: 12, height: 12, borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }} />
                           <span style={{ position: 'absolute', top: -4, right: -6, fontFamily: FONT, fontSize: 10, fontWeight: 700, color: '#fff', background: seller.badge === 'Pro' ? '#A54AFF' : '#344054', borderRadius: PILL, padding: '2px 6px' }}>
                             {seller.badge}
@@ -673,11 +940,18 @@ export default function NewCustomFavorPage() {
                     );
                   })}
                 </div>
+                )}
               </SectionCard>
             </div>
           </div>
         </div>
       </main>
+      {authOpen && (
+        <AuthGateModal
+          onClose={() => setAuthOpen(false)}
+          message="Sign in to post a custom favor."
+        />
+      )}
       <Footer />
     </>
   );

@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig, type AxiosResponse } from 'axios';
+import { disconnectBuyerSocket } from '@/lib/buyerSocket';
+import { getAppStore, getAuthToken } from '@/lib/storeAccess';
 import { showToast } from '@/lib/toast';
-import { getAuthToken } from '@/lib/storeAccess';
 
 declare module 'axios' {
   interface AxiosRequestConfig {
@@ -8,14 +9,56 @@ declare module 'axios' {
   }
 }
 
+type ApiFieldError = {
+  field?: string;
+  message?: string;
+};
+
 type ApiErrorBody = {
   success?: boolean;
   message?: string;
   error?: string;
+  errors?: ApiFieldError[];
+};
+
+export type AxiosErrorDetails = {
+  message: string;
+  fieldErrors: Record<string, string>;
+};
+
+const getErrorBody = (error: unknown): unknown => {
+  if (axios.isAxiosError(error)) return error.response?.data;
+  if (error && typeof error === 'object' && 'data' in error) {
+    return (error as { data?: unknown }).data;
+  }
+  return error;
+};
+
+const getFieldErrorsFromBody = (body: unknown): Record<string, string> => {
+  if (!body || typeof body !== 'object') return {};
+
+  const errors = (body as ApiErrorBody).errors;
+  if (!Array.isArray(errors)) return {};
+
+  const mapped: Record<string, string> = {};
+  for (const item of errors) {
+    if (!item || typeof item !== 'object') continue;
+    const field = typeof item.field === 'string' ? item.field.trim() : '';
+    const message = typeof item.message === 'string' ? item.message.trim() : '';
+    if (field && message && !mapped[field]) {
+      mapped[field] = message;
+    }
+  }
+  return mapped;
 };
 
 const getMessageFromBody = (body: unknown, fallback: string): string => {
   if (typeof body === 'string' && body.trim()) return body;
+
+  const fieldErrors = getFieldErrorsFromBody(body);
+  const fieldMessages = Object.values(fieldErrors);
+  if (fieldMessages.length === 1) return fieldMessages[0];
+  if (fieldMessages.length > 1) return fieldMessages.join('. ');
 
   if (body && typeof body === 'object') {
     const data = body as ApiErrorBody;
@@ -26,26 +69,65 @@ const getMessageFromBody = (body: unknown, fallback: string): string => {
   return fallback;
 };
 
+export const getAxiosErrorDetails = (error: unknown): AxiosErrorDetails => {
+  if (typeof error === 'string' && error.trim()) {
+    return { message: error, fieldErrors: {} };
+  }
+
+  if (
+    error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    'fieldErrors' in error &&
+    typeof (error as AxiosErrorDetails).message === 'string'
+  ) {
+    const details = error as AxiosErrorDetails;
+    return {
+      message: details.message,
+      fieldErrors:
+        details.fieldErrors && typeof details.fieldErrors === 'object'
+          ? details.fieldErrors
+          : {},
+    };
+  }
+
+  if (axios.isAxiosError(error) && !error.response) {
+    return {
+      message: 'Unable to connect. Please try again.',
+      fieldErrors: {},
+    };
+  }
+
+  const body = getErrorBody(error);
+  const fallback =
+    axios.isAxiosError(error)
+      ? error.message || 'Something went wrong. Please try again.'
+      : 'Something went wrong. Please try again.';
+
+  return {
+    message: getMessageFromBody(body, fallback),
+    fieldErrors: getFieldErrorsFromBody(body),
+  };
+};
+
 export const getAxiosErrorMessage = (error: unknown): string => {
-  if (typeof error === 'string' && error.trim()) return error;
+  return getAxiosErrorDetails(error).message;
+};
 
-  if (axios.isAxiosError(error)) {
-    if (!error.response) {
-      return 'Unable to connect. Please try again.';
-    }
+const isPublicAuthRequest = (url?: string): boolean => {
+  if (!url) return false;
+  return /\/api\/buyer\/auth\/(login|register|forgot-password|verify-otp|reset-otp|reset-password)/.test(
+    url,
+  );
+};
 
-    return getMessageFromBody(
-      error.response.data,
-      error.message || 'Something went wrong. Please try again.',
-    );
-  }
+const logoutOnUnauthorized = (): void => {
+  disconnectBuyerSocket();
+  getAppStore()?.dispatch({ type: 'auth/logout' });
 
-  if (error && typeof error === 'object' && 'message' in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === 'string' && message.trim()) return message;
-  }
-
-  return 'Something went wrong. Please try again.';
+  if (typeof window === 'undefined') return;
+  if (window.location.pathname.startsWith('/auth/')) return;
+  window.location.replace('/auth/login');
 };
 
 export const api = axios.create({
@@ -100,7 +182,12 @@ api.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-    if (!error.config?.skipErrorToast) {
+    const isUnauthorized =
+      error.response?.status === 401 && !isPublicAuthRequest(error.config?.url);
+
+    if (isUnauthorized) {
+      logoutOnUnauthorized();
+    } else if (!error.config?.skipErrorToast) {
       showToast(getAxiosErrorMessage(error), 'error');
     }
 

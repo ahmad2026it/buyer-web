@@ -1,6 +1,6 @@
 export type FavorCard = {
   id: string;
-  image: string;
+  image: string | null;
   title: string;
   price: number;
   badge: string;

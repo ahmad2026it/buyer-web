@@ -19,10 +19,7 @@ export const BUYER_CONVERSATIONS_LIST_PARAMS: GetBuyerConversationsParams = {
 
 export const BUYER_CONVERSATION_MESSAGES_LIMIT = 50;
 
-export const newClientMsgId = (): string =>
-  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : `msg-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+export { createClientMsgId as newClientMsgId } from "@/lib/conversationSocketTypes";
 
 export const buyerConversationsAPI = createApi({
   reducerPath: "buyerConversationsAPI",

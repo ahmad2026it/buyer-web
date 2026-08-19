@@ -3,15 +3,20 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { useGetBuyerFavorByIdQuery } from '@/app/buyer/store/buyerFavorsAPI';
+import AuthGateModal from '@/components/AuthGateModal';
+import {
+  useGetBuyerFavorByIdQuery,
+  useMarkBuyerFavoriteMutation,
+  useUnmarkBuyerFavoriteMutation,
+} from '@/app/buyer/store/buyerFavorsAPI';
 import type {
-  BuyerFavorAddOn,
   BuyerFavorReview,
   BuyerRelatedFavor,
 } from '@/app/buyer/store/buyerFavorsTypes';
+import FavorImage, { isUsableImageUrl, pickFavorImage } from '@/components/FavorImage';
+import { useAppSelector } from '@/store/hooks';
 
 const GRAD = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
-const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&h=560&fit=crop&auto=format&q=75';
 const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80';
 
 function Stars({ n, size = 14 }: { n: number; size?: number }) {
@@ -60,14 +65,6 @@ function formatDate(value?: string | null): string {
   return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function normalizeAddOn(item: BuyerFavorAddOn, index: number) {
-  return {
-    id: String(item.id ?? index),
-    label: item.label || item.name || item.title || item.description || `Add-on ${index + 1}`,
-    price: Number(item.price) || 0,
-  };
-}
-
 function normalizeReview(item: BuyerFavorReview, index: number) {
   return {
     id: item.id ?? index,
@@ -84,8 +81,8 @@ function asRelatedList(value: BuyerRelatedFavor | BuyerRelatedFavor[] | null | u
   return Array.isArray(value) ? value : [value];
 }
 
-function relatedImage(favor: BuyerRelatedFavor): string {
-  return favor.images?.[0] || favor.favorImage || PLACEHOLDER_IMG;
+function relatedImage(favor: BuyerRelatedFavor): string | null {
+  return pickFavorImage(favor.images, favor.favorImage);
 }
 
 function relatedPrice(favor: BuyerRelatedFavor): number {
@@ -107,25 +104,25 @@ function relatedSellerAvatar(favor: BuyerRelatedFavor): string {
 export default function FavorDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
+  const token = useAppSelector((state) => state.auth.token);
   const favorId = Number(params.id);
   const skip = !Number.isFinite(favorId) || favorId <= 0;
 
   const { data, isLoading, isError } = useGetBuyerFavorByIdQuery(favorId, { skip });
+  const [markFavorite, { isLoading: markingFavorite }] = useMarkBuyerFavoriteMutation();
+  const [unmarkFavorite, { isLoading: unmarkingFavorite }] = useUnmarkBuyerFavoriteMutation();
   const favor = data?.data?.favor;
   const related = data?.data?.relatedFavors;
 
   const [activeImg, setActiveImg] = useState(0);
-  const [addons, setAddons] = useState<Set<string>>(new Set());
   const [liked, setLiked] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const [msgOpen, setMsgOpen] = useState(false);
-  const [msgText, setMsgText] = useState('');
+  const [authOpen, setAuthOpen] = useState(false);
+  const favoriteBusy = markingFavorite || unmarkingFavorite;
 
   useEffect(() => {
     setActiveImg(0);
-    setAddons(new Set());
     setShowAll(false);
-    setMsgOpen(false);
   }, [favorId]);
 
   useEffect(() => {
@@ -134,20 +131,20 @@ export default function FavorDetailPage() {
 
   const images = useMemo(() => {
     if (!favor) return [];
-    if (favor.images?.length) return favor.images;
-    return favor.favorImage ? [favor.favorImage] : [];
+    const fromGallery = (favor.images ?? []).filter(isUsableImageUrl);
+    if (fromGallery.length) return fromGallery;
+    const cover = pickFavorImage(favor.favorImage);
+    return cover ? [cover] : [];
   }, [favor]);
 
-  const galleryImages = images.length ? images : [PLACEHOLDER_IMG];
-  const addonItems = (favor?.addOns ?? []).map(normalizeAddOn);
+  const galleryImages = images;
   const reviewItems = (favor?.reviews ?? []).map(normalizeReview);
   const visibleReviews = showAll ? reviewItems : reviewItems.slice(0, 2);
   const moreFromSeller = related?.sellerOtherFavors ?? [];
   const similarFavors = asRelatedList(related?.sameTypeOtherSellerFavor);
 
-  const addonTotal = addonItems.filter(a => addons.has(a.id)).reduce((sum, a) => sum + a.price, 0);
   const startingPrice = Number(favor?.budget) || 0;
-  const total = startingPrice + addonTotal;
+  const total = startingPrice;
 
   const sellerName = favor?.seller?.fullName || favor?.user?.fullName || 'Seller';
   const sellerAvatar = favor?.seller?.profileImage || favor?.user?.profileImage || PLACEHOLDER_AVATAR;
@@ -160,19 +157,36 @@ export default function FavorDetailPage() {
   const subCategories = favor?.subCategories ?? [];
   const locationLabel = favor?.location?.location || favor?.favorLocation?.location;
 
-  const toggleAddon = (id: string) =>
-    setAddons(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-
   const showLoading = !skip && isLoading;
   const showError = skip || (!isLoading && (isError || !favor));
+
+  const handleToggleFavorite = async () => {
+    if (!token) {
+      setAuthOpen(true);
+      return;
+    }
+    if (!favor || favoriteBusy) return;
+
+    try {
+      if (liked) {
+        await unmarkFavorite(favor.id).unwrap();
+      } else {
+        await markFavorite(favor.id).unwrap();
+      }
+    } catch {
+      // axios interceptor already toasts API errors
+    }
+  };
 
   return (
     <>
       <Navbar />
+      {authOpen && (
+        <AuthGateModal
+          onClose={() => setAuthOpen(false)}
+          message="Log in to save this favor to your favorites."
+        />
+      )}
       <main style={{ minHeight: '100vh', background: '#FAFAFA', paddingTop: '88px' }}>
         {showLoading ? (
           <div style={{ maxWidth: '1376px', margin: '0 auto', padding: '40px 32px 80px' }}>
@@ -216,13 +230,13 @@ export default function FavorDetailPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: galleryImages.length > 1 ? '1fr 352px' : '1fr', gap: '16px', marginBottom: '40px' }}>
                 <div style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', height: '520px', cursor: 'pointer', background: '#F3E8FF' }}>
-                  <img src={galleryImages[activeImg] || PLACEHOLDER_IMG} alt={favor.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.02)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }} />
+                  <FavorImage src={galleryImages[activeImg]} alt={favor.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {galleryImages.length > 0 && (
                   <div style={{ position: 'absolute', bottom: '16px', left: '16px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', borderRadius: '9999px', padding: '4px 12px', fontFamily: 'Poppins,sans-serif', fontSize: '12px', color: '#fff', fontWeight: 500 }}>
                     {Math.min(activeImg + 1, galleryImages.length)} / {galleryImages.length}
                   </div>
+                  )}
                 </div>
                 {galleryImages.length > 1 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -232,7 +246,7 @@ export default function FavorDetailPage() {
                       return (
                         <div key={`${img}-${i}`} onClick={() => setActiveImg(i)}
                           style={{ height: thumbHeight, flexShrink: 0, borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', border: `2.5px solid ${activeImg === i ? '#A54AFF' : 'transparent'}`, boxShadow: activeImg === i ? '0 0 0 3px rgba(165,74,255,0.2)' : 'none', transition: 'all 0.15s', background: '#F3E8FF' }}>
-                          <img src={img} alt={`View ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: activeImg === i ? 1 : 0.75, transition: 'opacity 0.15s' }} />
+                          <FavorImage src={img} alt={`View ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: activeImg === i ? 1 : 0.75 }} />
                         </div>
                       );
                     })}
@@ -245,9 +259,11 @@ export default function FavorDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '14px' }}>
                     <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '32px', color: '#101828', lineHeight: '1.2', letterSpacing: '-0.02em' }}>{favor.title}</h1>
                     <div style={{ display: 'flex', gap: '8px', flexShrink: 0, paddingTop: '4px' }}>
-                      <button onClick={() => setLiked(l => !l)}
+                      <button
+                        onClick={() => { void handleToggleFavorite(); }}
+                        disabled={favoriteBusy}
                         aria-label={liked ? 'Remove from saved' : 'Save favor'}
-                        style={{ width: '40px', height: '40px', borderRadius: '9999px', background: liked ? '#FFF1F3' : '#F9FAFB', border: `1.5px solid ${liked ? '#F43F5E' : '#EAECF0'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
+                        style={{ width: '40px', height: '40px', borderRadius: '9999px', background: liked ? '#FFF1F3' : '#F9FAFB', border: `1.5px solid ${liked ? '#F43F5E' : '#EAECF0'}`, cursor: favoriteBusy ? 'default' : 'pointer', opacity: favoriteBusy ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
                         <svg viewBox="0 0 24 24" width="18" height="18">
                           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
                             stroke={liked ? '#F43F5E' : '#98A2B3'} strokeWidth="2" fill={liked ? '#F43F5E' : 'none'} strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.15s' }} />
@@ -328,32 +344,6 @@ export default function FavorDetailPage() {
                     ))}
                   </div>
 
-                  {addonItems.length > 0 && (
-                    <>
-                      <Divider />
-                      <div style={{ marginBottom: '0' }}>
-                        <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828', marginBottom: '16px' }}>Add-ons</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          {addonItems.map(a => {
-                            const on = addons.has(a.id);
-                            return (
-                              <div key={a.id} onClick={() => toggleAddon(a.id)}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#fff', border: `1.5px solid ${on ? '#A54AFF' : '#EAECF0'}`, borderRadius: '16px', cursor: 'pointer', transition: 'all 0.15s', gap: '16px', boxShadow: on ? '0 0 0 3px rgba(165,74,255,0.1)' : 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                                  <div style={{ width: '22px', height: '22px', borderRadius: '6px', border: `2px solid ${on ? '#A54AFF' : '#D0D5DD'}`, background: on ? '#A54AFF' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-                                    {on && <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                                  </div>
-                                  <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#344054', fontWeight: on ? 600 : 400 }}>{a.label}</p>
-                                </div>
-                                <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '15px', color: '#A54AFF', flexShrink: 0 }}>+${formatMoney(a.price)}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </>
-                  )}
-
                   <Divider />
 
                   <div>
@@ -400,24 +390,22 @@ export default function FavorDetailPage() {
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                           <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828' }}>More from this pro</h2>
-                          {sellerId && (
+                          {sellerId && moreFromSeller.length > 4 && (
                             <button onClick={() => router.push(`/seller/${sellerId}`)}
                               style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '14px', color: '#A54AFF', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
                               See all
                             </button>
                           )}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(moreFromSeller.length, 3)},1fr)`, gap: '20px' }}>
-                          {moreFromSeller.slice(0, 3).map(f => (
+                        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(moreFromSeller.length, 4)},1fr)`, gap: '20px' }}>
+                          {moreFromSeller.slice(0, 4).map(f => (
                             <div key={f.id} onClick={() => router.push(`/favor/${f.id}`)}
                               style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #EAECF0', cursor: 'pointer', transition: 'border-color 0.2s, box-shadow 0.2s', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                               onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'rgba(165,74,255,0.3)'; el.style.boxShadow = '0 8px 24px rgba(165,74,255,0.1)'; }}
                               onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#EAECF0'; el.style.boxShadow = 'none'; }}>
                               <div style={{ padding: '10px 10px 0', flexShrink: 0 }}>
                                 <div style={{ height: '160px', borderRadius: '14px', overflow: 'hidden' }}>
-                                  <img src={relatedImage(f)} alt={f.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
-                                    onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
-                                    onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }} />
+                                  <FavorImage src={relatedImage(f)} alt={f.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
                               </div>
                               <div style={{ padding: '12px 14px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -460,53 +448,20 @@ export default function FavorDetailPage() {
                       )}
                     </div>
 
-                    {addonItems.length > 0 && (
-                      <div style={{ padding: '20px 24px', borderBottom: '1px solid #EAECF0' }}>
-                        <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#344054', marginBottom: '10px' }}>Add-ons</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {addonItems.map(a => {
-                            const on = addons.has(a.id);
-                            return (
-                              <div key={a.id} onClick={() => toggleAddon(a.id)}
-                                style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '6px 0' }}>
-                                <div style={{ width: '18px', height: '18px', borderRadius: '5px', border: `2px solid ${on ? '#A54AFF' : '#D0D5DD'}`, background: on ? '#A54AFF' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-                                  {on && <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                                </div>
-                                <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '12px', color: '#344054', flex: 1, lineHeight: '1.4' }}>{a.label}</p>
-                                <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: '12px', fontWeight: 600, color: '#A54AFF', flexShrink: 0 }}>+${formatMoney(a.price)}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
                     <div style={{ padding: '20px 24px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>Starting price</span>
                         <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', fontWeight: 600, color: '#101828' }}>${formatMoney(startingPrice)}</span>
                       </div>
-                      {addonItems.filter(a => addons.has(a.id)).map(a => (
-                        <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>{a.label.split(' ').slice(0, 3).join(' ')}{a.label.split(' ').length > 3 ? '…' : ''}</span>
-                          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', fontWeight: 600, color: '#101828' }}>+${formatMoney(a.price)}</span>
-                        </div>
-                      ))}
                       <div style={{ height: '1px', background: '#EAECF0', margin: '12px 0' }} />
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                         <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '15px', color: '#101828' }}>Total</span>
                         <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '20px', background: GRAD, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>${formatMoney(total)}</span>
                       </div>
-                      <button onClick={() => router.push(`/booking/${favor.id}`)} style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '15px', color: '#fff', background: GRAD, border: 'none', borderRadius: '9999px', padding: '14px', cursor: 'pointer', marginBottom: '10px', transition: 'opacity 0.2s', boxShadow: '0 4px 16px rgba(165,74,255,0.3)' }}
+                      <button onClick={() => router.push(`/booking/${favor.id}`)} style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '15px', color: '#fff', background: GRAD, border: 'none', borderRadius: '9999px', padding: '14px', cursor: 'pointer', transition: 'opacity 0.2s', boxShadow: '0 4px 16px rgba(165,74,255,0.3)' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
                         Request Booking
-                      </button>
-                      <button onClick={() => setMsgOpen(o => !o)}
-                        style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '15px', color: '#A54AFF', background: '#fff', border: '1.5px solid #A54AFF', borderRadius: '9999px', padding: '13px', cursor: 'pointer', transition: 'background 0.15s' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F8F0FF'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}>
-                        Send a message
                       </button>
                     </div>
 
@@ -523,21 +478,6 @@ export default function FavorDetailPage() {
                 </div>
               </div>
 
-              {msgOpen && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-                  onClick={e => { if (e.target === e.currentTarget) setMsgOpen(false); }}>
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} onClick={() => setMsgOpen(false)} />
-                  <div style={{ position: 'relative', background: '#fff', borderRadius: '24px 24px 0 0', padding: '32px', width: '100%', maxWidth: '560px', zIndex: 1 }}>
-                    <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '18px', color: '#101828', marginBottom: '16px' }}>Message {sellerName}</h3>
-                    <textarea value={msgText} onChange={e => setMsgText(e.target.value)} placeholder="Hi! I'm interested in your service..."
-                      style={{ width: '100%', height: '120px', border: '1.5px solid #D0D5DD', borderRadius: '12px', padding: '12px 14px', fontFamily: 'Poppins,sans-serif', fontSize: '14px', resize: 'none', outline: 'none', boxSizing: 'border-box' }} />
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-                      <button onClick={() => setMsgOpen(false)} style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontSize: '14px', fontWeight: 600, color: '#344054', background: '#F9FAFB', border: '1.5px solid #D0D5DD', borderRadius: '9999px', padding: '12px', cursor: 'pointer' }}>Cancel</button>
-                      <button style={{ flex: 2, fontFamily: 'Poppins,sans-serif', fontSize: '14px', fontWeight: 700, color: '#fff', background: GRAD, border: 'none', borderRadius: '9999px', padding: '12px', cursor: 'pointer' }}>Send Message</button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {similarFavors.length > 0 && (
@@ -563,9 +503,7 @@ export default function FavorDetailPage() {
                         onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#EAECF0'; el.style.boxShadow = 'none'; el.style.transform = 'translateY(0)'; }}>
                         <div style={{ padding: '10px 10px 0', flexShrink: 0 }}>
                           <div style={{ height: '180px', borderRadius: '14px', overflow: 'hidden' }}>
-                            <img src={relatedImage(f)} alt={f.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
-                              onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }} />
+                            <FavorImage src={relatedImage(f)} alt={f.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </div>
                         </div>
                         <div style={{ padding: '12px 14px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>

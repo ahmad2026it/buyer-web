@@ -1,23 +1,23 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { loginBuyer } from "@/app/auth/store/authThunk";
-import { clearAuthError } from "@/app/auth/store/authSlice";
-import type { AuthApiError } from "@/app/auth/store/authTypes";
-import { getAxiosErrorDetails } from "@/lib/axios";
 import {
-  getNotificationPermission,
-  getWebFcmToken,
-  isEdgeBrowser,
-} from "@/lib/fcm";
+  useForgotPasswordMutation,
+  useResetOtpMutation,
+  useResetPasswordMutation,
+  useVerifyOtpMutation,
+} from "@/app/auth/store/authAPI";
 import { showToast } from "@/lib/toast";
-import { showSuccess, showSwal } from "@/lib/swal";
+import { showSuccess } from "@/lib/swal";
 
 const GRAD = "linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)";
 const BORDER = "#D0D5DD";
 const BRAND = "#A54AFF";
-const ERROR = "#D92D20";
+const OTP_LENGTH = 4;
+const RESEND_SECONDS = 60;
+const MIN_PASSWORD_LENGTH = 6;
+
+type FlowStep = "email" | "otp" | "password";
 
 function WhoCanLogo() {
   return (
@@ -85,27 +85,36 @@ function EyeIcon({ off }: { off?: boolean }) {
   );
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function maskEmail(email: string) {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return email;
+  const visible = local.slice(0, 1);
+  return `${visible}${"•".repeat(Math.max(local.length - 1, 2))}@${domain}`;
+}
+
 function PillInput({
   label,
   type = "text",
   placeholder,
   value,
-  error,
   onChange,
+  autoComplete,
 }: {
   label: string;
   type?: string;
   placeholder: string;
   value: string;
-  error?: string;
   onChange: (v: string) => void;
+  autoComplete?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
   const isPassword = type === "password";
   const inputType = isPassword ? (visible ? "text" : "password") : type;
-  const hasError = Boolean(error);
-  const borderColor = hasError ? ERROR : focused ? BRAND : BORDER;
 
   return (
     <div>
@@ -129,24 +138,21 @@ function PillInput({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          aria-invalid={hasError}
-          autoComplete={isPassword ? "current-password" : undefined}
+          autoComplete={autoComplete}
           style={{
             width: "100%",
             fontFamily: "Poppins, sans-serif",
             fontSize: "16px",
             color: "#101828",
             background: "#ffffff",
-            border: `1px solid ${borderColor}`,
+            border: `1px solid ${focused ? BRAND : BORDER}`,
             borderRadius: "9999px",
             padding: isPassword ? "11px 48px 11px 18px" : "11px 18px",
             outline: "none",
             boxSizing: "border-box",
-            boxShadow: hasError
-              ? "0 0 0 4px rgba(217,45,32,0.12)"
-              : focused
-                ? `0 0 0 4px rgba(165,74,255,0.12)`
-                : "0 1px 1px rgba(16,24,40,0.05)",
+            boxShadow: focused
+              ? `0 0 0 4px rgba(165,74,255,0.12)`
+              : "0 1px 1px rgba(16,24,40,0.05)",
             transition: "border-color 0.15s, box-shadow 0.15s",
           }}
         />
@@ -177,113 +183,260 @@ function PillInput({
           </button>
         )}
       </div>
-      {hasError && (
-        <p
-          style={{
-            fontFamily: "Poppins, sans-serif",
-            fontSize: "12px",
-            color: ERROR,
-            marginTop: "6px",
-          }}
-        >
-          {error}
-        </p>
-      )}
     </div>
   );
 }
 
-export default function LoginPage() {
+function PrimaryButton({
+  children,
+  disabled,
+  onClick,
+}: {
+  children: ReactNode;
+  disabled?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="submit"
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: "100%",
+        fontFamily: "Poppins, sans-serif",
+        fontWeight: 600,
+        fontSize: "16px",
+        color: "#ffffff",
+        background: GRAD,
+        border: "none",
+        borderRadius: "9999px",
+        padding: "14px",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.7 : 1,
+        marginBottom: "24px",
+        boxShadow: "0 2px 12px rgba(165,74,255,0.35)",
+        transition: "opacity 0.2s",
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) (e.currentTarget as HTMLElement).style.opacity = "0.9";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.opacity = disabled ? "0.7" : "1";
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function OtpInputs({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  disabled?: boolean;
+}) {
+  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+  const digits = value.padEnd(OTP_LENGTH, " ").slice(0, OTP_LENGTH).split("");
+
+  const focusAt = (index: number) => {
+    inputsRef.current[Math.max(0, Math.min(OTP_LENGTH - 1, index))]?.focus();
+  };
+
+  const setDigit = (index: number, digit: string) => {
+    const next = value.split("");
+    while (next.length < OTP_LENGTH) next.push("");
+    next[index] = digit;
+    onChange(next.join("").replace(/\s/g, "").slice(0, OTP_LENGTH));
+  };
+
+  return (
+    <div
+      style={{ display: "flex", gap: "10px", justifyContent: "center" }}
+      role="group"
+      aria-label="One-time password"
+    >
+      {digits.map((digit, index) => (
+        <input
+          key={index}
+          ref={(el) => {
+            inputsRef.current[index] = el;
+          }}
+          inputMode="numeric"
+          autoComplete={index === 0 ? "one-time-code" : "off"}
+          maxLength={1}
+          value={digit.trim()}
+          disabled={disabled}
+          onChange={(e) => {
+            const nextDigit = e.target.value.replace(/\D/g, "").slice(-1);
+            if (!nextDigit) {
+              setDigit(index, "");
+              return;
+            }
+            setDigit(index, nextDigit);
+            if (index < OTP_LENGTH - 1) focusAt(index + 1);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Backspace" && !value[index] && index > 0) {
+              setDigit(index - 1, "");
+              focusAt(index - 1);
+            }
+            if (e.key === "ArrowLeft") focusAt(index - 1);
+            if (e.key === "ArrowRight") focusAt(index + 1);
+          }}
+          onPaste={(e) => {
+            e.preventDefault();
+            const pasted = e.clipboardData
+              .getData("text")
+              .replace(/\D/g, "")
+              .slice(0, OTP_LENGTH);
+            if (!pasted) return;
+            onChange(pasted);
+            focusAt(Math.min(pasted.length, OTP_LENGTH - 1));
+          }}
+          style={{
+            width: "56px",
+            height: "56px",
+            textAlign: "center",
+            fontFamily: "Poppins, sans-serif",
+            fontWeight: 600,
+            fontSize: "22px",
+            color: "#101828",
+            background: "#ffffff",
+            border: `1px solid ${digit.trim() ? BRAND : BORDER}`,
+            borderRadius: "16px",
+            outline: "none",
+            boxShadow: "0 1px 1px rgba(16,24,40,0.05)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
-  const { loading } = useAppSelector((state) => state.auth);
+  const [step, setStep] = useState<FlowStep>("email");
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<{
-    email?: string;
-    password?: string;
-  }>({});
-  const [remember, setRemember] = useState(false);
-  const [pushPermission, setPushPermission] = useState<
-    NotificationPermission | "unsupported"
-  >("unsupported");
+  const [confirm, setConfirm] = useState("");
+  const [resendIn, setResendIn] = useState(0);
+
+  const [forgotPassword, { isLoading: sendingCode }] =
+    useForgotPasswordMutation();
+  const [verifyOtp, { isLoading: verifyingOtp }] = useVerifyOtpMutation();
+  const [resetOtp, { isLoading: resendingOtp }] = useResetOtpMutation();
+  const [resetPassword, { isLoading: savingPassword }] =
+    useResetPasswordMutation();
+
+  const busy = sendingCode || verifyingOtp || resendingOtp || savingPassword;
 
   useEffect(() => {
-    setPushPermission(getNotificationPermission());
-  }, []);
+    if (resendIn <= 0) return;
+    const timer = window.setTimeout(() => setResendIn((prev) => prev - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendIn]);
 
-  const handleEnablePush = async () => {
-    if (typeof Notification === "undefined") {
-      showToast("This browser does not support notifications.", "warning");
+  const startResendTimer = () => setResendIn(RESEND_SECONDS);
+
+  const handleSendCode = async (e: FormEvent) => {
+    e.preventDefault();
+    const nextEmail = email.trim().toLowerCase();
+    if (!isValidEmail(nextEmail)) {
+      showToast("Please enter a valid email address.", "warning");
       return;
     }
-
-    const permission = await Notification.requestPermission();
-    setPushPermission(permission);
-
-    if (permission === "granted") {
-      showToast("Notifications enabled. Sign in to register this device.", "success");
-      return;
-    }
-
-    await showSwal({
-      title: `Permission is "${permission}"`,
-      html: isEdgeBrowser()
-        ? "<p>Edge denied the request without prompting. Check these in order, then reload:</p><p>1. Windows Settings → System → Notifications → <strong>Microsoft Edge must be On</strong>. If Windows notifications are off for Edge, every web prompt is auto-denied.</p><p>2. <strong>edge://settings/content/notifications</strong> → the top toggle must be <strong>Ask before sending</strong>, and turn off <strong>Quiet notification requests</strong>.</p><p>3. On that same page, remove <strong>localhost:3000</strong> from the Block list.</p>"
-        : "<p>The browser denied the request without prompting.</p><p>Check that your OS allows notifications for this browser, then open the lock icon next to the URL and reset the Notifications permission. Reload afterwards.</p>",
-      variant: "warning",
-      confirmText: "Got it",
-    });
-  };
-
-  const handleLogin = async () => {
-    if (!email.trim() || !password) {
-      setFieldErrors({
-        email: !email.trim() ? "Please enter your email." : undefined,
-        password: !password ? "Please enter your password." : undefined,
-      });
-      return;
-    }
-
-    dispatch(clearAuthError());
-    setFieldErrors({});
 
     try {
-      const fcm = await getWebFcmToken();
-      setPushPermission(getNotificationPermission());
-      if (!fcm.token) {
-        console.warn(`Signing in without fcmToken: ${fcm.reason ?? fcm.status}`);
-      }
-
-      const result = await dispatch(
-        loginBuyer({
-          email: email.trim(),
-          password,
-          fcmToken: fcm.token,
-        }),
-      ).unwrap();
-
-      localStorage.setItem("whoCan_loggedIn", "true");
-      if (remember) {
-        localStorage.setItem("whoCan_remember", "true");
-      }
-
-      await showSuccess("Success", result.message || "Logged in successfully");
-
-      router.push("/");
-    } catch (error) {
-      const details = getAxiosErrorDetails(error as AuthApiError);
-      const nextErrors = {
-        email: details.fieldErrors.email,
-        password: details.fieldErrors.password,
-      };
-      setFieldErrors(nextErrors);
-
-      if (!nextErrors.email && !nextErrors.password) {
-        showToast(details.message, "error");
-      }
+      const result = await forgotPassword({ email: nextEmail }).unwrap();
+      setEmail(nextEmail);
+      setOtp("");
+      startResendTimer();
+      setStep("otp");
+      await showSuccess(
+        "Check your email",
+        result.message || "We sent a 4-digit code to your email.",
+      );
+    } catch {
+      // API errors are shown by the axios interceptor toast
     }
   };
+
+  const handleVerifyOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== OTP_LENGTH) {
+      showToast("Enter the 4-digit code from your email.", "warning");
+      return;
+    }
+
+    try {
+      const result = await verifyOtp({ email, otp }).unwrap();
+      setPassword("");
+      setConfirm("");
+      setStep("password");
+      await showSuccess(
+        "Code verified",
+        result.message || "Enter a new password to continue.",
+      );
+    } catch {
+      // API errors are shown by the axios interceptor toast
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendIn > 0 || busy) return;
+    try {
+      const result = await resetOtp({ email }).unwrap();
+      setOtp("");
+      startResendTimer();
+      showToast(result.message || "A new code was sent to your email.", "success");
+    } catch {
+      // API errors are shown by the axios interceptor toast
+    }
+  };
+
+  const handleResetPassword = async (e: FormEvent) => {
+    e.preventDefault();
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      showToast(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`, "warning");
+      return;
+    }
+    if (password !== confirm) {
+      showToast("Passwords do not match.", "warning");
+      return;
+    }
+
+    try {
+      const result = await resetPassword({
+        email,
+        newPassword: password,
+      }).unwrap();
+      await showSuccess(
+        "Password updated",
+        result.message || "You can now log in with your new password.",
+      );
+      router.push("/auth/login");
+    } catch {
+      // API errors are shown by the axios interceptor toast
+    }
+  };
+
+  const title =
+    step === "email"
+      ? "Forgot password"
+      : step === "otp"
+        ? "Enter verification code"
+        : "Set a new password";
+
+  const subtitle =
+    step === "email"
+      ? "Enter the email linked to your account and we'll send a reset code."
+      : step === "otp"
+        ? `We sent a 4-digit code to ${maskEmail(email)}.`
+        : "Choose a new password for your WhoCan account.";
 
   return (
     <div
@@ -299,7 +452,6 @@ export default function LoginPage() {
         overflow: "hidden",
       }}
     >
-      {/* Subtle grid background */}
       <div
         style={{
           position: "absolute",
@@ -310,7 +462,6 @@ export default function LoginPage() {
           pointerEvents: "none",
         }}
       />
-      {/* Top radial glow */}
       <div
         style={{
           position: "absolute",
@@ -325,13 +476,45 @@ export default function LoginPage() {
         }}
       />
 
-      {/* Logo */}
       <a href="/" style={{ marginBottom: "40px", position: "relative" }}>
         <WhoCanLogo />
       </a>
 
-      {/* Card */}
       <div style={{ width: "100%", maxWidth: "400px", position: "relative" }}>
+        {step !== "email" && (
+          <button
+            type="button"
+            onClick={() => setStep(step === "password" ? "otp" : "email")}
+            disabled={busy}
+            aria-label="Back"
+            style={{
+              position: "absolute",
+              top: "-8px",
+              left: 0,
+              width: "40px",
+              height: "40px",
+              background: "#ffffff",
+              border: "1px solid #EAECF0",
+              borderRadius: "12px",
+              cursor: busy ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: busy ? 0.6 : 1,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M19 12H5M5 12l7 7M5 12l7-7"
+                stroke="#344054"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
+
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
           <h1
             style={{
@@ -343,187 +526,111 @@ export default function LoginPage() {
               marginBottom: "10px",
             }}
           >
-            Log In
+            {title}
           </h1>
           <p
             style={{
               fontFamily: "Poppins, sans-serif",
               fontSize: "16px",
               color: "#475467",
+              lineHeight: "1.5",
             }}
           >
-            Welcome back! Please enter your details.
+            {subtitle}
           </p>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-            marginBottom: "16px",
-          }}
-        >
-          <PillInput
-            label="Email"
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            error={fieldErrors.email}
-            onChange={(value) => {
-              setEmail(value);
-              if (fieldErrors.email) {
-                setFieldErrors((prev) => ({ ...prev, email: undefined }));
-              }
-            }}
-          />
-          <PillInput
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            error={fieldErrors.password}
-            onChange={(value) => {
-              setPassword(value);
-              if (fieldErrors.password) {
-                setFieldErrors((prev) => ({ ...prev, password: undefined }));
-              }
-            }}
-          />
-        </div>
+        {step === "email" && (
+          <form onSubmit={handleSendCode}>
+            <div style={{ marginBottom: "24px" }}>
+              <PillInput
+                label="Email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={setEmail}
+                autoComplete="email"
+              />
+            </div>
+            <PrimaryButton disabled={busy}>
+              {sendingCode ? "Sending code..." : "Send reset code"}
+            </PrimaryButton>
+          </form>
+        )}
 
-        {/* Remember + Forgot */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "24px",
-          }}
-        >
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              cursor: "pointer",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
+        {step === "otp" && (
+          <form onSubmit={handleVerifyOtp}>
+            <div style={{ marginBottom: "20px" }}>
+              <OtpInputs value={otp} onChange={setOtp} disabled={busy} />
+            </div>
+            <PrimaryButton disabled={busy}>
+              {verifyingOtp ? "Verifying..." : "Verify code"}
+            </PrimaryButton>
+            <p
               style={{
-                width: "16px",
-                height: "16px",
-                accentColor: BRAND,
-                cursor: "pointer",
-              }}
-            />
-            <span
-              style={{
+                textAlign: "center",
                 fontFamily: "Poppins, sans-serif",
-                fontWeight: 500,
                 fontSize: "14px",
                 color: "#344054",
+                marginBottom: "24px",
               }}
             >
-              Remember for 30 days
-            </span>
-          </label>
-          <a
-            href="/auth/forgot-password"
-            style={{
-              fontFamily: "Poppins, sans-serif",
-              fontWeight: 600,
-              fontSize: "14px",
-              color: "#7535B5",
-              textDecoration: "none",
-            }}
-          >
-            Forgot password
-          </a>
-        </div>
+              Didn't get a code?{" "}
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={busy || resendIn > 0}
+                style={{
+                  fontFamily: "Poppins, sans-serif",
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  color: BRAND,
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: busy || resendIn > 0 ? "not-allowed" : "pointer",
+                  opacity: busy || resendIn > 0 ? 0.6 : 1,
+                }}
+              >
+                {resendIn > 0 ? `Resend in ${resendIn}s` : "Resend code"}
+              </button>
+            </p>
+          </form>
+        )}
 
-        {/* Push notification status */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "12px",
-            padding: "10px 14px",
-            marginBottom: "16px",
-            border: `1px solid ${BORDER}`,
-            borderRadius: "12px",
-            background: "#F9FAFB",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "Poppins, sans-serif",
-              fontSize: "13px",
-              color: "#475467",
-            }}
-          >
-            Notifications:{" "}
-            <strong style={{ color: "#101828" }}>{pushPermission}</strong>
-          </span>
-          {pushPermission !== "granted" && (
-            <button
-              type="button"
-              onClick={handleEnablePush}
+        {step === "password" && (
+          <form onSubmit={handleResetPassword}>
+            <div
               style={{
-                fontFamily: "Poppins, sans-serif",
-                fontWeight: 600,
-                fontSize: "13px",
-                color: BRAND,
-                background: "transparent",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+                marginBottom: "24px",
               }}
             >
-              Enable
-            </button>
-          )}
-        </div>
+              <PillInput
+                label="New password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={setPassword}
+                autoComplete="new-password"
+              />
+              <PillInput
+                label="Confirm password"
+                type="password"
+                placeholder="••••••••"
+                value={confirm}
+                onChange={setConfirm}
+                autoComplete="new-password"
+              />
+            </div>
+            <PrimaryButton disabled={busy}>
+              {savingPassword ? "Updating password..." : "Reset password"}
+            </PrimaryButton>
+          </form>
+        )}
 
-        {/* Submit */}
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          style={{
-            width: "100%",
-            fontFamily: "Poppins, sans-serif",
-            fontWeight: 600,
-            fontSize: "16px",
-            color: "#ffffff",
-            background: GRAD,
-            border: "none",
-            borderRadius: "9999px",
-            padding: "14px",
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1,
-            marginBottom: "24px",
-            boxShadow: "0 2px 12px rgba(165,74,255,0.35)",
-            transition: "opacity 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            if (!loading)
-              (e.currentTarget as HTMLElement).style.opacity = "0.9";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.opacity = loading
-              ? "0.7"
-              : "1";
-          }}
-        >
-          {loading ? "Signing in..." : "Sign in"}
-        </button>
-
-        {/* Sign up link */}
         <p
           style={{
             textAlign: "center",
@@ -532,9 +639,9 @@ export default function LoginPage() {
             color: "#344054",
           }}
         >
-          Don't have an account?{" "}
+          Remember your password?{" "}
           <a
-            href="/auth/signup"
+            href="/auth/login"
             style={{
               fontFamily: "Poppins, sans-serif",
               fontWeight: 600,
@@ -543,7 +650,7 @@ export default function LoginPage() {
               textDecoration: "none",
             }}
           >
-            Sign Up
+            Log In
           </a>
         </p>
       </div>
