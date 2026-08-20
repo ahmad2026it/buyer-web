@@ -864,6 +864,7 @@ export default function Navbar() {
     dispatch(logoutAuth());
     setIsLoggedIn(false);
     setProfileOpen(false);
+    router.push('/');
   };
 
   const markColor = scrolled ? '#9643E8' : '#BF75FF';
