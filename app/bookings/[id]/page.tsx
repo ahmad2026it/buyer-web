@@ -24,7 +24,7 @@ import type {
   BuyerBookingAddOn,
   BuyerBookingReview,
 } from '@/app/buyer/store/buyerBookingsTypes';
-import { isAwaitingCompleteBookingStatus, isFinishedBookingStatus } from '@/app/buyer/store/buyerBookingsTypes';
+import { isAwaitingCompleteBookingStatus, isCancelledBookingStatus, isFinishedBookingStatus } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 
@@ -79,7 +79,7 @@ function mapApiStatus(status: string): Status {
   if (['upcoming', 'accepted', 'confirmed', 'scheduled', 'approved'].includes(key)) return 'Upcoming';
   if (['pending', 'request', 'requested'].includes(key)) return 'Pending';
   if (['declined', 'rejected'].includes(key)) return 'Declined';
-  if (['cancelled', 'canceled'].includes(key)) return 'Cancelled';
+  if (isCancelledBookingStatus(status)) return 'Cancelled';
   if (isFinishedBookingStatus(status)) return 'Completed';
   if (isAwaitingCompleteBookingStatus(status)) return 'Complete';
   return 'Pending';
@@ -368,13 +368,6 @@ function ThreeDotMenu({ onReport }: { onReport: () => void }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="#D92D20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="#D92D20" strokeWidth="2" strokeLinecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="#D92D20" strokeWidth="2" strokeLinecap="round"/></svg>
               Report Seller
             </button>
-            <button
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#344054', background: 'none', border: 'none', cursor: 'pointer', padding: '9px 12px', borderRadius: 8 }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='#F9FAFB'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='none'; }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#667085" strokeWidth="1.8"/><path d="M12 8v4M12 16h.01" stroke="#667085" strokeWidth="1.8" strokeLinecap="round"/></svg>
-              Get Help
-            </button>
           </div>
         </>
       )}
@@ -427,17 +420,19 @@ type CompleteReviewPayload = {
   videos: File[];
 };
 
-/* ─── MarkCompleteModal ──────────────────────────────────── */
+/* ─── MarkCompleteModal / RateSellerModal ────────────────── */
 function MarkCompleteModal({
+  mode = 'complete',
   onClose,
   onDone,
   onReport,
   isSubmitting,
 }: {
+  mode?: 'complete' | 'rate';
   booking: DetailedBooking;
   onClose: () => void;
   onDone: (review: CompleteReviewPayload) => Promise<boolean>;
-  onReport: () => void;
+  onReport?: () => void;
   isSubmitting: boolean;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -446,6 +441,9 @@ function MarkCompleteModal({
   const [hover,  setHover]  = useState(0);
   const [review, setReview] = useState('');
   const [media, setMedia] = useState<ReviewMediaItem[]>([]);
+  const isRateMode = mode === 'rate';
+  const ratingRequired = isRateMode;
+  const canSubmit = !isSubmitting && (!ratingRequired || rating >= 1);
 
   useEffect(() => {
     mediaRef.current = media;
@@ -483,7 +481,7 @@ function MarkCompleteModal({
         {/* Header */}
         <div style={{ padding: '20px 24px 0', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 18, color: '#101828', margin: 0 }}>Mark favor completed</h2>
+            <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 18, color: '#101828', margin: 0 }}>{isRateMode ? 'Rate seller' : 'Mark favor completed'}</h2>
             <ModalCloseBtn onClose={isSubmitting ? () => undefined : onClose} />
           </div>
           <div style={{ height: 1, background: '#EAECF0', margin: '0 -24px' }}/>
@@ -492,9 +490,14 @@ function MarkCompleteModal({
         {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 24 }}>
-            Please provide your valuable feedback about the seller and the service.
+            {isRateMode
+              ? 'Please provide your valuable feedback about the seller and the service.'
+              : 'You can mark this favor complete now. Rating the seller is optional and can be done later.'}
           </p>
 
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 8, textAlign: 'center' }}>
+            {isRateMode ? 'Rating' : 'Rating (optional)'}
+          </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
             {[1,2,3,4,5].map(i => (
               <button key={i} type="button" disabled={isSubmitting} onClick={() => setRating(i)} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(0)}
@@ -544,10 +547,10 @@ function MarkCompleteModal({
         <div style={{ flexShrink: 0, borderTop: '1px solid #EAECF0', padding: '16px 24px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button
             type="button"
-            disabled={isSubmitting || rating < 1}
+            disabled={!canSubmit}
             onClick={async () => {
-              if (rating < 1) {
-                showToast('Please rate the seller before marking complete.', 'warning');
+              if (ratingRequired && rating < 1) {
+                showToast('Please rate the seller before submitting.', 'warning');
                 return;
               }
               const ok = await onDone({
@@ -558,14 +561,18 @@ function MarkCompleteModal({
               });
               if (!ok) return;
             }}
-            style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '13px', cursor: (isSubmitting || rating < 1) ? 'not-allowed' : 'pointer', opacity: (isSubmitting || rating < 1) ? 0.6 : 1, transition: 'opacity 0.15s' }}
+            style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '13px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.6, transition: 'opacity 0.15s' }}
           >
-            {isSubmitting ? 'Marking complete...' : 'Mark complete'}
+            {isSubmitting
+              ? (isRateMode ? 'Submitting...' : 'Marking complete...')
+              : (isRateMode ? 'Submit rating' : 'Mark complete')}
           </button>
-          <button type="button" onClick={onReport} disabled={isSubmitting}
-            style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 600, color: '#D92D20', background: 'none', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', textAlign: 'center', padding: '4px 0', opacity: isSubmitting ? 0.6 : 1 }}>
-            Report favor
-          </button>
+          {!isRateMode && onReport && (
+            <button type="button" onClick={onReport} disabled={isSubmitting}
+              style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 600, color: '#D92D20', background: 'none', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', textAlign: 'center', padding: '4px 0', opacity: isSubmitting ? 0.6 : 1 }}>
+              Report favor
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -573,7 +580,7 @@ function MarkCompleteModal({
 }
 
 /* ─── CompletedSuccessModal ──────────────────────────────── */
-function CompletedSuccessModal({ onClose }: { onClose: () => void }) {
+function CompletedSuccessModal({ didReview, onClose }: { didReview: boolean; onClose: () => void }) {
   const dots = [
     { x:-52, y:-46, s:9, c:'#F79009' },{ x:48, y:-52, s:7, c:'#F04438' },
     { x:-64, y:-8,  s:6, c:'#17B26A' },{ x:60, y:-4,  s:8, c:'#A54AFF' },
@@ -594,7 +601,11 @@ function CompletedSuccessModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 20, color: '#101828', marginBottom: 8 }}>Favor completed!</h2>
-        <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', marginBottom: 28 }}>Thanks for your feedback. Your review has been submitted.</p>
+        <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', marginBottom: 28 }}>
+          {didReview
+            ? 'Thanks for your feedback. Your review has been submitted.'
+            : 'This favor is complete. You can rate the seller anytime from this booking.'}
+        </p>
         <button onClick={onClose}
           style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '13px', cursor: 'pointer', transition: 'opacity 0.15s' }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
@@ -1017,18 +1028,61 @@ function WithdrawModal({
 }
 
 /* ─── CancelModal (upcoming — 80% refund) ────────────────── */
-function CancelModal({ booking, onConfirm, onClose }: { booking: DetailedBooking; onConfirm: () => void; onClose: () => void }) {
+function CancelModal({
+  booking,
+  onConfirm,
+  onClose,
+  onDone,
+  isSubmitting,
+}: {
+  booking: DetailedBooking;
+  onConfirm: (reason: string) => Promise<boolean>;
+  onClose: () => void;
+  onDone: () => void;
+  isSubmitting: boolean;
+}) {
+  const [reason, setReason] = useState('');
+  const [note, setNote] = useState('');
+  const [done, setDone] = useState(false);
   const refund = Math.round(booking.price * 0.8 * 100) / 100;
   const fee    = Math.round(booking.price * 0.2 * 100) / 100;
+  const cancelReason = reason === 'Other' ? (note.trim() || 'Other') : reason;
+  const canSubmit = Boolean(reason) && (reason !== 'Other' || Boolean(note.trim())) && !isSubmitting;
+
+  if (done) {
+    return (
+      <div style={MODAL_OVERLAY}>
+        <div style={{ background: '#fff', borderRadius: 16, maxWidth: 380, width: '100%', padding: '40px 28px 32px', textAlign: 'center', boxShadow: MODAL_SHADOW }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F4EBFF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 20, color: '#101828', marginBottom: 8 }}>Booking cancelled</h2>
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 28 }}>
+            This booking has been cancelled. You can find it in History.
+          </p>
+          <button
+            type="button"
+            onClick={onDone}
+            style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '13px', cursor: 'pointer' }}
+          >
+            Back to bookings
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div onClick={e => { if (e.target === e.currentTarget) onClose(); }} style={MODAL_OVERLAY}>
+    <div onClick={e => { if (e.target === e.currentTarget && !isSubmitting) onClose(); }} style={MODAL_OVERLAY}>
       <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: MODAL_SHADOW }}>
 
         {/* Header */}
         <div style={{ padding: '20px 24px 0', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 18, color: '#101828', margin: 0 }}>Cancel Booking?</h2>
-            <ModalCloseBtn onClose={onClose} />
+            <ModalCloseBtn onClose={isSubmitting ? () => undefined : onClose} />
           </div>
           <div style={{ height: 1, background: '#EAECF0', margin: '0 -24px' }}/>
         </div>
@@ -1039,7 +1093,7 @@ function CancelModal({ booking, onConfirm, onClose }: { booking: DetailedBooking
             This action cannot be undone. Per our cancellation policy, you will receive an 80% refund of your payment.
           </p>
 
-          <div style={{ background: '#FEF3F2', border: '1px solid #FECDCA', borderRadius: 12, padding: '14px 16px', marginBottom: 4 }}>
+          <div style={{ background: '#FEF3F2', border: '1px solid #FECDCA', borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
             {[['Amount paid', `$${booking.price.toFixed(2)}`, '#344054'], ['Cancellation fee (20%)', `-$${fee.toFixed(2)}`, '#D92D20']].map(([l, v, c], i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085' }}>{l}</span>
@@ -1051,21 +1105,44 @@ function CancelModal({ booking, onConfirm, onClose }: { booking: DetailedBooking
               <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#079455' }}>${refund.toFixed(2)}</span>
             </div>
           </div>
+
+          <div style={{ marginBottom: reason === 'Other' ? 18 : 0 }}>
+            <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 8 }}>Select reason</p>
+            <ModalSelect value={reason} onChange={setReason} options={WITHDRAW_REASONS} placeholder="Select one" />
+          </div>
+          {reason === 'Other' && (
+            <textarea
+              value={note}
+              disabled={isSubmitting}
+              onChange={e => setNote(e.target.value)}
+              placeholder="Tell us why you're cancelling"
+              style={{ width: '100%', minHeight: 90, fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#101828', border: '1px solid #D0D5DD', borderRadius: 12, padding: '12px 14px', outline: 'none', resize: 'none', boxSizing: 'border-box', display: 'block' }}
+            />
+          )}
         </div>
 
         {/* Footer */}
         <div style={{ flexShrink: 0, borderTop: '1px solid #EAECF0', padding: '16px 24px 24px', display: 'flex', gap: 12 }}>
-          <button onClick={onClose}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: 'pointer', transition: 'background 0.15s' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1, transition: 'background 0.15s' }}
+            onMouseEnter={e => { if (!isSubmitting) (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}>
             Keep Booking
           </button>
-          <button onClick={onConfirm}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: 'linear-gradient(135deg,#F97066,#D92D20)', border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: 'pointer', transition: 'opacity 0.15s' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-            Confirm Cancel
+          <button
+            type="button"
+            onClick={async () => {
+              if (!canSubmit) return;
+              const ok = await onConfirm(cancelReason);
+              if (ok) setDone(true);
+            }}
+            disabled={!canSubmit}
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: 'linear-gradient(135deg,#F97066,#D92D20)', border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.5, transition: 'opacity 0.15s' }}
+          >
+            {isSubmitting ? 'Cancelling...' : 'Confirm Cancel'}
           </button>
         </div>
       </div>
@@ -1215,18 +1292,25 @@ export default function BookingDetailPage() {
   const [reportBooking, { isLoading: isReporting }] = useReportBuyerBookingMutation();
   const [startConversation, { isLoading: isStartingChat }] = useStartBuyerConversationByBookingMutation();
   const isSubmittingComplete = isApproving || isReviewing;
+  const [buyerApproved, setBuyerApproved] = useState(false);
   const mapped = useMemo(() => {
     const item = data?.data?.booking;
     if (!item) return null;
-    return toDetailedBooking(item, data?.data?.review ?? null);
-  }, [data]);
+    const detailed = toDetailedBooking(item, data?.data?.review ?? null);
+    if (buyerApproved && detailed.status === 'Complete') {
+      return { ...detailed, status: 'Completed' as Status };
+    }
+    return detailed;
+  }, [buyerApproved, data]);
 
   const [authOpen, setAuthOpen]       = useState(false);
   const [showEdit,        setShowEdit]        = useState(false);
   const [showPreCancel,   setShowPreCancel]   = useState(false);
   const [showLiveCancel,  setShowLiveCancel]  = useState(false);
   const [showMarkDone,    setShowMarkDone]    = useState(false);
+  const [showRate,        setShowRate]        = useState(false);
   const [showDoneSuccess, setShowDoneSuccess] = useState(false);
+  const [didSubmitReview, setDidSubmitReview] = useState(false);
   const [showReport,      setShowReport]      = useState(false);
   const [showMessage,     setShowMessage]     = useState<{ name: string; conversationId: number; canSend: boolean } | null>(null);
   const [showWithdraw,    setShowWithdraw]    = useState(false);
@@ -1316,13 +1400,14 @@ export default function BookingDetailPage() {
 
   const isLive    = booking.status === 'InProgress';
   const isAwaitingComplete = booking.status === 'Complete';
+  const canRate = booking.status === 'Completed' && !booking.rating;
   const days      = getDaysUntil(booking.dateIso || booking.date);
   const canWithdraw = booking.status === 'Pending';
 
-  const handleDoneSuccess = () => { setShowDoneSuccess(false); router.push('/bookings'); };
+  const handleDoneSuccess = () => { setShowDoneSuccess(false); };
   const handlePreCancelConfirm = () => { setShowPreCancel(false); router.push('/bookings'); };
   const handleLiveCancelConfirm = () => { setShowLiveCancel(false); router.push('/bookings'); };
-  const handleLiveCancel = async (cancelReason: string) => {
+  const handleCancelBooking = async (cancelReason: string) => {
     try {
       const response = await cancelBooking({
         booking_id: bookingId,
@@ -1337,20 +1422,46 @@ export default function BookingDetailPage() {
   const handleApproveComplete = async (review: CompleteReviewPayload) => {
     try {
       const response = await approveComplete({ booking_id: bookingId }).unwrap();
-      try {
-        await addReview({
-          booking_id: bookingId,
-          rating: review.rating,
-          comment: review.comment,
-          images: review.images.length ? review.images : undefined,
-          videos: review.videos.length ? review.videos : undefined,
-        }).unwrap();
-      } catch {
-        // Booking is already complete; interceptor toasts the review error.
+      const shouldReview = review.rating >= 1;
+      if (shouldReview) {
+        try {
+          await addReview({
+            booking_id: bookingId,
+            rating: review.rating,
+            comment: review.comment,
+            images: review.images.length ? review.images : undefined,
+            videos: review.videos.length ? review.videos : undefined,
+          }).unwrap();
+        } catch {
+          // Booking is already complete; interceptor toasts the review error.
+        }
       }
+      setBuyerApproved(true);
+      setDidSubmitReview(shouldReview);
       setShowMarkDone(false);
       showToast(response.message || 'Booking marked complete.', 'success');
       setShowDoneSuccess(true);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const handleAddReview = async (review: CompleteReviewPayload) => {
+    if (review.rating < 1) {
+      showToast('Please rate the seller before submitting.', 'warning');
+      return false;
+    }
+    try {
+      const response = await addReview({
+        booking_id: bookingId,
+        rating: review.rating,
+        comment: review.comment,
+        images: review.images.length ? review.images : undefined,
+        videos: review.videos.length ? review.videos : undefined,
+      }).unwrap();
+      setShowRate(false);
+      setDidSubmitReview(true);
+      showToast(response.message || 'Review submitted.', 'success');
       return true;
     } catch {
       return false;
@@ -1530,6 +1641,18 @@ export default function BookingDetailPage() {
               {!isLive && !isAwaitingComplete && booking.status !== 'Upcoming' && (
                 <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
                   <StatusPill />
+                  {canRate && (
+                    <button
+                      type="button"
+                      onClick={() => setShowRate(true)}
+                      disabled={isReviewing}
+                      style={{ display:'inline-flex', alignItems:'center', gap:7, fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:'#fff', background:GRAD, border:'none', borderRadius:PILL, padding:'11px 18px', cursor: isReviewing ? 'not-allowed' : 'pointer', whiteSpace:'nowrap', boxShadow:'0 3px 12px rgba(165,74,255,0.3)', opacity: isReviewing ? 0.7 : 1, transition:'opacity 0.15s' }}
+                      onMouseEnter={e=>{ if (!isReviewing) (e.currentTarget as HTMLElement).style.opacity='0.9'; }}
+                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity= isReviewing ? '0.7' : '1';}}
+                    >
+                      Rate seller
+                    </button>
+                  )}
                   <ThreeDotMenu onReport={() => setShowReport(true)} />
                 </div>
               )}
@@ -1955,16 +2078,32 @@ export default function BookingDetailPage() {
               <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
                 {booking.status === 'Completed' && (
                   <Section title="Your Feedback">
-                    <div style={{ display:'flex', alignItems:'flex-start', gap:16 }}>
-                      <img src={booking.sellerAvatar} alt={booking.sellerName} style={{ width:44, height:44, borderRadius:'50%', objectFit:'cover', flexShrink:0, border:'2px solid #DFBAFF' }}/>
-                      <div style={{ flex:1 }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:8 }}>
-                          <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:'#101828', margin:0 }}>{booking.sellerName}</p>
-                          {booking.rating && <StarDisplay rating={booking.rating} />}
+                    {booking.rating ? (
+                      <div style={{ display:'flex', alignItems:'flex-start', gap:16 }}>
+                        <img src={booking.sellerAvatar} alt={booking.sellerName} style={{ width:44, height:44, borderRadius:'50%', objectFit:'cover', flexShrink:0, border:'2px solid #DFBAFF' }}/>
+                        <div style={{ flex:1 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:8 }}>
+                            <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:'#101828', margin:0 }}>{booking.sellerName}</p>
+                            <StarDisplay rating={booking.rating} />
+                          </div>
+                          {booking.review && <p style={{ fontFamily:'Poppins,sans-serif', fontSize:14, color:'#344054', lineHeight:1.65, margin:0 }}>"{booking.review}"</p>}
                         </div>
-                        {booking.review && <p style={{ fontFamily:'Poppins,sans-serif', fontSize:14, color:'#344054', lineHeight:1.65, margin:0 }}>"{booking.review}"</p>}
                       </div>
-                    </div>
+                    ) : (
+                      <div>
+                        <p style={{ fontFamily:'Poppins,sans-serif', fontSize:14, color:'#667085', lineHeight:1.65, margin:'0 0 16px' }}>
+                          You haven't rated this seller yet. Your feedback helps other buyers.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowRate(true)}
+                          disabled={isReviewing}
+                          style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:'#fff', background:GRAD, border:'none', borderRadius:PILL, padding:'11px 18px', cursor: isReviewing ? 'not-allowed' : 'pointer', opacity: isReviewing ? 0.7 : 1 }}
+                        >
+                          Rate seller
+                        </button>
+                      </div>
+                    )}
                   </Section>
                 )}
 
@@ -2041,7 +2180,15 @@ export default function BookingDetailPage() {
 
       {/* ─── Modals ──────────────────────────────────────────── */}
       {showEdit       && <EditModal booking={booking} onClose={() => setShowEdit(false)}/>}
-      {showPreCancel  && <CancelModal booking={booking} onConfirm={handlePreCancelConfirm} onClose={() => setShowPreCancel(false)}/>}
+      {showPreCancel  && (
+        <CancelModal
+          booking={booking}
+          isSubmitting={isCancelling}
+          onConfirm={handleCancelBooking}
+          onClose={() => { if (!isCancelling) setShowPreCancel(false); }}
+          onDone={handlePreCancelConfirm}
+        />
+      )}
       {showWithdraw   && (
         <WithdrawModal
           onConfirm={handleWithdraw}
@@ -2054,7 +2201,7 @@ export default function BookingDetailPage() {
           booking={booking}
           variant={isAwaitingComplete ? 'reject' : 'cancel'}
           onClose={() => { if (!isCancelling) setShowLiveCancel(false); }}
-          onConfirm={handleLiveCancel}
+          onConfirm={handleCancelBooking}
           onDone={handleLiveCancelConfirm}
           isSubmitting={isCancelling}
         />
@@ -2068,7 +2215,16 @@ export default function BookingDetailPage() {
           isSubmitting={isSubmittingComplete}
         />
       )}
-      {showDoneSuccess && <CompletedSuccessModal onClose={handleDoneSuccess}/>}
+      {showRate && (
+        <MarkCompleteModal
+          mode="rate"
+          booking={booking}
+          onClose={() => { if (!isReviewing) setShowRate(false); }}
+          onDone={handleAddReview}
+          isSubmitting={isReviewing}
+        />
+      )}
+      {showDoneSuccess && <CompletedSuccessModal didReview={didSubmitReview} onClose={handleDoneSuccess}/>}
       {showReport && (
         <ReportModal
           sellerName={booking.sellerName}

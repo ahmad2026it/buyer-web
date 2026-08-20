@@ -71,7 +71,10 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
     .filter((value) => typeof value === 'string' && value.trim())
     .join(' ')
     .toLowerCase();
-  const looksLikeBooking = /(booking|booked|accepted|declined|cancelled|completed)/.test(type);
+  const looksLikeBooking =
+    /(booking|booked|accepted|declined|cancelled|canceled|completed|in-progress|in_progress|inprogress)/.test(
+      type,
+    );
   const isChat =
     /(message|chat|conversation|support)/.test(type) ||
     (Boolean(notification.actorUserId || notification.actor?.id) &&

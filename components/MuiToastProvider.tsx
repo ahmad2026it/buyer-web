@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Alert, Snackbar } from '@mui/material';
+import { Alert, AlertTitle, Snackbar } from '@mui/material';
 import {
   subscribeToast,
   type ToastPayload,
@@ -43,16 +43,18 @@ export default function MuiToastProvider({
       <Snackbar
         key={current?.id}
         open={Boolean(current)}
-        autoHideDuration={4500}
+        autoHideDuration={7000}
         onClose={handleClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        sx={{ zIndex: 14000 }}
       >
         <Alert
           onClose={handleClose}
           severity={severity}
           variant="filled"
-          sx={{ width: '100%', boxShadow: '0 8px 24px rgba(16,24,40,0.16)' }}
+          sx={{ width: '100%', minWidth: 280, maxWidth: 420, boxShadow: '0 8px 24px rgba(16,24,40,0.16)' }}
         >
+          {current?.title ? <AlertTitle sx={{ fontWeight: 700 }}>{current.title}</AlertTitle> : null}
           {current?.message}
         </Alert>
       </Snackbar>

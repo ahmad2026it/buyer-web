@@ -1,4 +1,5 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import {
   FLUSH,
   PAUSE,
@@ -89,6 +90,7 @@ export const makeStore = () => {
       ),
   });
 
+  setupListeners(store.dispatch);
   const persistor = persistStore(store);
   return { store, persistor };
 };

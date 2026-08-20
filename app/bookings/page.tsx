@@ -4,10 +4,15 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AuthGateModal from '@/components/AuthGateModal';
-import { useGetBuyerBookingsQuery } from '@/app/buyer/store/buyerBookingsAPI';
+import {
+  useCancelBuyerBookingMutation,
+  useGetBuyerBookingsQuery,
+  useWithdrawBuyerBookingMutation,
+} from '@/app/buyer/store/buyerBookingsAPI';
 import {
   isActiveListingBookingStatus,
   isAwaitingCompleteBookingStatus,
+  isCancelledBookingStatus,
   isFinishedBookingStatus,
   mergeBuyerBookings,
   normalizeBookingStatus,
@@ -16,6 +21,7 @@ import {
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import { showToast } from '@/lib/toast';
 
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const BRAND = '#A54AFF';
@@ -41,6 +47,27 @@ interface Booking {
 
 const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80';
 const PAGE_SIZE = 10;
+const CANCEL_REASONS = [
+  'Plans changed',
+  'No longer needed',
+  'Booked by mistake',
+  'Found another option',
+  'Emergency on my end',
+  'Seller is not responding',
+  'Other',
+];
+const WITHDRAW_REASONS = [
+  'Plans changed',
+  'No longer needed',
+  'Booked by mistake',
+  'Found another option',
+  'Other',
+];
+const MODAL_OVERLAY: React.CSSProperties = {
+  position: 'fixed', inset: 0, background: 'rgba(16,24,40,0.52)', zIndex: 9999,
+  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+};
+const MODAL_SHADOW = '0 20px 24px -4px rgba(16,24,40,0.08), 0 8px 8px -4px rgba(16,24,40,0.03)';
 
 function mapApiStatus(status: string, tab: BuyerBookingListTab): Status {
   const key = normalizeBookingStatus(status);
@@ -48,7 +75,7 @@ function mapApiStatus(status: string, tab: BuyerBookingListTab): Status {
   if (['upcoming', 'accepted', 'confirmed', 'scheduled', 'approved'].includes(key)) return 'Upcoming';
   if (['pending', 'request', 'requested'].includes(key)) return 'Pending';
   if (['declined', 'rejected'].includes(key)) return 'Declined';
-  if (['cancelled', 'canceled'].includes(key)) return 'Cancelled';
+  if (isCancelledBookingStatus(status)) return 'Cancelled';
   if (isFinishedBookingStatus(status) || (tab === 'history' && isAwaitingCompleteBookingStatus(status))) return 'Completed';
   if (isAwaitingCompleteBookingStatus(status)) return 'Complete';
   if (tab === 'upcoming') return 'Upcoming';
@@ -167,7 +194,7 @@ function KebabMenu({ status, onWithdraw, onDelete, onCancel, onViewDetails }: { 
                 Withdraw request
               </button>
             )}
-            {(status === 'Declined' || status === 'Cancelled' || status === 'Completed') && (
+            {status === 'Declined' && (
               <button onClick={() => { onDelete(); setOpen(false); }}
                 style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FEF3F2'; }}
@@ -189,7 +216,261 @@ function KebabMenu({ status, onWithdraw, onDelete, onCancel, onViewDetails }: { 
   );
 }
 
-function BookingCard({ booking, onRemove }: { booking: Booking; onRemove: () => void }) {
+function CancelBookingModal({
+  booking,
+  onClose,
+  onConfirm,
+  isSubmitting,
+}: {
+  booking: Booking;
+  onClose: () => void;
+  onConfirm: (reason: string) => Promise<boolean>;
+  isSubmitting: boolean;
+}) {
+  const [reason, setReason] = useState('');
+  const [note, setNote] = useState('');
+  const [done, setDone] = useState(false);
+  const cancelReason = reason === 'Other' ? (note.trim() || 'Other') : reason;
+  const canSubmit = Boolean(reason) && (reason !== 'Other' || Boolean(note.trim())) && !isSubmitting;
+  const isUpcoming = booking.status === 'Upcoming';
+  const refund = Math.round(booking.price * 0.8 * 100) / 100;
+  const fee = Math.round(booking.price * 0.2 * 100) / 100;
+
+  if (done) {
+    return (
+      <div style={MODAL_OVERLAY}>
+        <div style={{ background: '#fff', borderRadius: 16, maxWidth: 380, width: '100%', padding: '40px 28px 32px', textAlign: 'center', boxShadow: MODAL_SHADOW }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F4EBFF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 20, color: '#101828', marginBottom: 8 }}>Booking cancelled</h2>
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 28 }}>
+            This booking has been cancelled. You can find it in History.
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '13px', cursor: 'pointer' }}
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div onClick={(e) => { if (e.target === e.currentTarget && !isSubmitting) onClose(); }} style={MODAL_OVERLAY}>
+      <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: MODAL_SHADOW }}>
+        <div style={{ padding: '20px 24px 0', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 18, color: '#101828', margin: 0 }}>Cancel Booking?</h2>
+            <button
+              type="button"
+              onClick={isSubmitting ? undefined : onClose}
+              disabled={isSubmitting}
+              style={{ width: 36, height: 36, borderRadius: '50%', background: '#F2F4F7', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#667085" strokeWidth="2.5" strokeLinecap="round"/></svg>
+            </button>
+          </div>
+          <div style={{ height: 1, background: '#EAECF0', margin: '0 -24px' }} />
+        </div>
+
+        <div style={{ padding: 24 }}>
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 20 }}>
+            {isUpcoming
+              ? 'This action cannot be undone. Per our cancellation policy, you will receive an 80% refund of your payment.'
+              : "Please tell us why you're cancelling this favor. Payment will be withheld on both sides and will release after review within 72h."}
+          </p>
+
+          {isUpcoming && (
+            <div style={{ background: '#FEF3F2', border: '1px solid #FECDCA', borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
+              {[['Amount paid', `$${booking.price.toFixed(2)}`, '#344054'], ['Cancellation fee (20%)', `-$${fee.toFixed(2)}`, '#D92D20']].map(([label, value, color], i) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: i === 0 ? 8 : 0 }}>
+                  <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085' }}>{label}</span>
+                  <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color }}>{value}</span>
+                </div>
+              ))}
+              <div style={{ borderTop: '1px solid #FECDCA', paddingTop: 10, marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#344054' }}>You will receive</span>
+                <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#079455' }}>${refund.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+
+          <div style={{ marginBottom: reason === 'Other' ? 18 : 0 }}>
+            <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 8 }}>Select reason</p>
+            <select
+              value={reason}
+              disabled={isSubmitting}
+              onChange={(e) => setReason(e.target.value)}
+              style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontSize: 14, color: reason ? '#344054' : '#98A2B3', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '11px 16px', outline: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', boxSizing: 'border-box' }}
+            >
+              <option value="">Select one</option>
+              {CANCEL_REASONS.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+
+          {reason === 'Other' && (
+            <textarea
+              value={note}
+              disabled={isSubmitting}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Tell us why you're cancelling"
+              style={{ width: '100%', minHeight: 90, fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#101828', border: '1px solid #D0D5DD', borderRadius: 12, padding: '12px 14px', outline: 'none', resize: 'none', boxSizing: 'border-box', display: 'block' }}
+            />
+          )}
+        </div>
+
+        <div style={{ flexShrink: 0, borderTop: '1px solid #EAECF0', padding: '16px 24px 24px', display: 'flex', gap: 12 }}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
+          >
+            Keep Booking
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              if (!canSubmit) return;
+              const ok = await onConfirm(cancelReason);
+              if (ok) setDone(true);
+            }}
+            disabled={!canSubmit}
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: 'linear-gradient(135deg,#F97066,#D92D20)', border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.5 }}
+          >
+            {isSubmitting ? 'Cancelling...' : 'Confirm Cancel'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WithdrawRequestModal({
+  onClose,
+  onConfirm,
+  isSubmitting,
+}: {
+  onClose: () => void;
+  onConfirm: (reason: string) => Promise<boolean>;
+  isSubmitting: boolean;
+}) {
+  const [reason, setReason] = useState('');
+  const [note, setNote] = useState('');
+  const [done, setDone] = useState(false);
+  const cancelReason = reason === 'Other' ? (note.trim() || 'Other') : reason;
+  const canSubmit = Boolean(reason) && (reason !== 'Other' || Boolean(note.trim())) && !isSubmitting;
+
+  if (done) {
+    return (
+      <div style={MODAL_OVERLAY}>
+        <div style={{ background: '#fff', borderRadius: 16, maxWidth: 380, width: '100%', padding: '40px 28px 32px', textAlign: 'center', boxShadow: MODAL_SHADOW }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F4EBFF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 20, color: '#101828', marginBottom: 8 }}>Request withdrawn</h2>
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 28 }}>
+            This request has been withdrawn. The seller will no longer see it.
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '13px', cursor: 'pointer' }}
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div onClick={(e) => { if (e.target === e.currentTarget && !isSubmitting) onClose(); }} style={MODAL_OVERLAY}>
+      <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: MODAL_SHADOW }}>
+        <div style={{ padding: '20px 24px 0', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 18, color: '#101828', margin: 0 }}>Withdraw Request?</h2>
+            <button
+              type="button"
+              onClick={isSubmitting ? undefined : onClose}
+              disabled={isSubmitting}
+              style={{ width: 36, height: 36, borderRadius: '50%', background: '#F2F4F7', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#667085" strokeWidth="2.5" strokeLinecap="round"/></svg>
+            </button>
+          </div>
+          <div style={{ height: 1, background: '#EAECF0', margin: '0 -24px' }} />
+        </div>
+
+        <div style={{ padding: 24 }}>
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 20 }}>
+            This will cancel your pending booking request. The seller will no longer see it.
+          </p>
+
+          <div style={{ marginBottom: reason === 'Other' ? 18 : 0 }}>
+            <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 8 }}>Select reason</p>
+            <select
+              value={reason}
+              disabled={isSubmitting}
+              onChange={(e) => setReason(e.target.value)}
+              style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontSize: 14, color: reason ? '#344054' : '#98A2B3', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '11px 16px', outline: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', boxSizing: 'border-box' }}
+            >
+              <option value="">Select one</option>
+              {WITHDRAW_REASONS.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+
+          {reason === 'Other' && (
+            <textarea
+              value={note}
+              disabled={isSubmitting}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Tell us why you're withdrawing"
+              style={{ width: '100%', minHeight: 90, fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#101828', border: '1px solid #D0D5DD', borderRadius: 12, padding: '12px 14px', outline: 'none', resize: 'none', boxSizing: 'border-box', display: 'block' }}
+            />
+          )}
+        </div>
+
+        <div style={{ flexShrink: 0, borderTop: '1px solid #EAECF0', padding: '16px 24px 24px', display: 'flex', gap: 12 }}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
+          >
+            Keep Request
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              if (!canSubmit) return;
+              const ok = await onConfirm(cancelReason);
+              if (ok) setDone(true);
+            }}
+            disabled={!canSubmit}
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: 'linear-gradient(135deg,#F97066,#D92D20)', border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.5 }}
+          >
+            {isSubmitting ? 'Withdrawing...' : 'Withdraw Request'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BookingCard({ booking, onCancel, onWithdraw }: { booking: Booking; onCancel: () => void; onWithdraw: () => void }) {
   const router    = useRouter();
   const isActive  = booking.status === 'InProgress';
 
@@ -232,9 +513,9 @@ function BookingCard({ booking, onRemove }: { booking: Booking; onRemove: () => 
         <div data-nomove>
           <KebabMenu
             status={booking.status}
-            onWithdraw={onRemove}
-            onDelete={onRemove}
-            onCancel={onRemove}
+            onWithdraw={onWithdraw}
+            onDelete={() => undefined}
+            onCancel={onCancel}
             onViewDetails={() => router.push(`/bookings/${booking.id}`)}
           />
         </div>
@@ -300,8 +581,50 @@ function EmptyState({ icon, title, description }: { icon: 'calendar' | 'request'
 export default function BookingsPage() {
   const [tab, setTab] = useState<BuyerBookingListTab>('upcoming');
   const [authOpen, setAuthOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
+  const [withdrawTarget, setWithdrawTarget] = useState<Booking | null>(null);
+  const [cancelBooking, { isLoading: isCancelling }] = useCancelBuyerBookingMutation();
+  const [withdrawBooking, { isLoading: isWithdrawing }] = useWithdrawBuyerBookingMutation();
   const token = useAppSelector((state) => state.auth.token);
   const skip = !token;
+
+  const handleCancelBooking = async (cancelReason: string) => {
+    if (!cancelTarget) return false;
+    const bookingId = Number(cancelTarget.id);
+    if (!Number.isFinite(bookingId) || bookingId <= 0) {
+      showToast('Could not cancel this booking. Please try again.', 'error');
+      return false;
+    }
+    try {
+      const response = await cancelBooking({
+        booking_id: bookingId,
+        cancel_reason: cancelReason,
+      }).unwrap();
+      showToast(response.message || 'Booking cancelled.', 'success');
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleWithdrawBooking = async (cancelReason: string) => {
+    if (!withdrawTarget) return false;
+    const bookingId = Number(withdrawTarget.id);
+    if (!Number.isFinite(bookingId) || bookingId <= 0) {
+      showToast('Could not withdraw this request. Please try again.', 'error');
+      return false;
+    }
+    try {
+      const response = await withdrawBooking({
+        booking_id: bookingId,
+        cancel_reason: cancelReason,
+      }).unwrap();
+      showToast(response.message || 'Request withdrawn.', 'success');
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const upcomingQuery = useGetBuyerBookingsQuery(
     { page: 1, limit: PAGE_SIZE, status: 'upcoming' },
@@ -460,7 +783,14 @@ export default function BookingsPage() {
           ) : (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(400px,1fr))', gap: 20 }}>
-                {current.map(b => <BookingCard key={b.id} booking={b} onRemove={() => undefined} />)}
+                {current.map(b => (
+                  <BookingCard
+                    key={b.id}
+                    booking={b}
+                    onCancel={() => setCancelTarget(b)}
+                    onWithdraw={() => setWithdrawTarget(b)}
+                  />
+                ))}
               </div>
               {tab === 'requests' && (
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#98A2B3', textAlign: 'center', marginTop: 32 }}>
@@ -472,6 +802,21 @@ export default function BookingsPage() {
         </div>
       </main>
       <Footer />
+      {cancelTarget && (
+        <CancelBookingModal
+          booking={cancelTarget}
+          isSubmitting={isCancelling}
+          onClose={() => { if (!isCancelling) setCancelTarget(null); }}
+          onConfirm={handleCancelBooking}
+        />
+      )}
+      {withdrawTarget && (
+        <WithdrawRequestModal
+          isSubmitting={isWithdrawing}
+          onClose={() => { if (!isWithdrawing) setWithdrawTarget(null); }}
+          onConfirm={handleWithdrawBooking}
+        />
+      )}
     </>
   );
 }

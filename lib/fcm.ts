@@ -14,9 +14,16 @@ export type PushMessage = {
   data: Record<string, string>;
 };
 
+const FCM_TOKEN_CACHE_KEY = "whoCan_webFcmToken";
+
 export function isEdgeBrowser(): boolean {
   if (typeof navigator === "undefined") return false;
   return /Edg\//.test(navigator.userAgent);
+}
+
+export function isChromeBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Chrome\//.test(navigator.userAgent) && !/Edg\//.test(navigator.userAgent);
 }
 
 export function getNotificationPermission(): NotificationPermission | "unsupported" {
@@ -24,6 +31,18 @@ export function getNotificationPermission(): NotificationPermission | "unsupport
     return "unsupported";
   }
   return Notification.permission;
+}
+
+export function getCachedWebFcmToken(): string | null {
+  if (typeof window === "undefined") return null;
+  const token = sessionStorage.getItem(FCM_TOKEN_CACHE_KEY)?.trim();
+  return token || null;
+}
+
+function cacheWebFcmToken(token: string | null): void {
+  if (typeof window === "undefined") return;
+  if (token) sessionStorage.setItem(FCM_TOKEN_CACHE_KEY, token);
+  else sessionStorage.removeItem(FCM_TOKEN_CACHE_KEY);
 }
 
 const waitForActiveWorker = async (
@@ -44,30 +63,69 @@ const waitForActiveWorker = async (
   return registration;
 };
 
+function isPushMessageEvent(payload: unknown): payload is { type: string; message: PushMessage } {
+  if (!payload || typeof payload !== "object") return false;
+  const data = payload as { type?: string; message?: PushMessage };
+  return (data.type === "WHCAN_PUSH" || data.type === "WHOCAN_PUSH") && Boolean(data.message);
+}
+
 export async function onForegroundMessage(
   handler: (message: PushMessage) => void,
 ): Promise<() => void> {
-  if (typeof window === "undefined" || Notification.permission !== "granted") {
+  if (typeof window === "undefined") {
     return () => {};
   }
 
-  try {
-    const { getMessaging, onMessage } = await import("firebase/messaging");
-    return onMessage(getMessaging(getFirebaseApp()), (payload) => {
-      const data = (payload.data ?? {}) as Record<string, string>;
-      handler({
-        title: payload.notification?.title ?? data.title ?? "WhoCan",
-        body: payload.notification?.body ?? data.body ?? "",
-        data,
-      });
+  const unsubscribers: Array<() => void> = [];
+
+  const onWorkerMessage = (event: MessageEvent) => {
+    const payload = event.data;
+    if (!isPushMessageEvent(payload)) return;
+    console.warn("[WHCAN_NOTIFY] service worker message", payload.message);
+    const message = payload.message;
+    handler({
+      title: message.title || "WhoCan",
+      body: message.body || "",
+      data: message.data ?? {},
     });
-  } catch (error) {
-    console.warn("Failed to subscribe to foreground push messages", error);
-    return () => {};
+  };
+
+  navigator.serviceWorker?.addEventListener("message", onWorkerMessage);
+  unsubscribers.push(() => {
+    navigator.serviceWorker?.removeEventListener("message", onWorkerMessage);
+  });
+
+  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+    try {
+      const registration = await navigator.serviceWorker.register(
+        "/firebase-messaging-sw.js",
+      );
+      await waitForActiveWorker(registration);
+
+      const { getMessaging, onMessage } = await import("firebase/messaging");
+      const unsubscribe = onMessage(getMessaging(getFirebaseApp()), (payload) => {
+        console.warn("[WHCAN_NOTIFY] firebase onMessage", payload);
+        const data = (payload.data ?? {}) as Record<string, string>;
+        handler({
+          title: payload.notification?.title ?? data.title ?? "WhoCan",
+          body: payload.notification?.body ?? data.body ?? "",
+          data,
+        });
+      });
+      unsubscribers.push(unsubscribe);
+    } catch (error) {
+      console.warn("Failed to subscribe to foreground push messages", error);
+    }
   }
+
+  return () => {
+    unsubscribers.forEach((unsubscribe) => unsubscribe());
+  };
 }
 
-export async function getWebFcmToken(): Promise<FcmTokenResult> {
+export async function getWebFcmToken(options?: {
+  requestPermission?: boolean;
+}): Promise<FcmTokenResult> {
   if (typeof window === "undefined") {
     return { status: "unsupported", reason: "window unavailable" };
   }
@@ -79,14 +137,28 @@ export async function getWebFcmToken(): Promise<FcmTokenResult> {
   }
 
   if (Notification.permission === "denied") {
+    cacheWebFcmToken(null);
     return { status: "blocked", reason: "notification permission is denied" };
   }
 
   if (Notification.permission !== "granted") {
+    if (!options?.requestPermission) {
+      return {
+        status: "blocked",
+        reason: "notification permission has not been granted yet",
+      };
+    }
+
     const permission = await Notification.requestPermission();
     if (permission !== "granted") {
+      cacheWebFcmToken(null);
       return { status: "blocked", reason: "notification permission was not granted" };
     }
+  }
+
+  const cached = getCachedWebFcmToken();
+  if (cached && Notification.permission === "granted" && !options?.requestPermission) {
+    return { token: cached, status: "ok" };
   }
 
   try {
@@ -103,9 +175,11 @@ export async function getWebFcmToken(): Promise<FcmTokenResult> {
     });
 
     if (!token) {
+      cacheWebFcmToken(null);
       return { status: "blocked", reason: "Firebase returned an empty token" };
     }
 
+    cacheWebFcmToken(token);
     return { token, status: "ok" };
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown FCM error";
@@ -114,6 +188,7 @@ export async function getWebFcmToken(): Promise<FcmTokenResult> {
       message.toLowerCase().includes("registration failed") ||
       (error instanceof DOMException && error.name === "NotAllowedError");
 
+    cacheWebFcmToken(null);
     return {
       status: blocked ? "blocked" : "unsupported",
       reason: message,

@@ -29,14 +29,13 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
+const PUSH_MESSAGE_TYPE = "WHCAN_PUSH";
 
-// Maps an admin push payload to an in-app route. `data.url` always wins so the
-// backend can link anywhere without a service worker change.
 function resolveTargetPath(data) {
   if (!data) return "/";
   if (data.url) return data.url;
 
-  const type = String(data.type || data.key || data.source || "").toLowerCase();
+  const type = String(data.type || data.key || data.source || data.eventKey || "").toLowerCase();
   const conversationId = data.conversationId || data.conversation_id;
   const bookingId = data.bookingId || data.booking_id;
   const sellerId = data.sellerId || data.seller_id;
@@ -47,34 +46,83 @@ function resolveTargetPath(data) {
   if (isChat && sellerId) return `/chat?sellerId=${sellerId}`;
   if (isChat) return "/chat";
 
-  if (data.bookingId && /booking/.test(type)) return `/bookings/${data.bookingId}`;
+  if (bookingId) {
+    return `/bookings/${bookingId}`;
+  }
   if (data.disputeId && /dispute/.test(type)) return `/disputes/${data.disputeId}`;
   if (data.customFavorId) return `/custom-favors/${data.customFavorId}`;
   if (data.favorId) return `/favor/${data.favorId}`;
 
-  if (/booking/.test(type)) return "/bookings";
+  if (/booking|completed/.test(type)) return "/bookings";
   if (/dispute/.test(type)) return "/disputes";
   if (/(bid|favor)/.test(type)) return "/custom-favors";
 
   return "/";
 }
 
-messaging.onBackgroundMessage((payload) => {
-  console.log("[push-sw] background message received", payload);
-  const data = payload.data || {};
-  const title = payload.notification?.title || data.title || "WhoCan";
+function parsePushPayload(event) {
+  if (!event.data) return {};
+  try {
+    return event.data.json() || {};
+  } catch {
+    return { data: { body: event.data.text() } };
+  }
+}
 
-  self.registration.showNotification(title, {
-    body: payload.notification?.body || data.body || "",
-    icon: "/hero.png",
-    data: { ...data, path: resolveTargetPath(data) },
-  });
+function buildClientMessage(payload) {
+  const data = payload.data || {};
+  return {
+    type: PUSH_MESSAGE_TYPE,
+    message: {
+      title: payload.notification?.title || data.title || "WhoCan",
+      body: payload.notification?.body || data.body || "",
+      data,
+    },
+  };
+}
+
+function notifyOpenClients(payload) {
+  const message = buildClientMessage(payload);
+  console.log("[WHCAN_NOTIFY] forwarding push to page", message);
+
+  return self.clients
+    .matchAll({ type: "window", includeUncontrolled: true })
+    .then((clientList) => {
+      clientList.forEach((client) => client.postMessage(message));
+      return clientList.some((client) => client.visibilityState === "visible");
+    });
+}
+
+self.addEventListener("push", (event) => {
+  const payload = parsePushPayload(event);
+  console.log("[WHCAN_NOTIFY] sw push", payload);
+
+  event.waitUntil(
+    notifyOpenClients(payload).then((hasVisibleClient) => {
+      if (hasVisibleClient) return undefined;
+      if (payload.notification) return undefined;
+
+      const data = payload.data || {};
+      return self.registration.showNotification(
+        payload.notification?.title || data.title || "WhoCan",
+        {
+          body: payload.notification?.body || data.body || "",
+          icon: "/hero.png",
+          data: { ...data, path: resolveTargetPath(data) },
+        },
+      );
+    }),
+  );
+});
+
+messaging.onBackgroundMessage((payload) => {
+  console.log("[WHCAN_NOTIFY] background fcm", payload);
+  return notifyOpenClients(payload);
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  // Notifications auto-displayed by FCM nest the original payload under FCM_MSG.
   const raw = event.notification.data || {};
   const data = raw.FCM_MSG ? raw.FCM_MSG.data || {} : raw;
   const path = raw.path || resolveTargetPath(data);

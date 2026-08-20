@@ -38,6 +38,33 @@ export const CONVERSATION_EVENTS = {
   ready: 'ready',
 } as const;
 
+export const NOTIFICATION_EVENTS = [
+  'notification:new',
+  'notification:created',
+  'notifications:new',
+  'user:notification',
+  'buyer:notification',
+] as const;
+
+type IncomingMessageRaw = Partial<BuyerConversationMessage> & {
+  message?: BuyerConversationMessage;
+  conversation_id?: number;
+  sender_user_id?: number;
+  client_msg_id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+let activeBuyerConversationId: number | null = null;
+
+export function setActiveBuyerConversationId(id: number | null): void {
+  activeBuyerConversationId = id;
+}
+
+export function getActiveBuyerConversationId(): number | null {
+  return activeBuyerConversationId;
+}
+
 export function createClientMsgId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -52,4 +79,31 @@ export function toNumericId(value: unknown): number | null {
     if (Number.isFinite(parsed)) return parsed;
   }
   return null;
+}
+
+export function normalizeIncomingMessage(raw: unknown): BuyerConversationMessage | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const msg = raw as IncomingMessageRaw;
+
+  if (msg.message && typeof msg.message === 'object') {
+    return normalizeIncomingMessage(msg.message);
+  }
+
+  const id = toNumericId(msg.id);
+  const conversationId = toNumericId(msg.conversationId ?? msg.conversation_id);
+  const senderUserId = toNumericId(msg.senderUserId ?? msg.sender_user_id);
+  if (id == null || conversationId == null || senderUserId == null) return null;
+
+  const createdAt = msg.createdAt ?? msg.created_at ?? new Date().toISOString();
+
+  return {
+    id,
+    conversationId,
+    senderUserId,
+    body: typeof msg.body === 'string' ? msg.body : '',
+    attachments: Array.isArray(msg.attachments) ? msg.attachments : [],
+    clientMsgId: msg.clientMsgId ?? msg.client_msg_id ?? '',
+    createdAt,
+    updatedAt: msg.updatedAt ?? msg.updated_at ?? createdAt,
+  };
 }

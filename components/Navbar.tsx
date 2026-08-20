@@ -13,6 +13,10 @@ import {
 } from '@/app/buyer/store/buyerLocationsAPI';
 import type { BuyerLocation } from '@/app/buyer/store/buyerLocationsTypes';
 import {
+  BUYER_CONVERSATIONS_LIST_PARAMS,
+  useGetBuyerConversationsQuery,
+} from '@/app/buyer/store/buyerConversationsAPI';
+import {
   useGetBuyerNotificationsQuery,
   useMarkAllBuyerNotificationsReadMutation,
   useMarkBuyerNotificationReadMutation,
@@ -687,12 +691,26 @@ export default function Navbar() {
     refetch: refetchNotifications,
   } = useGetBuyerNotificationsQuery(
     { page: notifPage, limit: NOTIF_LIMIT },
+    {
+      skip: !token,
+      pollingInterval: token ? 20000 : 0,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    },
+  );
+
+  const { data: conversationsResponse } = useGetBuyerConversationsQuery(
+    BUYER_CONVERSATIONS_LIST_PARAMS,
     { skip: !token },
   );
 
   const notifications = notificationsResponse?.data?.notifications ?? [];
   const unreadCount = notificationsResponse?.data?.unreadCount ?? 0;
   const notifTotal = notificationsResponse?.data?.pagination?.total ?? 0;
+  const chatUnread = (conversationsResponse?.data?.conversations ?? []).reduce(
+    (sum, conversation) => sum + (conversation.unreadCount || 0),
+    0,
+  );
 
   const notificationsErrorMessage = getMutationErrorMessage(
     notificationsQueryError,
@@ -1002,12 +1020,13 @@ export default function Navbar() {
               </button>
 
               {/* Chat */}
-              <button onClick={() => router.push('/chat')} style={{ width: '36px', height: '36px', borderRadius: PILL, background: 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
+              <button onClick={() => router.push('/chat')} style={{ width: '36px', height: '36px', borderRadius: PILL, background: 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', position: 'relative' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.28)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.15)'; }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
+                {chatUnread > 0 && <span style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', borderRadius: '50%', background: '#F43F5E', border: '1.5px solid rgba(165,74,255,0.6)' }}/>}
               </button>
 
               {/* Notification bell */}

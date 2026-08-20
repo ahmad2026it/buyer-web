@@ -7,7 +7,7 @@ import type {
 } from "./buyerNotificationsTypes";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
 
-const PAGE_SIZE = 20;
+export const BUYER_NOTIFICATIONS_PAGE_SIZE = 20;
 
 const markNotificationsRead = (
   draft: GetBuyerNotificationsResponse,
@@ -33,6 +33,8 @@ export const buyerNotificationsAPI = createApi({
   reducerPath: "buyerNotificationsAPI",
   baseQuery: axiosBaseQuery(),
   tagTypes: ["BuyerNotifications"],
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => ({
     getBuyerNotifications: builder.query<
       GetBuyerNotificationsResponse,
@@ -43,7 +45,7 @@ export const buyerNotificationsAPI = createApi({
         method: "GET",
         params: {
           page: params?.page ?? 1,
-          limit: params?.limit ?? PAGE_SIZE,
+          limit: params?.limit ?? BUYER_NOTIFICATIONS_PAGE_SIZE,
         },
       }),
       serializeQueryArgs: ({ endpointName }) => endpointName,

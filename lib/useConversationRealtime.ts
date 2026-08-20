@@ -11,6 +11,8 @@ import {
 import {
   CONVERSATION_EVENTS,
   createClientMsgId,
+  normalizeIncomingMessage,
+  setActiveBuyerConversationId,
   toNumericId,
   type ConversationAck,
   type ConversationReadPayload,
@@ -32,46 +34,10 @@ type SendResult = {
   error?: string;
 };
 
-type IncomingMessageRaw = Partial<BuyerConversationMessage> & {
-  message?: BuyerConversationMessage;
-  conversation_id?: number;
-  sender_user_id?: number;
-  client_msg_id?: string;
-  created_at?: string;
-  updated_at?: string;
-};
-
 function isTypingPayloadActive(payload: ConversationTypingPayload): boolean {
   if (typeof payload.is_typing === 'boolean') return payload.is_typing;
   if (typeof payload.typing === 'boolean') return payload.typing;
   return true;
-}
-
-function normalizeIncomingMessage(raw: unknown): BuyerConversationMessage | null {
-  if (!raw || typeof raw !== 'object') return null;
-  const msg = raw as IncomingMessageRaw;
-
-  if (msg.message && typeof msg.message === 'object') {
-    return normalizeIncomingMessage(msg.message);
-  }
-
-  const id = toNumericId(msg.id);
-  const conversationId = toNumericId(msg.conversationId ?? msg.conversation_id);
-  const senderUserId = toNumericId(msg.senderUserId ?? msg.sender_user_id);
-  if (id == null || conversationId == null || senderUserId == null) return null;
-
-  const createdAt = msg.createdAt ?? msg.created_at ?? new Date().toISOString();
-
-  return {
-    id,
-    conversationId,
-    senderUserId,
-    body: typeof msg.body === 'string' ? msg.body : '',
-    attachments: Array.isArray(msg.attachments) ? msg.attachments : [],
-    clientMsgId: msg.clientMsgId ?? msg.client_msg_id ?? '',
-    createdAt,
-    updatedAt: msg.updatedAt ?? msg.updated_at ?? createdAt,
-  };
 }
 
 export function useConversationRealtime({
@@ -91,6 +57,11 @@ export function useConversationRealtime({
 
   conversationIdRef.current = conversationId ?? null;
   myUserIdRef.current = myUserId ?? null;
+
+  useEffect(() => {
+    setActiveBuyerConversationId(enabled ? conversationId ?? null : null);
+    return () => setActiveBuyerConversationId(null);
+  }, [conversationId, enabled]);
 
   useEffect(() => {
     if (!enabled || !conversationId || !token) {
@@ -176,7 +147,6 @@ export function useConversationRealtime({
       socket.off(CONVERSATION_EVENTS.typing, handleTyping);
       socket.off(CONVERSATION_EVENTS.messageRead, handleRead);
       socket.off('connect', joinConversation);
-      socket.emit(CONVERSATION_EVENTS.leave, { conversationId });
       setJoined(false);
       setOtherUserTyping(false);
 

@@ -7,8 +7,10 @@ import { clearAuthError, selectIsAuthenticated } from "@/app/auth/store/authSlic
 import type { AuthApiError } from "@/app/auth/store/authTypes";
 import { getAxiosErrorDetails } from "@/lib/axios";
 import {
+  getCachedWebFcmToken,
   getNotificationPermission,
   getWebFcmToken,
+  isChromeBrowser,
   isEdgeBrowser,
 } from "@/lib/fcm";
 import { showToast } from "@/lib/toast";
@@ -212,6 +214,35 @@ export default function LoginPage() {
 
   useEffect(() => {
     setPushPermission(getNotificationPermission());
+
+    if (getNotificationPermission() === "granted") {
+      void getWebFcmToken();
+    }
+
+    if (!navigator.permissions?.query) return;
+
+    let cancelled = false;
+    let permissionStatus: PermissionStatus | null = null;
+    const sync = () => {
+      const permission = getNotificationPermission();
+      setPushPermission(permission);
+      if (permission === "granted") void getWebFcmToken();
+    };
+
+    void navigator.permissions
+      .query({ name: "notifications" as PermissionName })
+      .then((status) => {
+        if (cancelled) return;
+        permissionStatus = status;
+        sync();
+        status.addEventListener("change", sync);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      permissionStatus?.removeEventListener("change", sync);
+    };
   }, []);
 
   useEffect(() => {
@@ -219,28 +250,44 @@ export default function LoginPage() {
     router.replace("/");
   }, [isAuthenticated, router]);
 
+  const showBlockedNotificationHelp = async (permission: NotificationPermission | "unsupported") => {
+    const chromeHelp =
+      "<p>Chrome automatically blocked the prompt. That is why no FCM token is sent on sign in.</p><p>1. Click the site settings icon (tune / crossed-out bell) in the address bar.</p><p>2. Set <strong>Notifications</strong> to <strong>Allow</strong>. If it says Automatically blocked, change it to Allow.</p><p>3. Reload this page, click <strong>Enable</strong>, then sign in.</p><p>You can also open <strong>chrome://settings/content/notifications</strong>, turn on <strong>Sites can ask to send notifications</strong>, and remove <strong>localhost:3000</strong> from Not allowed.</p>";
+    const edgeHelp =
+      "<p>Edge denied the request without prompting. Check these in order, then reload:</p><p>1. Windows Settings → System → Notifications → <strong>Microsoft Edge must be On</strong>. If Windows notifications are off for Edge, every web prompt is auto-denied.</p><p>2. <strong>edge://settings/content/notifications</strong> → the top toggle must be <strong>Ask before sending</strong>, and turn off <strong>Quiet notification requests</strong>.</p><p>3. On that same page, remove <strong>localhost:3000</strong> from the Block list.</p>";
+    const genericHelp =
+      "<p>The browser denied notifications without prompting, so this device cannot send an FCM token.</p><p>Open the lock / site settings icon next to the URL, set Notifications to Allow, reload, click Enable, then sign in.</p>";
+
+    await showSwal({
+      title: `Permission is "${permission}"`,
+      html: isChromeBrowser() ? chromeHelp : isEdgeBrowser() ? edgeHelp : genericHelp,
+      variant: "warning",
+      confirmText: "Got it",
+    });
+  };
+
   const handleEnablePush = async () => {
     if (typeof Notification === "undefined") {
       showToast("This browser does not support notifications.", "warning");
       return;
     }
 
-    const permission = await Notification.requestPermission();
-    setPushPermission(permission);
-
-    if (permission === "granted") {
-      showToast("Notifications enabled. Sign in to register this device.", "success");
+    if (Notification.permission === "denied") {
+      setPushPermission("denied");
+      await showBlockedNotificationHelp("denied");
       return;
     }
 
-    await showSwal({
-      title: `Permission is "${permission}"`,
-      html: isEdgeBrowser()
-        ? "<p>Edge denied the request without prompting. Check these in order, then reload:</p><p>1. Windows Settings → System → Notifications → <strong>Microsoft Edge must be On</strong>. If Windows notifications are off for Edge, every web prompt is auto-denied.</p><p>2. <strong>edge://settings/content/notifications</strong> → the top toggle must be <strong>Ask before sending</strong>, and turn off <strong>Quiet notification requests</strong>.</p><p>3. On that same page, remove <strong>localhost:3000</strong> from the Block list.</p>"
-        : "<p>The browser denied the request without prompting.</p><p>Check that your OS allows notifications for this browser, then open the lock icon next to the URL and reset the Notifications permission. Reload afterwards.</p>",
-      variant: "warning",
-      confirmText: "Got it",
-    });
+    const fcm = await getWebFcmToken({ requestPermission: true });
+    const permission = getNotificationPermission();
+    setPushPermission(permission);
+
+    if (fcm.token) {
+      showToast("Notifications enabled. You can sign in now.", "success");
+      return;
+    }
+
+    await showBlockedNotificationHelp(permission);
   };
 
   const handleLogin = async () => {
@@ -256,10 +303,16 @@ export default function LoginPage() {
     setFieldErrors({});
 
     try {
-      const fcm = await getWebFcmToken();
-      setPushPermission(getNotificationPermission());
+      const permission = getNotificationPermission();
+      setPushPermission(permission);
+
+      const fcm =
+        permission === "granted"
+          ? await getWebFcmToken()
+          : { token: getCachedWebFcmToken() || undefined, status: "blocked" as const };
+
       if (!fcm.token) {
-        console.warn(`Signing in without fcmToken: ${fcm.reason ?? fcm.status}`);
+        console.warn(`Signing in without fcmToken: ${fcm.status}`);
       }
 
       const result = await dispatch(
@@ -456,45 +509,66 @@ export default function LoginPage() {
         {/* Push notification status */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "12px",
             padding: "10px 14px",
             marginBottom: "16px",
-            border: `1px solid ${BORDER}`,
+            border: `1px solid ${pushPermission === "denied" ? "#FECDCA" : BORDER}`,
             borderRadius: "12px",
-            background: "#F9FAFB",
+            background: pushPermission === "denied" ? "#FEF3F2" : "#F9FAFB",
           }}
         >
-          <span
+          <div
             style={{
-              fontFamily: "Poppins, sans-serif",
-              fontSize: "13px",
-              color: "#475467",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
             }}
           >
-            Notifications:{" "}
-            <strong style={{ color: "#101828" }}>{pushPermission}</strong>
-          </span>
-          {pushPermission !== "granted" && (
-            <button
-              type="button"
-              onClick={handleEnablePush}
+            <span
               style={{
                 fontFamily: "Poppins, sans-serif",
-                fontWeight: 600,
                 fontSize: "13px",
-                color: BRAND,
-                background: "transparent",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
+                color: "#475467",
               }}
             >
-              Enable
-            </button>
+              Notifications:{" "}
+              <strong style={{ color: "#101828" }}>
+                {pushPermission === "denied" ? "automatically blocked" : pushPermission}
+              </strong>
+            </span>
+            {pushPermission !== "granted" && (
+              <button
+                type="button"
+                onClick={handleEnablePush}
+                style={{
+                  fontFamily: "Poppins, sans-serif",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                  color: BRAND,
+                  background: "transparent",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {pushPermission === "denied" ? "Allow in browser" : "Enable"}
+              </button>
+            )}
+          </div>
+          {pushPermission !== "granted" && (
+            <p
+              style={{
+                fontFamily: "Poppins, sans-serif",
+                fontSize: "12px",
+                color: "#667085",
+                margin: "8px 0 0",
+              }}
+            >
+              {pushPermission === "denied"
+                ? "The browser blocked the prompt. Set Notifications to Allow in the address bar, reload, then enable before signing in."
+                : "Enable notifications before signing in so the FCM token is sent with login."}
+            </p>
           )}
         </div>
 

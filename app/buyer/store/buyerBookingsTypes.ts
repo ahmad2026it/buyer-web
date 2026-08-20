@@ -254,6 +254,11 @@ export const isAwaitingCompleteBookingStatus = (status: string): boolean => {
   );
 };
 
+export const isCancelledBookingStatus = (status: string): boolean => {
+  const key = normalizeBookingStatus(status);
+  return key.includes("cancel");
+};
+
 export const isFinishedBookingStatus = (status: string): boolean => {
   const key = normalizeBookingStatus(status);
   return [
