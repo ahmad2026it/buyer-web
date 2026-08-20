@@ -37,11 +37,7 @@ export const buyerFavorsAPI = createApi({
       query: (params) => ({
         url: "/api/buyer/favors",
         method: "GET",
-        params: compactParams({
-          ...params,
-          page: params.page ?? 1,
-          limit: params.limit ?? 15,
-        }),
+        params: compactParams(params),
         skipErrorToast: true,
       }),
       serializeQueryArgs: ({ queryArgs }) => {

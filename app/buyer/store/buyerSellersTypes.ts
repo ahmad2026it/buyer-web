@@ -55,6 +55,39 @@ export type BuyerRecommendedFavor = {
   startingPrice: string | number;
 };
 
+export type BuyerSeller = {
+  id?: number;
+  sellerId?: number;
+  name?: string;
+  fullName?: string;
+  profileImage?: string | null;
+  profileImageUrl?: string | null;
+  isPro?: boolean;
+  isTeam?: boolean;
+  averageRating?: number | null;
+  totalReviews?: number;
+  reviewCount?: number;
+  favorsCompleted?: number;
+  isOnline?: boolean;
+};
+
+export type BuyerSellersPagination = {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export type GetBuyerSellersResponse = {
+  success: boolean;
+  status: number;
+  message: string;
+  data: {
+    sellers: BuyerSeller[];
+    pagination?: BuyerSellersPagination;
+  };
+};
+
 export type GetBuyerSellerByIdResponse = {
   success: boolean;
   status: number;
