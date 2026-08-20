@@ -12,7 +12,11 @@ export const getStripe = (publishableKey?: string): Promise<Stripe | null> => {
 
   if (!stripePromise || loadedKey !== key) {
     loadedKey = key;
-    stripePromise = loadStripe(key);
+    stripePromise = loadStripe(key, {
+      developerTools: {
+        assistant: { enabled: false },
+      },
+    });
   }
 
   return stripePromise;

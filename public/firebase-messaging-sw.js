@@ -36,7 +36,16 @@ function resolveTargetPath(data) {
   if (!data) return "/";
   if (data.url) return data.url;
 
-  const type = String(data.type || data.key || "").toLowerCase();
+  const type = String(data.type || data.key || data.source || "").toLowerCase();
+  const conversationId = data.conversationId || data.conversation_id;
+  const bookingId = data.bookingId || data.booking_id;
+  const sellerId = data.sellerId || data.seller_id;
+
+  const isChat = /(message|chat|conversation|support)/.test(type);
+  if (conversationId) return `/chat?id=${conversationId}`;
+  if (isChat && bookingId) return `/chat?bookingId=${bookingId}`;
+  if (isChat && sellerId) return `/chat?sellerId=${sellerId}`;
+  if (isChat) return "/chat";
 
   if (data.bookingId && /booking/.test(type)) return `/bookings/${data.bookingId}`;
   if (data.disputeId && /dispute/.test(type)) return `/disputes/${data.disputeId}`;
@@ -45,7 +54,6 @@ function resolveTargetPath(data) {
 
   if (/booking/.test(type)) return "/bookings";
   if (/dispute/.test(type)) return "/disputes";
-  if (/(message|chat|support)/.test(type)) return "/chat";
   if (/(bid|favor)/.test(type)) return "/custom-favors";
 
   return "/";

@@ -126,6 +126,11 @@ function toFavorDate(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+function formatUsd(value: number): string {
+  if (!Number.isFinite(value)) return '$0.00';
+  return `$${value.toFixed(2)}`;
+}
+
 function toFavorTime(hour: string, period: 'AM' | 'PM'): string {
   let h = Number(hour);
   if (!Number.isFinite(h)) h = 8;
@@ -224,7 +229,7 @@ function FavorMiniCard({
           <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#344054', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{seller}</span>
           <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 10, fontWeight: 700, background: badge === 'Pro' ? '#A54AFF' : '#344054', color: '#fff', borderRadius: PILL, padding: '1px 7px', flexShrink: 0 }}>{badge}</span>
         </div>
-        <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 13, color: BRAND }}>starts from ${price}</p>
+        <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 13, color: BRAND }}>starts from {formatUsd(price)}</p>
       </div>
     </div>
   );
@@ -609,7 +614,7 @@ export default function BookingPage() {
                           {checked && <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                         </div>
                         <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#344054', flex: 1, lineHeight: 1.45 }}>{addon.label}</span>
-                        <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: BRAND, flexShrink: 0 }}>${addon.price}</span>
+                        <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: BRAND, flexShrink: 0 }}>{formatUsd(addon.price)}</span>
                       </div>
                     );
                   })}
@@ -923,13 +928,13 @@ export default function BookingPage() {
                   ].map(row => (
                     <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085' }}>{row.label}</span>
-                      <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 600, color: '#344054' }}>${row.amount}</span>
+                      <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatUsd(row.amount)}</span>
                     </div>
                   ))}
                   <div style={{ height: 1, background: '#EAECF0' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#101828' }}>Subtotal</span>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 17, color: BRAND }}>${total}</span>
+                    <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 17, color: BRAND }}>{formatUsd(total)}</span>
                   </div>
                 </div>
 

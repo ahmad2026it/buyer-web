@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -27,6 +28,13 @@ import { isAwaitingCompleteBookingStatus, isFinishedBookingStatus } from '@/app/
 import { useAppSelector } from '@/store/hooks';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 
+const LiveLocationMap = dynamic(() => import('@/components/LiveLocationMap'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: 210, borderRadius: 16, background: '#F2F4F7' }} />
+  ),
+});
+
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const BRAND = '#A54AFF';
 const PILL  = '9999px';
@@ -42,6 +50,7 @@ interface DetailedBooking {
   id: string; status: Status;
   title: string; category: string; image: string | null; price: number;
   date: string; dateIso: string; time: string; location: string; address: string;
+  lat: number | null; lng: number | null;
   isTeam: boolean;
   sellerName: string; sellerAvatar: string; sellerBadge: 'Pro' | 'Team'; sellerDistance?: number;
   teamName?: string; teamLogo?: string;
@@ -97,9 +106,15 @@ function formatFavorTime(value: string): string {
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-function formatUsd(value: number): string {
-  if (!Number.isFinite(value)) return '$0';
-  return value % 1 === 0 ? `$${value}` : `$${value.toFixed(2)}`;
+function formatUsd(value: number | string | null | undefined): string {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '$0.00';
+  return `$${n.toFixed(2)}`;
+}
+
+function parseCoord(value: unknown): number | null {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 function normalizeAddOns(items: unknown[] | undefined): Addon[] {
@@ -137,6 +152,8 @@ function toDetailedBooking(item: BuyerBooking, review: BuyerBookingReview): Deta
     time: formatFavorTime(item.favorTime),
     location: item.isBuyerComing ? 'Work' : 'Home',
     address: item.address || 'Address not provided',
+    lat: parseCoord(item.lat) ?? parseCoord(item.favor?.lat),
+    lng: parseCoord(item.lng) ?? parseCoord(item.favor?.lng),
     isTeam,
     sellerName: item.seller?.fullName || 'Seller',
     sellerAvatar: item.seller?.profileImage || PLACEHOLDER_AVATAR,
@@ -183,44 +200,6 @@ function isToday(y:number,m:number,d:number){const n=new Date();n.setHours(0,0,0
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const CANCEL_REASONS = ['Service not started on time','Seller is not responding','Emergency on my end','Changed plans','Not satisfied with the service','Other'];
 const WITHDRAW_REASONS = ['Plans changed','No longer needed','Booked by mistake','Found another option','Other'];
-
-/* ─── FakeMap ───────────────────────────────────────────── */
-function FakeMap({ sellerAvatar, sellerName }: { sellerAvatar: string; sellerName: string }) {
-  return (
-    <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', height: 210 }}>
-      <svg width="100%" height="210" viewBox="0 0 400 210" preserveAspectRatio="xMidYMid slice"
-        xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', inset: 0, display: 'block' }}>
-        <rect width="400" height="210" fill="#DDE4F5"/>
-        <rect x="10" y="10" width="52" height="30" rx="4" fill="#BEC8E8"/>
-        <rect x="10" y="50" width="36" height="24" rx="4" fill="#C5CEEC"/>
-        <rect x="82" y="10" width="44" height="26" rx="4" fill="#BEC8E8"/>
-        <rect x="142" y="10" width="58" height="24" rx="4" fill="#C5CEEC"/>
-        <rect x="218" y="10" width="42" height="28" rx="4" fill="#BEC8E8"/>
-        <rect x="312" y="10" width="76" height="34" rx="4" fill="#C5CEEC"/>
-        <rect x="328" y="54" width="60" height="40" rx="4" fill="#BEC8E8"/>
-        <rect x="10" y="126" width="70" height="72" rx="4" fill="#BEC8E8"/>
-        <rect x="98" y="136" width="46" height="64" rx="4" fill="#C5CEEC"/>
-        <rect x="200" y="136" width="60" height="68" rx="4" fill="#BEC8E8"/>
-        <rect x="312" y="124" width="76" height="78" rx="4" fill="#C5CEEC"/>
-        <rect x="0" y="44" width="400" height="14" fill="white" opacity="0.72"/>
-        <rect x="0" y="112" width="400" height="13" fill="white" opacity="0.72"/>
-        <rect x="70" y="0" width="12" height="210" fill="white" opacity="0.72"/>
-        <rect x="188" y="0" width="12" height="210" fill="white" opacity="0.72"/>
-        <rect x="298" y="0" width="12" height="210" fill="white" opacity="0.72"/>
-        <line x1="0" y1="190" x2="145" y2="58" stroke="white" strokeWidth="10" opacity="0.52" strokeLinecap="round"/>
-      </svg>
-      {/* Seller pin */}
-      <div style={{ position: 'absolute', top: '40%', left: '52%', transform: 'translate(-50%, -100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 2 }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, width: 54, height: 54, borderRadius: '50%', border: '2px solid rgba(165,74,255,0.5)', animation: 'mapRing 1.8s ease-out infinite' }} />
-        <div style={{ position: 'absolute', top: 0, left: 0, width: 54, height: 54, borderRadius: '50%', border: '2px solid rgba(165,74,255,0.3)', animation: 'mapRing 1.8s ease-out 0.7s infinite' }} />
-        <div style={{ width: 54, height: 54, borderRadius: '50%', border: '3px solid #A54AFF', overflow: 'hidden', background: '#fff', boxShadow: '0 4px 18px rgba(165,74,255,0.5)', position: 'relative', zIndex: 1 }}>
-          <img src={sellerAvatar} alt={sellerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
-        </div>
-        <div style={{ width: 0, height: 0, borderLeft: '9px solid transparent', borderRight: '9px solid transparent', borderTop: '13px solid #A54AFF', marginTop: -2, zIndex: 1, filter: 'drop-shadow(0 3px 4px rgba(165,74,255,0.35))' }}/>
-      </div>
-    </div>
-  );
-}
 
 /* ─── StatusMessages ─────────────────────────────────────── */
 function StatusMessages({ updates }: { updates: StatusUpdate[] }) {
@@ -1474,7 +1453,7 @@ export default function BookingDetailPage() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke={c.color} strokeWidth="2"/><path d={c.iconPath} stroke={c.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:14, color:c.color, margin:0, flex:1 }}>{c.text}</p>
         {bk.status==='Cancelled' && bk.refundAmount && (
-          <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#667085' }}>${bk.refundAmount} refunded</span>
+          <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#667085' }}>{formatUsd(bk.refundAmount)} refunded</span>
         )}
       </div>
     );
@@ -1664,7 +1643,7 @@ export default function BookingDetailPage() {
                       {booking.addons.map((a,i) => (
                         <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 14px', background:'#F9FAFB', borderRadius:10 }}>
                           <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', flex:1 }}>{a.label}</span>
-                          <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:BRAND, flexShrink:0, marginLeft:12 }}>+${a.price}</span>
+                          <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:BRAND, flexShrink:0, marginLeft:12 }}>+{formatUsd(a.price)}</span>
                         </div>
                       ))}
                     </div>
@@ -1691,7 +1670,7 @@ export default function BookingDetailPage() {
                     {booking.addons.map((a,i) => (
                       <div key={i} style={{ display:'flex', justifyContent:'space-between' }}>
                         <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#98A2B3', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingRight:12 }}>Add-on: {a.label}</span>
-                        <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', flexShrink:0 }}>+${a.price}</span>
+                        <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', flexShrink:0 }}>+{formatUsd(a.price)}</span>
                       </div>
                     ))}
                     <div style={{ display:'flex', justifyContent:'space-between' }}>
@@ -1715,7 +1694,13 @@ export default function BookingDetailPage() {
               {/* Right: map + updates */}
               <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
                 <Section title="Live Location">
-                  <FakeMap sellerAvatar={booking.sellerAvatar} sellerName={booking.sellerName} />
+                  <LiveLocationMap
+                    lat={booking.lat}
+                    lng={booking.lng}
+                    sellerAvatar={booking.sellerAvatar}
+                    sellerName={booking.sellerName}
+                    address={booking.address}
+                  />
                 </Section>
                 {booking.statusUpdates && booking.statusUpdates.length > 0 && (
                   <Section title="Updates">
@@ -1830,7 +1815,7 @@ export default function BookingDetailPage() {
                       {booking.addons.map((a,i) => (
                         <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 14px', background:'#F9FAFB', borderRadius:10 }}>
                           <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', flex:1 }}>{a.label}</span>
-                          <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:BRAND, flexShrink:0, marginLeft:12 }}>+${a.price}</span>
+                          <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:BRAND, flexShrink:0, marginLeft:12 }}>+{formatUsd(a.price)}</span>
                         </div>
                       ))}
                     </div>
@@ -1857,7 +1842,7 @@ export default function BookingDetailPage() {
                     {booking.addons.map((a,i) => (
                       <div key={i} style={{ display:'flex', justifyContent:'space-between' }}>
                         <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#98A2B3', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingRight:12 }}>Add-on: {a.label}</span>
-                        <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', flexShrink:0 }}>+${a.price}</span>
+                        <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', flexShrink:0 }}>+{formatUsd(a.price)}</span>
                       </div>
                     ))}
                     <div style={{ display:'flex', justifyContent:'space-between' }}>
@@ -2002,7 +1987,7 @@ export default function BookingDetailPage() {
                       {booking.addons.map((a,i) => (
                         <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 14px', background:'#F9FAFB', borderRadius:10 }}>
                           <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', flex:1 }}>{a.label}</span>
-                          <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:BRAND, flexShrink:0, marginLeft:12 }}>+${a.price}</span>
+                          <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:BRAND, flexShrink:0, marginLeft:12 }}>+{formatUsd(a.price)}</span>
                         </div>
                       ))}
                     </div>
@@ -2029,7 +2014,7 @@ export default function BookingDetailPage() {
                     {booking.addons.map((a,i) => (
                       <div key={i} style={{ display:'flex', justifyContent:'space-between' }}>
                         <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#98A2B3', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingRight:12 }}>Add-on: {a.label}</span>
-                        <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', flexShrink:0 }}>+${a.price}</span>
+                        <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', flexShrink:0 }}>+{formatUsd(a.price)}</span>
                       </div>
                     ))}
                     <div style={{ display:'flex', justifyContent:'space-between' }}>

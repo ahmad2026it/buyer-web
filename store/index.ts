@@ -21,6 +21,7 @@ import { buyerLocationsAPI } from '@/app/buyer/store/buyerLocationsAPI';
 import { buyerSellersAPI } from '@/app/buyer/store/buyerSellersAPI';
 import { buyerNotificationsAPI } from '@/app/buyer/store/buyerNotificationsAPI';
 import { buyerStripeAPI } from '@/app/buyer/store/buyerStripeAPI';
+import { buyerLegalAPI } from '@/app/buyer/store/buyerLegalAPI';
 
 type PersistStorage = {
   getItem: (key: string) => Promise<string | null>;
@@ -59,6 +60,7 @@ const rootReducer = combineReducers({
   [buyerSellersAPI.reducerPath]: buyerSellersAPI.reducer,
   [buyerNotificationsAPI.reducerPath]: buyerNotificationsAPI.reducer,
   [buyerStripeAPI.reducerPath]: buyerStripeAPI.reducer,
+  [buyerLegalAPI.reducerPath]: buyerLegalAPI.reducer,
 });
 
 export const makeStore = () => {
@@ -83,6 +85,7 @@ export const makeStore = () => {
         buyerSellersAPI.middleware,
         buyerNotificationsAPI.middleware,
         buyerStripeAPI.middleware,
+        buyerLegalAPI.middleware,
       ),
   });
 

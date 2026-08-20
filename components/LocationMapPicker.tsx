@@ -9,6 +9,11 @@ import {
 } from '@react-google-maps/api';
 
 import type { PickedLocation } from '@/components/locationTypes';
+import {
+  GOOGLE_MAPS_LIBRARIES,
+  GOOGLE_MAPS_LOADER_ID,
+  getGoogleMapsApiKey,
+} from '@/lib/googleMaps';
 
 export type { PickedLocation };
 
@@ -20,7 +25,6 @@ type LocationMapPickerProps = {
 };
 
 const DEFAULT_CENTER = { lat: 37.7749, lng: -122.4194 };
-const MAP_LIBRARIES: ('places')[] = ['places'];
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 
 const formatAddressParts = (place: google.maps.places.PlaceResult | google.maps.GeocoderResult) => {
@@ -53,11 +57,11 @@ export default function LocationMapPicker({
   onChange,
   height = 190,
 }: LocationMapPickerProps) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const apiKey = getGoogleMapsApiKey();
   const { isLoaded, loadError } = useJsApiLoader({
-    id: 'whocan-google-maps',
+    id: GOOGLE_MAPS_LOADER_ID,
     googleMapsApiKey: apiKey,
-    libraries: MAP_LIBRARIES,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   const [query, setQuery] = useState(value?.address ?? '');

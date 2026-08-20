@@ -290,6 +290,8 @@ export type BuyerBookingFavor = {
   videos?: string[];
   favorImage?: string | null;
   addOns?: BuyerBookingAddOn[];
+  lat?: string | number | null;
+  lng?: string | number | null;
 };
 
 export type BuyerBookingSeller = {

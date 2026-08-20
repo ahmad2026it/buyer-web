@@ -54,9 +54,9 @@ function initialsFromName(name: string): string {
 
 function formatMoney(value: string | number | undefined): string {
   const n = Number(value);
-  if (!Number.isFinite(n)) return '0';
+  if (!Number.isFinite(n)) return '0.00';
   return n.toLocaleString('en-US', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }
@@ -370,9 +370,7 @@ export default function SellerProfilePage() {
   const recommendedFavors = data?.data?.recommendedFavors ?? [];
 
   const [likedFavors, setLikedFavors] = useState<Set<string>>(new Set());
-  const [msgOpen, setMsgOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [msgText, setMsgText] = useState('');
   const [showMore, setShowMore] = useState(false);
   const [liked, setLiked] = useState(false);
   const [dotsOpen, setDotsOpen] = useState(false);
@@ -381,8 +379,6 @@ export default function SellerProfilePage() {
   useEffect(() => {
     setShowMore(false);
     setDotsOpen(false);
-    setMsgOpen(false);
-    setMsgText('');
   }, [sellerId]);
 
   useEffect(() => {
@@ -588,23 +584,6 @@ export default function SellerProfilePage() {
                 </div>
 
                 <div style={{ position: 'sticky', top: '108px', alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 24px rgba(16,24,40,0.06)' }}>
-                    <div style={{ padding: '24px', borderBottom: '1px solid #EAECF0' }}>
-                      <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '17px', color: '#101828', marginBottom: '4px' }}>Get in touch</p>
-                      {responseTime ? (
-                        <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>{responseTime}</p>
-                      ) : null}
-                    </div>
-                    <div style={{ padding: '20px 24px' }}>
-                      <button onClick={() => setAuthOpen(true)}
-                        style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '14px', color: '#fff', background: GRAD, border: 'none', borderRadius: '9999px', padding: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(165,74,255,0.25)', transition: 'opacity 0.2s' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                        Send a message
-                      </button>
-                    </div>
-                  </div>
-
                   <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: '20px', padding: '20px 22px' }}>
                     <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '15px', color: '#101828', marginBottom: '14px' }}>Quick stats</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' }}>
@@ -667,33 +646,6 @@ export default function SellerProfilePage() {
           </>
         ) : null}
       </main>
-
-      {msgOpen && seller && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={e => { if (e.target === e.currentTarget) setMsgOpen(false); }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} onClick={() => setMsgOpen(false)} />
-          <div style={{ position: 'relative', background: '#fff', borderRadius: '24px', padding: '36px', width: '100%', maxWidth: '480px', zIndex: 1, boxShadow: '0 24px 48px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '24px' }}>
-              <ProfileAvatar src={seller.profileImageUrl} name={seller.name} size={48} border="2px solid #DFBAFF" />
-              <div>
-                <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '16px', color: '#101828' }}>Message {seller.name}</p>
-                {responseTime ? (
-                  <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '12px', color: '#667085' }}>{responseTime}</p>
-                ) : null}
-              </div>
-            </div>
-            <textarea value={msgText} onChange={e => setMsgText(e.target.value)}
-              placeholder={`Hi ${seller.name}! I'm interested in your services...`}
-              style={{ width: '100%', height: '130px', border: '1.5px solid #D0D5DD', borderRadius: '12px', padding: '12px 14px', fontFamily: 'Poppins,sans-serif', fontSize: '14px', resize: 'none', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-              onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = '#A54AFF'; }}
-              onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = '#D0D5DD'; }} />
-            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-              <button onClick={() => setMsgOpen(false)} style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontSize: '14px', fontWeight: 600, color: '#344054', background: '#F9FAFB', border: '1.5px solid #D0D5DD', borderRadius: '9999px', padding: '12px', cursor: 'pointer' }}>Cancel</button>
-              <button style={{ flex: 2, fontFamily: 'Poppins,sans-serif', fontSize: '14px', fontWeight: 700, color: '#fff', background: GRAD, border: 'none', borderRadius: '9999px', padding: '12px', cursor: 'pointer' }}>Send Message</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Footer />
     </>

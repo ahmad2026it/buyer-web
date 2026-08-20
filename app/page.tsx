@@ -58,7 +58,8 @@ function formatFavorTime(value: string): string {
 }
 
 function formatPrice(price: number): string {
-  return price % 1 === 0 ? `$${price}` : `$${price.toFixed(2)}`;
+  if (!Number.isFinite(price)) return '$0.00';
+  return `$${price.toFixed(2)}`;
 }
 
 function toHomeBooking(item: BuyerBooking) {

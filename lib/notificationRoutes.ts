@@ -1,0 +1,124 @@
+import type { BuyerNotification } from '@/app/buyer/store/buyerNotificationsTypes';
+
+function toPositiveId(value: unknown): string | null {
+  if (value == null || value === '') return null;
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return String(Math.trunc(n));
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function parsePayload(payload: unknown): Record<string, unknown> | null {
+  if (typeof payload === 'string') {
+    try {
+      return asRecord(JSON.parse(payload));
+    } catch {
+      return null;
+    }
+  }
+  return asRecord(payload);
+}
+
+function pickId(record: Record<string, unknown> | null, keys: string[]): string | null {
+  if (!record) return null;
+  for (const key of keys) {
+    const id = toPositiveId(record[key]);
+    if (id) return id;
+  }
+  return null;
+}
+
+function firstId(
+  records: Array<Record<string, unknown> | null>,
+  keys: string[],
+): string | null {
+  for (const record of records) {
+    const id = pickId(record, keys);
+    if (id) return id;
+  }
+  return null;
+}
+
+function chatPath(params: Record<string, string | null>): string {
+  const query = Object.entries(params)
+    .filter(([, value]) => value)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+  return query ? `/chat?${query}` : '/chat';
+}
+
+export function getNotificationTargetPath(notification: BuyerNotification): string | null {
+  const payload = parsePayload(notification.payload);
+  const nestedData = asRecord(payload?.data);
+  const nestedBooking = asRecord(payload?.booking);
+  const nestedConversation = asRecord(payload?.conversation) ?? asRecord(nestedData?.conversation);
+  const sources = [payload, nestedData, nestedBooking, nestedConversation];
+  const type = [
+    notification.key,
+    notification.visualType,
+    notification.title,
+    notification.description,
+    payload?.source,
+    payload?.type,
+    payload?.event,
+    nestedData?.type,
+    nestedData?.source,
+  ]
+    .filter((value) => typeof value === 'string' && value.trim())
+    .join(' ')
+    .toLowerCase();
+  const looksLikeBooking = /(booking|booked|accepted|declined|cancelled|completed)/.test(type);
+  const isChat =
+    /(message|chat|conversation|support)/.test(type) ||
+    (Boolean(notification.actorUserId || notification.actor?.id) &&
+      !looksLikeBooking &&
+      !/(dispute|bid|favor|offer)/.test(type));
+
+  const explicitUrl = payload?.url ?? payload?.path ?? nestedData?.url ?? nestedData?.path;
+  if (typeof explicitUrl === 'string' && explicitUrl.startsWith('/')) return explicitUrl;
+
+  const bookingId =
+    firstId(sources, ['bookingId', 'booking_id', 'favorBookingId', 'favor_booking_id']) ??
+    pickId(nestedBooking, ['id']) ??
+    (/booking/.test(type) && !isChat ? pickId(payload, ['id']) : null);
+  const disputeId =
+    firstId(sources, ['disputeId', 'dispute_id']) ??
+    pickId(asRecord(payload?.dispute), ['id']);
+  const customFavorId = firstId(sources, [
+    'customFavorId',
+    'custom_favor_id',
+    'customFavor_id',
+  ]);
+  const conversationId =
+    firstId(sources, ['conversationId', 'conversation_id', 'chatId', 'chat_id', 'threadId', 'thread_id']) ??
+    pickId(nestedConversation, ['id']) ??
+    (isChat ? pickId(payload, ['id']) : null);
+  const favorId = firstId(sources, ['favorId', 'favor_id']);
+  const sellerId =
+    toPositiveId(notification.actorUserId) ??
+    toPositiveId(notification.actor?.id) ??
+    firstId(sources, ['sellerId', 'seller_id', 'sellerUserId', 'seller_user_id']);
+
+  if (isChat || conversationId) {
+    return chatPath({
+      id: conversationId,
+      bookingId: conversationId ? null : bookingId,
+      sellerId: conversationId || bookingId ? null : sellerId,
+    });
+  }
+
+  if (bookingId) return `/bookings/${bookingId}`;
+  if (disputeId) return `/disputes/${disputeId}`;
+  if (customFavorId) return `/custom-favors/${customFavorId}`;
+  if (favorId) return `/favor/${favorId}`;
+
+  if (/booking/.test(type)) return '/bookings';
+  if (/dispute/.test(type)) return '/disputes';
+  if (/(bid|custom.?favor)/.test(type)) return '/custom-favors';
+
+  return null;
+}

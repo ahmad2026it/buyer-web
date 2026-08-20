@@ -2378,7 +2378,7 @@ function SignupFlow() {
 
       await showSuccess("Success", result.message || "User registered successfully");
 
-      router.push("/");
+      router.replace("/");
     } catch (err) {
       setApiError(getRegisterErrorMessage(err));
     }

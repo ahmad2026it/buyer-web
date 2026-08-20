@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loginBuyer } from "@/app/auth/store/authThunk";
-import { clearAuthError } from "@/app/auth/store/authSlice";
+import { clearAuthError, selectIsAuthenticated } from "@/app/auth/store/authSlice";
 import type { AuthApiError } from "@/app/auth/store/authTypes";
 import { getAxiosErrorDetails } from "@/lib/axios";
 import {
@@ -197,6 +197,8 @@ export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.auth);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const skipAuthRedirectRef = useRef(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{
@@ -211,6 +213,11 @@ export default function LoginPage() {
   useEffect(() => {
     setPushPermission(getNotificationPermission());
   }, []);
+
+  useEffect(() => {
+    if (skipAuthRedirectRef.current || !isAuthenticated) return;
+    router.replace("/");
+  }, [isAuthenticated, router]);
 
   const handleEnablePush = async () => {
     if (typeof Notification === "undefined") {
@@ -268,9 +275,10 @@ export default function LoginPage() {
         localStorage.setItem("whoCan_remember", "true");
       }
 
+      skipAuthRedirectRef.current = true;
       await showSuccess("Success", result.message || "Logged in successfully");
 
-      router.push("/");
+      router.replace("/");
     } catch (error) {
       const details = getAxiosErrorDetails(error as AuthApiError);
       const nextErrors = {

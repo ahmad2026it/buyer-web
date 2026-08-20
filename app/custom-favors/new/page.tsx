@@ -10,6 +10,7 @@ import { useGetBuyerFavorsQuery } from '@/app/buyer/store/buyerFavorsAPI';
 import { useGetBuyerLocationsQuery } from '@/app/buyer/store/buyerLocationsAPI';
 import { useAppSelector } from '@/store/hooks';
 import { showToast } from '@/lib/toast';
+import { formatCustomFavorBudget } from '@/app/buyer/store/buyerCustomFavorsTypes';
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
@@ -606,7 +607,7 @@ export default function NewCustomFavorPage() {
                   {[
                     { label: 'Service', value: serviceType === 'Others' ? (customType || '—') : (serviceType || '—') },
                     { label: 'Title', value: title || '—' },
-                    { label: 'Budget', value: budget ? `$${budget}` : '—' },
+                    { label: 'Budget', value: budget ? formatCustomFavorBudget(budget) : '—' },
                     { label: 'Sellers needed', value: `${sellersRequired}` },
                     { label: 'Photos', value: media.length > 0 ? `${media.length} attached` : 'None' },
                   ].map(row => (
@@ -690,7 +691,7 @@ export default function NewCustomFavorPage() {
                   { label: 'Date', value: dateStr },
                   { label: 'Time', value: `${hour}:00 ${period}` },
                   { label: 'Location', value: loc?.label ?? '—' },
-                  { label: 'Budget', value: budget ? `$${budget}` : '—' },
+                  { label: 'Budget', value: budget ? formatCustomFavorBudget(budget) : '—' },
                 ].map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid #F2F4F7' }}>
                     <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>{row.label}</span>

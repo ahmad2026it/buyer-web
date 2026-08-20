@@ -72,7 +72,7 @@ const toMoney = (value: string | number | null | undefined): number => {
 };
 
 const formatMoney = (value: number): string =>
-  value % 1 === 0 ? `$${value}` : `$${value.toFixed(2)}`;
+  Number.isFinite(value) ? `$${value.toFixed(2)}` : '$0.00';
 
 function toFavorView(favor: BuyerCustomFavor): FavorView {
   const photos = (favor.images ?? []).filter(Boolean);

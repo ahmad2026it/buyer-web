@@ -18,6 +18,7 @@ import {
   useMarkBuyerNotificationReadMutation,
 } from '@/app/buyer/store/buyerNotificationsAPI';
 import type { BuyerNotification } from '@/app/buyer/store/buyerNotificationsTypes';
+import { getNotificationTargetPath } from '@/lib/notificationRoutes';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout as logoutAuth } from '@/app/auth/store/authSlice';
 import { disconnectBuyerSocket } from '@/lib/buyerSocket';
@@ -632,9 +633,9 @@ const PROFILE_AVA = 'https://images.unsplash.com/photo-1534528741775-53994a69dae
 const PROFILE_MENU = [
   { label: 'Edit profile',       href: '/profile/edit', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/></svg> },
   { label: 'Billing & Payments', href: '/billing',      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> },
-  { label: 'Security',           icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+  { label: 'Security',           href: '/profile/security', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
   { label: 'Dispute center', href: '/disputes', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> },
-  { label: 'Privacy policy',     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><polyline points="10 9 9 9 8 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+  { label: 'Privacy policy',     href: '/privacy-policy', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="10 9 9 9 8 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
 ];
 
 /* ═══════════════════════════════════════════════════════════
@@ -747,6 +748,13 @@ export default function Navbar() {
   const markOneRead = (notification: BuyerNotification) => {
     if (notification.isRead) return;
     void markNotificationRead(notification.id);
+  };
+
+  const openNotification = (notification: BuyerNotification) => {
+    markOneRead(notification);
+    setNotifOpen(false);
+    const path = getNotificationTargetPath(notification);
+    if (path) router.push(path);
   };
 
   const handleNotifScroll = (event: React.UIEvent<HTMLDivElement>) => {
@@ -897,7 +905,7 @@ export default function Navbar() {
       )}
 
       <header className="hero-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, padding: '12px 24px', transition: 'all 0.3s ease' }}>
-        <nav style={{ maxWidth: '1200px', margin: '0 auto', background: scrolled ? 'rgba(255,255,255,0.95)' : 'rgba(26,10,46,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '9999px', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: scrolled ? '0px 4px 24px rgba(165,74,255,0.12)' : '0px 4px 24px rgba(0,0,0,0.2)', border: scrolled ? '1px solid rgba(165,74,255,0.15)' : '1px solid rgba(255,255,255,0.1)', transition: 'all 0.35s ease' }}>
+        <nav style={{ maxWidth: '1200px', margin: '0 auto', background: scrolled ? '#ffffff' : 'rgba(26,10,46,0.75)', backdropFilter: scrolled ? 'none' : 'blur(20px)', WebkitBackdropFilter: scrolled ? 'none' : 'blur(20px)', borderRadius: '9999px', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: scrolled ? '0px 4px 24px rgba(165,74,255,0.12)' : '0px 4px 24px rgba(0,0,0,0.2)', border: scrolled ? '1px solid rgba(165,74,255,0.15)' : '1px solid rgba(255,255,255,0.1)', transition: 'all 0.35s ease' }}>
 
           {/* Logo */}
           <a href="/" style={{ display: 'flex', alignItems: 'center', lineHeight: 0 }}>
@@ -1062,7 +1070,7 @@ export default function Navbar() {
                                 const actorAvatar = getActorAvatar(notif);
                                 const text = getNotificationText(notif);
                                 return (
-                                  <div key={notif.id} onClick={() => markOneRead(notif)}
+                                  <div key={notif.id} onClick={() => openNotification(notif)}
                                     style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 20px', background: isUnread ? 'rgba(165,74,255,0.05)' : 'transparent', cursor: 'pointer', position: 'relative' }}
                                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isUnread ? 'rgba(165,74,255,0.09)' : '#F9FAFB'; }}
                                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isUnread ? 'rgba(165,74,255,0.05)' : 'transparent'; }}>

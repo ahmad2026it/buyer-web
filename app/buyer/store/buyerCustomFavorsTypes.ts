@@ -213,8 +213,8 @@ export const formatCustomFavorCategory = (type?: string | null): string => {
 
 export const formatCustomFavorBudget = (budget: string | number | null | undefined): string => {
   const amount = Number(budget);
-  if (!Number.isFinite(amount)) return "$0";
-  return amount % 1 === 0 ? `$${amount}` : `$${amount.toFixed(2)}`;
+  if (!Number.isFinite(amount)) return "$0.00";
+  return `$${amount.toFixed(2)}`;
 };
 
 export const formatCustomFavorDueDate = (dateTime?: string | null): string => {

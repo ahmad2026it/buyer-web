@@ -101,3 +101,8 @@ export type ResetPasswordRequest = {
   email: string;
   newPassword: string;
 };
+
+export type ChangePasswordRequest = {
+  currentPassword: string;
+  newPassword: string;
+};

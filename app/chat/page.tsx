@@ -199,10 +199,32 @@ function ChatPageInner() {
 
   useEffect(() => {
     if (!conversations.length) return;
+
+    const fromId = Number(searchParams.get('id'));
+    const fromBooking = Number(searchParams.get('bookingId'));
+    const fromSeller = Number(searchParams.get('sellerId'));
+
+    const byId =
+      Number.isFinite(fromId) && fromId > 0
+        ? conversations.find((conv) => conv.id === fromId)
+        : undefined;
+    const byBooking =
+      Number.isFinite(fromBooking) && fromBooking > 0
+        ? conversations.find(
+            (conv) => conv.favorBookingId === fromBooking || conv.booking?.id === fromBooking,
+          )
+        : undefined;
+    const bySeller =
+      Number.isFinite(fromSeller) && fromSeller > 0
+        ? conversations.find(
+            (conv) => conv.sellerUserId === fromSeller || conv.otherParticipant?.id === fromSeller,
+          )
+        : undefined;
+
+    const target = byId ?? byBooking ?? bySeller;
     setActiveId((prev) => {
+      if (target) return target.id;
       if (prev != null && conversations.some((conv) => conv.id === prev)) return prev;
-      const fromUrl = Number(searchParams.get('id'));
-      if (Number.isFinite(fromUrl) && conversations.some((conv) => conv.id === fromUrl)) return fromUrl;
       return conversations[0].id;
     });
   }, [conversations, searchParams]);

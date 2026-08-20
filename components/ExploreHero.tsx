@@ -6,9 +6,9 @@ import FiltersModal from './FiltersModal';
 const CATEGORIES = ['Cleaning', 'Electrical', 'Plumbing', 'Carpentry', 'Painting', 'Gardening', 'Assembly'];
 
 const FLOATING_FAVORS = [
-  { image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop&auto=format&q=75', title: 'Deep Home Cleaning',  price: '$253', rating: '4.9' },
-  { image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=300&h=200&fit=crop&auto=format&q=75', title: 'Electrical Repairs', price: '$180', rating: '4.8' },
-  { image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop&auto=format&q=75', title: 'Garden Landscaping', price: '$120', rating: '4.7' },
+  { image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop&auto=format&q=75', title: 'Deep Home Cleaning',  price: '$253.00', rating: '4.9' },
+  { image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=300&h=200&fit=crop&auto=format&q=75', title: 'Electrical Repairs', price: '$180.00', rating: '4.8' },
+  { image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop&auto=format&q=75', title: 'Garden Landscaping', price: '$120.00', rating: '4.7' },
 ];
 
 const FLOATING_SELLERS = [

@@ -51,9 +51,9 @@ function displayCategory(type: string): string {
 
 function formatMoney(value: string | number | undefined): string {
   const n = Number(value);
-  if (!Number.isFinite(n)) return '0';
+  if (!Number.isFinite(n)) return '0.00';
   return n.toLocaleString('en-US', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }

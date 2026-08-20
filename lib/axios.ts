@@ -121,6 +121,20 @@ const isPublicAuthRequest = (url?: string): boolean => {
   );
 };
 
+const isPublicLegalRequest = (url?: string): boolean => {
+  return Boolean(url && /\/api\/buyer\/legal\//.test(url));
+};
+
+const isChangePasswordCredentialError = (url?: string, body?: unknown): boolean => {
+  if (!url?.includes('/api/buyer/auth/change-password')) return false;
+  const message = getMessageFromBody(body, '').toLowerCase();
+  const fieldErrors = getFieldErrorsFromBody(body);
+  return (
+    Boolean(fieldErrors.currentPassword || fieldErrors.password) ||
+    /password|credential|current/.test(message)
+  );
+};
+
 const logoutOnUnauthorized = (): void => {
   disconnectBuyerSocket();
   getAppStore()?.dispatch({ type: 'auth/logout' });
@@ -183,7 +197,10 @@ api.interceptors.response.use(
   },
   (error: AxiosError) => {
     const isUnauthorized =
-      error.response?.status === 401 && !isPublicAuthRequest(error.config?.url);
+      error.response?.status === 401 &&
+      !isPublicAuthRequest(error.config?.url) &&
+      !isPublicLegalRequest(error.config?.url) &&
+      !isChangePasswordCredentialError(error.config?.url, error.response?.data);
 
     if (isUnauthorized) {
       logoutOnUnauthorized();

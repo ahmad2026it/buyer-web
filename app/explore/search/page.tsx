@@ -11,6 +11,8 @@ import { useGetBuyerFavorsQuery } from '@/app/buyer/store/buyerFavorsAPI';
 import type { BuyerCategory } from '@/app/buyer/store/buyerCategoriesTypes';
 import type { BuyerFavor } from '@/app/buyer/store/buyerFavorsTypes';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import { useGetBuyerSellersQuery } from '@/app/buyer/store/buyerSellersAPI';
+import type { BuyerSeller } from '@/app/buyer/store/buyerSellersTypes';
 import {
   DEFAULT_FAVOR_FILTERS,
   isFavorFiltersActive,
@@ -18,25 +20,18 @@ import {
   type AppliedFavorFilters,
 } from '@/app/buyer/store/buyerFavorsTypes';
 
-const AVA = [
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80',
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=72&h=72&fit=crop&auto=format&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=72&h=72&fit=crop&auto=format&q=80',
-  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=72&h=72&fit=crop&auto=format&q=80',
-];
+const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80';
 
-const PLACEHOLDER_AVATAR = AVA[0];
-
-const ALL_SELLERS = Array.from({ length: 20 }, (_, i) => ({
-  id: `seller-${i}`,
-  image: AVA[i % 4].replace('w=72&h=72', 'w=400&h=500'),
-  name: ['John Doe', 'Chris Gale', 'Olivia Rhye', 'Sam Smith', 'Emma Brown', 'Liam Jones', 'Sophie Lee', 'Ava Davis'][i % 8],
-  badge: i % 3 === 0 ? 'Pro' : 'Team',
-  rating: (4.6 + (i % 4) * 0.1).toFixed(1),
-  reviews: `${(500 + i * 123).toLocaleString()}`,
-  jobs: 150 + i * 23,
-  specialty: ['Cleaning Expert', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'Gardener'][i % 6],
-}));
+type SellerCard = {
+  id: number;
+  image: string | null;
+  name: string;
+  badge: string;
+  rating: string;
+  ratingValue: number;
+  reviews: string;
+  jobs: number;
+};
 
 const COLS_FAVORS = 3;
 const ROWS_PER_PAGE = 5;
@@ -72,6 +67,28 @@ function toFavorCard(favor: BuyerFavor, categories: BuyerCategory[]): FavorCard 
     sellerAvatar: favor.seller?.profileImage || PLACEHOLDER_AVATAR,
     seller: favor.seller?.fullName || 'Seller',
   };
+}
+
+function toSellerCard(seller: BuyerSeller): SellerCard | null {
+  const id = Number(seller.sellerId ?? seller.id);
+  if (!Number.isFinite(id) || id <= 0) return null;
+
+  const ratingValue = Number(seller.averageRating);
+  return {
+    id,
+    image: pickFavorImage(seller.profileImageUrl, seller.profileImage),
+    name: seller.name?.trim() || seller.fullName?.trim() || 'Seller',
+    badge: seller.isPro ? 'Pro' : seller.isTeam ? 'Team' : '',
+    rating: Number.isFinite(ratingValue) ? ratingValue.toFixed(1) : '—',
+    ratingValue: Number.isFinite(ratingValue) ? ratingValue : 0,
+    reviews: Number(seller.totalReviews ?? seller.reviewCount ?? 0).toLocaleString(),
+    jobs: Number(seller.favorsCompleted ?? 0),
+  };
+}
+
+function formatPrice(value: number): string {
+  if (!Number.isFinite(value)) return '$0.00';
+  return `$${value.toFixed(2)}`;
 }
 
 function extraFiltersActive(filters: AppliedFavorFilters): boolean {
@@ -127,6 +144,13 @@ function SearchContent() {
     isFetching: favorsFetching,
     isError: favorsError,
   } = useGetBuyerFavorsQuery(favorsParams, { skip: skipFavors });
+
+  const skipSellers = searchType !== 'sellers';
+  const {
+    data: sellersData,
+    isLoading: sellersLoading,
+    isError: sellersError,
+  } = useGetBuyerSellersQuery(undefined, { skip: skipSellers });
 
   const apiFavors = favorsData?.data?.favors ?? [];
   const pagination = favorsData?.data?.pagination;
@@ -199,10 +223,17 @@ function SearchContent() {
     syncUrl({ category: nextCategory });
   };
 
-  const filteredSellers = ALL_SELLERS.filter(s =>
-    (!appliedSearch || s.name.toLowerCase().includes(appliedSearch.toLowerCase()) || s.specialty.toLowerCase().includes(appliedSearch.toLowerCase()))
+  const sellerCards = useMemo(
+    () => (sellersData?.data?.sellers ?? []).map(toSellerCard).filter((s): s is SellerCard => s != null),
+    [sellersData],
   );
-  const sortedSellers = [...filteredSellers].sort((a, b) => sortBy === 'price' ? a.jobs - b.jobs : 0);
+  const q = appliedSearch.trim().toLowerCase();
+  const filteredSellers = q
+    ? sellerCards.filter(s => s.name.toLowerCase().includes(q))
+    : sellerCards;
+  const sortedSellers = [...filteredSellers].sort((a, b) =>
+    sortBy === 'price' ? a.jobs - b.jobs : b.ratingValue - a.ratingValue,
+  );
 
   const visibleItems = searchType === 'sellers' ? sortedSellers.slice(0, visibleCount) : favorCards;
   const colCount = searchType === 'sellers' ? 4 : COLS_FAVORS;
@@ -216,9 +247,11 @@ function SearchContent() {
   };
 
   const catList = activeCategory !== 'All' ? [activeCategory] : [];
-  const searchPlaceholder = catList.length > 0
-    ? `Search ${catList.map(c => c.toLowerCase()).join(', ')} favors...`
-    : `Search favors, services...`;
+  const searchPlaceholder = searchType === 'sellers'
+    ? 'Search sellers...'
+    : catList.length > 0
+      ? `Search ${catList.map(c => c.toLowerCase()).join(', ')} favors...`
+      : `Search favors, services...`;
 
   const R = '9999px';
 
@@ -257,7 +290,7 @@ function SearchContent() {
                 )}
               </div>
               {/* Recent searches dropdown */}
-              {searchFocused && (
+              {searchFocused && searchType !== 'sellers' && (
                 <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, background: '#fff', borderRadius: '14px', boxShadow: '0 8px 32px rgba(0,0,0,0.14)', zIndex: 200, paddingTop: '14px', paddingBottom: '6px', border: '1px solid #EAECF0' }}>
                   <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '12px', color: '#A54AFF', padding: '0 16px 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Recent searches
@@ -355,7 +388,7 @@ function SearchContent() {
           {/* Results header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
             <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#667085' }}>
-              <span style={{ fontWeight: 600, color: '#101828' }}>{favorsLoading && searchType !== 'sellers' ? '…' : totalCount}</span> {searchType === 'sellers' ? 'sellers' : 'favors'} found
+              <span style={{ fontWeight: 600, color: '#101828' }}>{(searchType === 'sellers' ? sellersLoading : favorsLoading) ? '…' : totalCount}</span> {searchType === 'sellers' ? 'sellers' : 'favors'} found
             </p>
             <div style={{ display: 'flex', gap: '4px', background: '#F2F4F7', borderRadius: R, padding: '4px' }}>
               {(['relevance', 'price'] as const).map(s => (
@@ -367,7 +400,18 @@ function SearchContent() {
             </div>
           </div>
 
-          {searchType !== 'sellers' && favorsLoading ? (
+          {searchType === 'sellers' && sellersLoading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(4, 1fr)`, gap: '24px' }}>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} style={{ height: 360, borderRadius: 20, background: '#fff', border: '1.5px solid #EAECF0' }} />
+              ))}
+            </div>
+          ) : searchType === 'sellers' && sellersError ? (
+            <div style={{ textAlign: 'center', padding: '80px 0' }}>
+              <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: 600, color: '#344054', marginBottom: '8px' }}>Unable to load sellers</p>
+              <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#667085' }}>Please try again in a moment.</p>
+            </div>
+          ) : searchType !== 'sellers' && favorsLoading ? (
             <div style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS_FAVORS}, 1fr)`, gap: '24px' }}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} style={{ height: 360, borderRadius: 20, background: '#fff', border: '1.5px solid #EAECF0' }} />
@@ -432,7 +476,7 @@ function SearchContent() {
 
                             {/* 2. Price + Category badge */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#8E40FF' }}>${favor.price}</span>
+                              <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#8E40FF' }}>{formatPrice(favor.price)}</span>
                               <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', fontWeight: 500, color: '#6941C6', background: '#F9F5FF', border: '1px solid #E9D7FE', borderRadius: '9999px', padding: '3px 10px' }}>{favor.category}</span>
                             </div>
 
@@ -456,30 +500,29 @@ function SearchContent() {
                         </div>
                       );
                     })
-                  : (visibleItems as typeof sortedSellers).map(seller => (
+                  : (visibleItems as SellerCard[]).map(seller => (
                       <div key={seller.id}
-                        onClick={() => router.push(`/seller/${seller.id.split('-')[1]}`)}
+                        onClick={() => router.push(`/seller/${seller.id}`)}
                         style={{ background: '#ffffff', borderRadius: '20px', border: '1.5px solid #EAECF0', cursor: 'pointer', transition: 'border-color 0.2s, box-shadow 0.2s', overflow: 'hidden' }}
                         onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'rgba(165,74,255,0.3)'; el.style.boxShadow = '0 8px 24px rgba(165,74,255,0.1)'; }}
                         onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#EAECF0'; el.style.boxShadow = 'none'; }}>
 
                         <div style={{ position: 'relative', padding: '10px 10px 0' }}>
                           <div style={{ height: '220px', borderRadius: '14px', overflow: 'hidden', background: '#F8F0FF' }}>
-                            <img src={seller.image} alt={seller.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+                            <FavorImage src={seller.image} alt={seller.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
                           </div>
-                          <div style={BADGE(seller.badge)}>{seller.badge}</div>
+                          {seller.badge ? <div style={BADGE(seller.badge)}>{seller.badge}</div> : null}
                         </div>
 
                         <div style={{ padding: '14px 16px 18px' }}>
-                          <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '16px', color: '#101828', marginBottom: '4px' }}>{seller.name}</h3>
-                          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', color: '#667085', marginBottom: '6px' }}>{seller.specialty}</p>
+                          <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '16px', color: '#101828', marginBottom: '6px' }}>{seller.name}</h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
                             <svg viewBox="0 0 24 24" width="14" height="14"><polygon fill="#F79009" stroke="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                             <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828' }}>{seller.rating}</span>
                             <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#D0D5DD' }}>|</span>
                             <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>{seller.reviews} reviews</span>
                             <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#D0D5DD' }}>/</span>
-                            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>{seller.jobs} jobs</span>
+                            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>{seller.jobs.toLocaleString()} jobs</span>
                           </div>
                         </div>
                       </div>

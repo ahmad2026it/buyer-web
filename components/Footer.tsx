@@ -7,6 +7,16 @@ const FOOTER_LINKS = {
   Legal: ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Accessibility'],
 };
 
+const FOOTER_HREFS: Record<string, string> = {
+  'Privacy Policy': '/privacy-policy',
+};
+
+const BOTTOM_LINKS = [
+  { label: 'Privacy', href: '/privacy-policy' },
+  { label: 'Terms', href: '#' },
+  { label: 'Cookies', href: '#' },
+];
+
 function LinkedInIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -147,7 +157,7 @@ export default function Footer() {
                 {links.map((link) => (
                   <li key={link}>
                     <a
-                      href="#"
+                      href={FOOTER_HREFS[link] ?? '#'}
                       style={{
                         fontFamily: 'Poppins, sans-serif',
                         fontSize: '14px',
@@ -199,10 +209,10 @@ export default function Footer() {
             © {new Date().getFullYear()} WhoCan. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: '24px' }}>
-            {['Privacy', 'Terms', 'Cookies'].map((item) => (
+            {BOTTOM_LINKS.map((item) => (
               <a
-                key={item}
-                href="#"
+                key={item.label}
+                href={item.href}
                 style={{
                   fontFamily: 'Poppins, sans-serif',
                   fontSize: '13px',
@@ -218,7 +228,7 @@ export default function Footer() {
                     'rgba(255,255,255,0.3)';
                 }}
               >
-                {item}
+                {item.label}
               </a>
             ))}
           </div>

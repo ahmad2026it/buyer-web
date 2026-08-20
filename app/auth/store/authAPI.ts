@@ -1,6 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import type {
   AuthMessageResponse,
+  ChangePasswordRequest,
   ForgotPasswordRequest,
   ResetOtpRequest,
   ResetPasswordRequest,
@@ -151,6 +152,16 @@ export const authAPI = createApi({
         body,
       }),
     }),
+    changePassword: builder.mutation<AuthMessageResponse, ChangePasswordRequest>(
+      {
+        query: (body) => ({
+          url: "/api/buyer/auth/change-password",
+          method: "PUT",
+          body,
+          skipErrorToast: true,
+        }),
+      },
+    ),
   }),
 });
 
@@ -161,4 +172,5 @@ export const {
   useVerifyOtpMutation,
   useResetOtpMutation,
   useResetPasswordMutation,
+  useChangePasswordMutation,
 } = authAPI;

@@ -137,7 +137,7 @@ function PulsingDot() {
   );
 }
 
-function KebabMenu({ status, onWithdraw, onDelete, onCancel }: { status: Status; onWithdraw: () => void; onDelete: () => void; onCancel: () => void }) {
+function KebabMenu({ status, onWithdraw, onDelete, onCancel, onViewDetails }: { status: Status; onWithdraw: () => void; onDelete: () => void; onCancel: () => void; onViewDetails: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -176,6 +176,7 @@ function KebabMenu({ status, onWithdraw, onDelete, onCancel }: { status: Status;
               </button>
             )}
             <button
+              onClick={() => { onViewDetails(); setOpen(false); }}
               style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#344054', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8 }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}>
@@ -225,11 +226,17 @@ function BookingCard({ booking, onRemove }: { booking: Booking; onRemove: () => 
             )}
           </div>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 16, color: BRAND }}>
-            {booking.price % 1 === 0 ? `$${booking.price}` : `$${booking.price.toFixed(2)}`}
+            {`$${Number(booking.price).toFixed(2)}`}
           </p>
         </div>
         <div data-nomove>
-          <KebabMenu status={booking.status} onWithdraw={onRemove} onDelete={onRemove} onCancel={onRemove} />
+          <KebabMenu
+            status={booking.status}
+            onWithdraw={onRemove}
+            onDelete={onRemove}
+            onCancel={onRemove}
+            onViewDetails={() => router.push(`/bookings/${booking.id}`)}
+          />
         </div>
       </div>
 

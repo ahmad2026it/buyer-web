@@ -27,8 +27,8 @@ function displayCategory(type: string): string {
 
 function formatPrice(value: string | number): string {
   const n = Number(value);
-  if (!Number.isFinite(n)) return "$0";
-  return n % 1 === 0 ? `$${n}` : `$${n.toFixed(2)}`;
+  if (!Number.isFinite(n)) return "$0.00";
+  return `$${n.toFixed(2)}`;
 }
 
 /* ── Favor card ────────────────────────────────────────── */

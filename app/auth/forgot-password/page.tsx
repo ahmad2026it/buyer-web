@@ -13,9 +13,41 @@ import { showSuccess } from "@/lib/swal";
 const GRAD = "linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)";
 const BORDER = "#D0D5DD";
 const BRAND = "#A54AFF";
+const ERROR = "#D92D20";
 const OTP_LENGTH = 4;
 const RESEND_SECONDS = 60;
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_PASSWORD_LENGTH = 8;
+
+const PASSWORD_RULES = [
+  {
+    id: "length",
+    label: `At least ${MIN_PASSWORD_LENGTH} characters`,
+    test: (value: string) => value.length >= MIN_PASSWORD_LENGTH,
+  },
+  {
+    id: "uppercase",
+    label: "One uppercase letter",
+    test: (value: string) => /[A-Z]/.test(value),
+  },
+  {
+    id: "number",
+    label: "One number",
+    test: (value: string) => /\d/.test(value),
+  },
+  {
+    id: "special",
+    label: "One special character (e.g. !@#$%)",
+    test: (value: string) => /[^A-Za-z0-9]/.test(value),
+  },
+] as const;
+
+function getPasswordError(password: string): string | undefined {
+  const failed = PASSWORD_RULES.filter((rule) => !rule.test(password));
+  if (failed.length === 0) return undefined;
+  return `Password must include ${failed
+    .map((rule) => rule.label.toLowerCase())
+    .join(", ")}.`;
+}
 
 type FlowStep = "email" | "otp" | "password";
 
@@ -101,6 +133,7 @@ function PillInput({
   type = "text",
   placeholder,
   value,
+  error,
   onChange,
   autoComplete,
 }: {
@@ -108,6 +141,7 @@ function PillInput({
   type?: string;
   placeholder: string;
   value: string;
+  error?: string;
   onChange: (v: string) => void;
   autoComplete?: string;
 }) {
@@ -115,6 +149,8 @@ function PillInput({
   const [visible, setVisible] = useState(false);
   const isPassword = type === "password";
   const inputType = isPassword ? (visible ? "text" : "password") : type;
+  const hasError = Boolean(error);
+  const borderColor = hasError ? ERROR : focused ? BRAND : BORDER;
 
   return (
     <div>
@@ -138,6 +174,7 @@ function PillInput({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          aria-invalid={hasError}
           autoComplete={autoComplete}
           style={{
             width: "100%",
@@ -145,14 +182,16 @@ function PillInput({
             fontSize: "16px",
             color: "#101828",
             background: "#ffffff",
-            border: `1px solid ${focused ? BRAND : BORDER}`,
+            border: `1px solid ${borderColor}`,
             borderRadius: "9999px",
             padding: isPassword ? "11px 48px 11px 18px" : "11px 18px",
             outline: "none",
             boxSizing: "border-box",
-            boxShadow: focused
-              ? `0 0 0 4px rgba(165,74,255,0.12)`
-              : "0 1px 1px rgba(16,24,40,0.05)",
+            boxShadow: hasError
+              ? "0 0 0 4px rgba(217,45,32,0.12)"
+              : focused
+                ? `0 0 0 4px rgba(165,74,255,0.12)`
+                : "0 1px 1px rgba(16,24,40,0.05)",
             transition: "border-color 0.15s, box-shadow 0.15s",
           }}
         />
@@ -183,7 +222,71 @@ function PillInput({
           </button>
         )}
       </div>
+      {hasError && (
+        <p
+          style={{
+            fontFamily: "Poppins, sans-serif",
+            fontSize: "12px",
+            color: ERROR,
+            marginTop: "6px",
+          }}
+        >
+          {error}
+        </p>
+      )}
     </div>
+  );
+}
+
+function PasswordRules({ value }: { value: string }) {
+  return (
+    <ul
+      style={{
+        listStyle: "none",
+        margin: 0,
+        padding: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px",
+      }}
+    >
+      {PASSWORD_RULES.map((rule) => {
+        const passed = rule.test(value);
+        return (
+          <li
+            key={rule.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontFamily: "Poppins, sans-serif",
+              fontSize: "12px",
+              color: passed ? "#027A48" : "#667085",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: passed ? "#ECFDF3" : "#F2F4F7",
+                color: passed ? "#027A48" : "#98A2B3",
+                fontSize: "10px",
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              {passed ? "✓" : "•"}
+            </span>
+            {rule.label}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -323,6 +426,10 @@ export default function ForgotPasswordPage() {
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{
+    password?: string;
+    confirm?: string;
+  }>({});
   const [resendIn, setResendIn] = useState(0);
 
   const [forgotPassword, { isLoading: sendingCode }] =
@@ -376,6 +483,7 @@ export default function ForgotPasswordPage() {
       const result = await verifyOtp({ email, otp }).unwrap();
       setPassword("");
       setConfirm("");
+      setFieldErrors({});
       setStep("password");
       await showSuccess(
         "Code verified",
@@ -400,14 +508,18 @@ export default function ForgotPasswordPage() {
 
   const handleResetPassword = async (e: FormEvent) => {
     e.preventDefault();
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      showToast(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`, "warning");
+    const passwordError = getPasswordError(password);
+    if (passwordError) {
+      setFieldErrors({ password: passwordError });
+      showToast(passwordError, "warning");
       return;
     }
     if (password !== confirm) {
+      setFieldErrors({ confirm: "Passwords do not match." });
       showToast("Passwords do not match.", "warning");
       return;
     }
+    setFieldErrors({});
 
     try {
       const result = await resetPassword({
@@ -436,7 +548,7 @@ export default function ForgotPasswordPage() {
       ? "Enter the email linked to your account and we'll send a reset code."
       : step === "otp"
         ? `We sent a 4-digit code to ${maskEmail(email)}.`
-        : "Choose a new password for your WhoCan account.";
+        : "Choose a strong password with an uppercase letter, a number, and a special character.";
 
   return (
     <div
@@ -608,20 +720,37 @@ export default function ForgotPasswordPage() {
                 marginBottom: "24px",
               }}
             >
-              <PillInput
-                label="New password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={setPassword}
-                autoComplete="new-password"
-              />
+              <div>
+                <PillInput
+                  label="New password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  error={fieldErrors.password}
+                  onChange={(value) => {
+                    setPassword(value);
+                    if (fieldErrors.password || fieldErrors.confirm) {
+                      setFieldErrors({});
+                    }
+                  }}
+                  autoComplete="new-password"
+                />
+                <div style={{ marginTop: "10px" }}>
+                  <PasswordRules value={password} />
+                </div>
+              </div>
               <PillInput
                 label="Confirm password"
                 type="password"
                 placeholder="••••••••"
                 value={confirm}
-                onChange={setConfirm}
+                error={fieldErrors.confirm}
+                onChange={(value) => {
+                  setConfirm(value);
+                  if (fieldErrors.confirm) {
+                    setFieldErrors((prev) => ({ ...prev, confirm: undefined }));
+                  }
+                }}
                 autoComplete="new-password"
               />
             </div>
