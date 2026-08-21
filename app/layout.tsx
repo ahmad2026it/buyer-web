@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ScrollAnimator from "@/components/ScrollAnimator";
 import Providers from "@/components/Providers";
@@ -9,6 +9,11 @@ export const metadata: Metadata = {
     "From cleaning to grass cutting, easily connect with trusted service providers for all your home needs.",
   keywords: "handyman, home services, cleaning, repairs, plumbing, electrician",
   manifest: "/manifest.json",
+  applicationName: "WhoCan",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#A54AFF",
 };
 
 export default function RootLayout({

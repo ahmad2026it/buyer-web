@@ -57,6 +57,17 @@ export type BuyerFavorAddOn = {
   price?: string | number;
 };
 
+export type BuyerFavorQuestion = {
+  id?: number | string;
+  question?: string;
+  text?: string;
+  title?: string;
+  label?: string;
+  type?: string;
+  options?: string[];
+  placeholder?: string;
+};
+
 export type BuyerFavorReview = {
   id?: number;
   rating?: number;
@@ -90,7 +101,7 @@ export type BuyerFavorDetail = {
   images: string[];
   videos: string[];
   addOns: BuyerFavorAddOn[];
-  questions: unknown[];
+  questions: Array<string | BuyerFavorQuestion>;
   categoryId: number | null;
   subCategoryIds: number[];
   isHidden: boolean;

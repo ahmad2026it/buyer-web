@@ -38,70 +38,67 @@ function toLatLng(lat: number | null, lng: number | null): { lat: number; lng: n
 }
 
 function SellerPin({ avatar, name }: { avatar: string; name: string }) {
+  const [broken, setBroken] = useState(false);
+  const showPhoto = Boolean(avatar) && !broken;
+
   return (
     <div
       style={{
         position: 'relative',
-        transform: 'translate(-50%, -100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
+        width: 36,
+        height: 48,
+        transform: 'translate(-50%, calc(-100% + 6px))',
         pointerEvents: 'none',
+        filter: 'drop-shadow(0 8px 16px rgba(16,24,40,0.28))',
       }}
     >
       <div
         style={{
           position: 'absolute',
-          top: 0,
           left: '50%',
-          width: 54,
-          height: 54,
-          marginLeft: -27,
+          bottom: 2,
+          width: 14,
+          height: 14,
+          marginLeft: -7,
           borderRadius: '50%',
-          border: '2px solid rgba(165,74,255,0.5)',
-          animation: 'liveMapRing 1.8s ease-out infinite',
+          background: 'rgba(165,74,255,0.28)',
+          animation: 'liveMapPulse 1.8s ease-out infinite',
         }}
       />
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: '50%',
-          width: 54,
-          height: 54,
-          marginLeft: -27,
-          borderRadius: '50%',
-          border: '2px solid rgba(165,74,255,0.3)',
-          animation: 'liveMapRing 1.8s ease-out 0.7s infinite',
-        }}
-      />
-      <div
-        style={{
-          width: 54,
-          height: 54,
-          borderRadius: '50%',
-          border: `3px solid ${BRAND}`,
-          overflow: 'hidden',
-          background: '#fff',
-          boxShadow: '0 4px 18px rgba(165,74,255,0.5)',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
-        <img src={avatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      </div>
-      <div
-        style={{
-          width: 0,
-          height: 0,
-          borderLeft: '9px solid transparent',
-          borderRight: '9px solid transparent',
-          borderTop: `13px solid ${BRAND}`,
-          marginTop: -2,
-          zIndex: 1,
-          filter: 'drop-shadow(0 3px 4px rgba(165,74,255,0.35))',
-        }}
-      />
+      <svg width="36" height="48" viewBox="0 0 36 48" fill="none" aria-hidden>
+        <path
+          d="M18 47C18 47 33 31.2 33 18.5C33 10.04 26.28 3.2 18 3.2C9.72 3.2 3 10.04 3 18.5C3 31.2 18 47 18 47Z"
+          fill={BRAND}
+        />
+        <path
+          d="M18 47C18 47 33 31.2 33 18.5C33 10.04 26.28 3.2 18 3.2C9.72 3.2 3 10.04 3 18.5C3 31.2 18 47 18 47Z"
+          stroke="#fff"
+          strokeWidth="2.2"
+        />
+        <circle cx="18" cy="18" r="10.5" fill="#fff" />
+        {!showPhoto && (
+          <path
+            d="M18 12.4a3.1 3.1 0 1 1 0 6.2 3.1 3.1 0 0 1 0-6.2Zm0 7.4c2.6 0 5.2 1.3 5.2 3.1v.9H12.8v-.9c0-1.8 2.6-3.1 5.2-3.1Z"
+            fill={BRAND}
+          />
+        )}
+      </svg>
+      {showPhoto && (
+        <img
+          src={avatar}
+          alt={name}
+          onError={() => setBroken(true)}
+          style={{
+            position: 'absolute',
+            top: 9,
+            left: 9,
+            width: 18,
+            height: 18,
+            borderRadius: '50%',
+            objectFit: 'cover',
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -179,9 +176,9 @@ export default function LiveLocationMap({
   return (
     <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', height }}>
       <style>{`
-        @keyframes liveMapRing {
-          0% { transform: scale(1); opacity: 0.7; }
-          100% { transform: scale(2.4); opacity: 0; }
+        @keyframes liveMapPulse {
+          0% { transform: scale(0.6); opacity: 0.55; }
+          100% { transform: scale(2.8); opacity: 0; }
         }
       `}</style>
       <GoogleMap

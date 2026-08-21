@@ -12,11 +12,12 @@ import BecomeSellerSection from '@/components/BecomeSellerSection';
 import Footer from '@/components/Footer';
 import { useGetBuyerBookingsQuery } from '@/app/buyer/store/buyerBookingsAPI';
 import {
+  formatBuyerBookingStatusLabel,
   isActiveListingBookingStatus,
-  isAwaitingCompleteBookingStatus,
-  isInProgressBookingStatus,
+  mapBuyerBookingUiStatus,
   mergeBuyerBookings,
   type BuyerBooking,
+  type BuyerBookingUiStatus,
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
@@ -27,18 +28,24 @@ const PILL  = '9999px';
 const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80';
 const HOME_BOOKINGS_LIMIT = 4;
 
-type HomeBookingStatus = 'InProgress' | 'Upcoming' | 'Complete';
+type HomeBookingStatus = BuyerBookingUiStatus;
 
-const STATUS_CFG = {
-  InProgress: { label: 'In Progress', bg: '#FFF4ED', color: '#C4320A', border: '#F9DBAF', dot: '#C4320A' },
-  Upcoming:   { label: 'Upcoming',    bg: '#ECFDF3', color: '#079455', border: '#A9EFC5', dot: '#079455' },
-  Complete:   { label: 'Complete',    bg: '#F9F5FF', color: '#6941C6', border: '#E9D7FE', dot: '#6941C6' },
+const STATUS_CFG: Record<HomeBookingStatus, { label: string; bg: string; color: string; border: string; dot: string }> = {
+  InProgress:        { label: 'In Progress',         bg: '#FFF4ED', color: '#C4320A', border: '#F9DBAF', dot: '#C4320A' },
+  Upcoming:          { label: 'Upcoming',            bg: '#ECFDF3', color: '#079455', border: '#A9EFC5', dot: '#079455' },
+  Pending:           { label: 'Pending',             bg: '#FFFAEB', color: '#B54708', border: '#FEDF89', dot: '#B54708' },
+  DeclinedBySeller:  { label: 'Declined by seller',  bg: '#FEF3F2', color: '#B42318', border: '#FECDCA', dot: '#B42318' },
+  CancelledByBuyer:  { label: 'Cancelled by buyer',  bg: '#F2F4F7', color: '#667085', border: '#D0D5DD', dot: '#667085' },
+  CancelledBySeller: { label: 'Cancelled by seller', bg: '#F2F4F7', color: '#667085', border: '#D0D5DD', dot: '#667085' },
+  Cancelled:         { label: 'Cancelled',           bg: '#F2F4F7', color: '#667085', border: '#D0D5DD', dot: '#667085' },
+  Complete:          { label: 'Complete',            bg: '#F9F5FF', color: '#6941C6', border: '#E9D7FE', dot: '#6941C6' },
+  Completed:         { label: 'Completed',           bg: '#EEF4FF', color: '#3538CD', border: '#C7D7FE', dot: '#3538CD' },
 };
 
-function mapHomeStatus(status: string): HomeBookingStatus {
-  if (isInProgressBookingStatus(status)) return 'InProgress';
-  if (isAwaitingCompleteBookingStatus(status)) return 'Complete';
-  return 'Upcoming';
+function mapHomeStatus(item: BuyerBooking): HomeBookingStatus {
+  return mapBuyerBookingUiStatus(item.status, {
+    booking: item,
+  });
 }
 
 function formatFavorDate(value: string): string {
@@ -65,7 +72,7 @@ function formatPrice(price: number): string {
 function toHomeBooking(item: BuyerBooking) {
   return {
     id: String(item.id),
-    status: mapHomeStatus(item.status),
+    status: mapHomeStatus(item),
     title: item.favor?.title || 'Booking',
     image: pickFavorImage(item.images, item.favor?.images, item.favor?.favorImage),
     date: formatFavorDate(item.favorDate),
@@ -340,7 +347,7 @@ export default function Home() {
                           {/* Status badge */}
                           <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', alignItems: 'center', gap: 5, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: PILL, padding: '4px 10px' }}>
                             <div style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.dot, flexShrink: 0, ...(isLive ? { animation: 'bkPulse 1.6s ease-out infinite' } : {}) }}/>
-                            <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 11, fontWeight: 700, color: cfg.color, whiteSpace: 'nowrap' }}>{cfg.label}</span>
+                            <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 11, fontWeight: 700, color: cfg.color, whiteSpace: 'nowrap' }}>{formatBuyerBookingStatusLabel(bk.status)}</span>
                           </div>
                         </div>
 

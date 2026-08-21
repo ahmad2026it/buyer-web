@@ -1,11 +1,14 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { GetBuyerPrivacyPolicyResponse } from "./buyerLegalTypes";
+import type {
+  GetBuyerBookingTermsResponse,
+  GetBuyerPrivacyPolicyResponse,
+} from "./buyerLegalTypes";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
 
 export const buyerLegalAPI = createApi({
   reducerPath: "buyerLegalAPI",
   baseQuery: axiosBaseQuery(),
-  tagTypes: ["BuyerPrivacyPolicy"],
+  tagTypes: ["BuyerPrivacyPolicy", "BuyerBookingTerms"],
   endpoints: (builder) => ({
     getBuyerPrivacyPolicy: builder.query<GetBuyerPrivacyPolicyResponse, void>({
       query: () => ({
@@ -15,7 +18,18 @@ export const buyerLegalAPI = createApi({
       }),
       providesTags: ["BuyerPrivacyPolicy"],
     }),
+    getBuyerBookingTerms: builder.query<GetBuyerBookingTermsResponse, void>({
+      query: () => ({
+        url: "/api/buyer/legal/booking-terms",
+        method: "GET",
+        skipErrorToast: true,
+      }),
+      providesTags: ["BuyerBookingTerms"],
+    }),
   }),
 });
 
-export const { useGetBuyerPrivacyPolicyQuery } = buyerLegalAPI;
+export const {
+  useGetBuyerPrivacyPolicyQuery,
+  useGetBuyerBookingTermsQuery,
+} = buyerLegalAPI;

@@ -8,6 +8,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { makeStore } from '@/store';
 import { injectStore } from '@/lib/storeAccess';
 import { muiTheme } from '@/lib/muiTheme';
+import AuthHistoryGuard from '@/components/AuthHistoryGuard';
 import MuiToastProvider from '@/components/MuiToastProvider';
 import PushNotificationListener from '@/components/PushNotificationListener';
 
@@ -28,6 +29,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           <PersistGate loading={null} persistor={persistor}>
             <MuiToastProvider>
               <PushNotificationListener />
+              <AuthHistoryGuard />
               {children}
             </MuiToastProvider>
           </PersistGate>

@@ -5,6 +5,7 @@ import {
   BUYER_CONVERSATIONS_LIST_PARAMS,
   useGetBuyerConversationsQuery,
 } from '@/app/buyer/store/buyerConversationsAPI';
+import type { BuyerConversation } from '@/app/buyer/store/buyerConversationsTypes';
 import { selectAuthToken, selectAuthUser } from '@/app/auth/store/authSlice';
 import { getBuyerSocket } from '@/lib/buyerSocket';
 import {
@@ -17,6 +18,7 @@ import {
   getActiveBuyerConversationId,
   normalizeIncomingMessage,
 } from '@/lib/conversationSocketTypes';
+import { getChatConversationPath } from '@/lib/notificationRoutes';
 import { showToastOnce } from '@/lib/toast';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
@@ -26,6 +28,7 @@ export function useBuyerRealtime(): void {
   const myUserId = useAppSelector(selectAuthUser)?.id ?? null;
   const joinedIdsRef = useRef<Set<number>>(new Set());
   const conversationIdsRef = useRef<number[]>([]);
+  const conversationsRef = useRef<BuyerConversation[]>([]);
 
   const { data: conversationsResponse } = useGetBuyerConversationsQuery(
     BUYER_CONVERSATIONS_LIST_PARAMS,
@@ -38,6 +41,10 @@ export function useBuyerRealtime(): void {
       .filter((id) => Number.isFinite(id) && id > 0)
       .sort((left, right) => left - right)
       .join(',');
+  }, [conversationsResponse]);
+
+  useEffect(() => {
+    conversationsRef.current = conversationsResponse?.data?.conversations ?? [];
   }, [conversationsResponse]);
 
   useEffect(() => {
@@ -90,8 +97,17 @@ export function useBuyerRealtime(): void {
       if (isOwn || isActive) return;
 
       scheduleInboxRefresh();
-      const preview = message.body.trim() || 'New message';
-      showToastOnce(`chat:${message.conversationId}:${message.id}`, preview);
+      const conversation = conversationsRef.current.find((item) => item.id === message.conversationId);
+      const senderName = conversation?.otherParticipant?.fullName?.trim() || 'New message';
+      const preview = message.body.trim() || 'Sent you a message';
+      showToastOnce(
+        `chat:${message.conversationId}:${message.id}`,
+        preview,
+        'info',
+        4000,
+        senderName,
+        getChatConversationPath(message.conversationId),
+      );
     };
 
     const handleNotification = (payload: unknown, eventName?: string) => {

@@ -51,6 +51,43 @@ function chatPath(params: Record<string, string | null>): string {
   return query ? `/chat?${query}` : '/chat';
 }
 
+export function getChatConversationPath(conversationId: number | string): string {
+  return chatPath({ id: String(conversationId) });
+}
+
+export function getIncomingEventTargetPath(data: Record<string, unknown>): string | null {
+  const actor = asRecord(data.actor);
+  const actorId =
+    toPositiveId(data.actorUserId) ??
+    toPositiveId(data.actor_user_id) ??
+    toPositiveId(data.sellerId) ??
+    toPositiveId(data.seller_id) ??
+    pickId(actor, ['id']);
+
+  return getNotificationTargetPath({
+    id: Number(toPositiveId(data.notificationId ?? data.notification_id ?? data.id) ?? 0),
+    title: typeof data.title === 'string' ? data.title : '',
+    description: typeof data.description === 'string' ? data.description : typeof data.body === 'string' ? data.body : '',
+    message: typeof data.message === 'string' ? data.message : typeof data.body === 'string' ? data.body : '',
+    key: typeof data.key === 'string' ? data.key : typeof data.eventKey === 'string' ? String(data.eventKey) : '',
+    payload: data,
+    isRead: false,
+    readAt: null,
+    createdAt: '',
+    updatedAt: '',
+    actorUserId: actorId ? Number(actorId) : null,
+    actor: actor
+      ? {
+          id: Number(pickId(actor, ['id']) ?? 0) || undefined,
+          fullName: typeof actor.fullName === 'string' ? actor.fullName : undefined,
+          name: typeof actor.name === 'string' ? actor.name : undefined,
+          profileImage: typeof actor.profileImage === 'string' ? actor.profileImage : null,
+        }
+      : null,
+    visualType: typeof data.visualType === 'string' ? data.visualType : typeof data.type === 'string' ? data.type : '',
+  });
+}
+
 export function getNotificationTargetPath(notification: BuyerNotification): string | null {
   const payload = parsePayload(notification.payload);
   const nestedData = asRecord(payload?.data);

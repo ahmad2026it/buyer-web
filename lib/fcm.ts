@@ -4,7 +4,7 @@ import { firebaseVapidKey, getFirebaseApp } from "@/lib/firebase";
 
 export type FcmTokenResult = {
   token?: string;
-  status: "ok" | "blocked" | "unsupported";
+  status: "ok" | "blocked" | "unsupported" | "pending";
   reason?: string;
 };
 
@@ -31,6 +31,49 @@ export function getNotificationPermission(): NotificationPermission | "unsupport
     return "unsupported";
   }
   return Notification.permission;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+/**
+ * Ask the browser for notification permission.
+ * Edge often never resolves requestPermission() because it uses a quiet
+ * address-bar bell instead of Chrome's popup / Windows "turn on" dialog.
+ */
+export async function requestNotificationPermission(): Promise<
+  NotificationPermission | "unsupported"
+> {
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    return "unsupported";
+  }
+  if (Notification.permission === "granted" || Notification.permission === "denied") {
+    return Notification.permission;
+  }
+
+  const requested = Notification.requestPermission()
+    .then(() => Notification.permission)
+    .catch(() => Notification.permission);
+
+  if (!isEdgeBrowser()) {
+    const permission = await requested;
+    console.warn("[WHCAN_NOTIFY] notification permission", {
+      permission,
+      browser: "chrome-or-other",
+    });
+    return permission;
+  }
+
+  const permission = await Promise.race([requested, delay(3000).then(() => Notification.permission)]);
+  console.warn("[WHCAN_NOTIFY] notification permission", {
+    permission,
+    browser: "edge",
+    quietUi: permission === "default",
+  });
+  return permission;
 }
 
 export function getCachedWebFcmToken(): string | null {
@@ -149,10 +192,17 @@ export async function getWebFcmToken(options?: {
       };
     }
 
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
+    const permission = await requestNotificationPermission();
+    if (permission === "denied") {
       cacheWebFcmToken(null);
       return { status: "blocked", reason: "notification permission was not granted" };
+    }
+    if (permission !== "granted") {
+      cacheWebFcmToken(null);
+      return {
+        status: "pending",
+        reason: "Edge hid the prompt behind the address-bar bell",
+      };
     }
   }
 

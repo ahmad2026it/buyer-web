@@ -2,6 +2,7 @@
 import { Suspense, useState, useRef, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRegisterBuyerMutation } from "@/app/auth/store/authAPI";
+import { goHomeAfterAuth } from "@/lib/authNavigation";
 import { showSuccess } from "@/lib/swal";
 import {
   COUNTRY_DIAL_CODES,
@@ -2378,7 +2379,7 @@ function SignupFlow() {
 
       await showSuccess("Success", result.message || "User registered successfully");
 
-      router.replace("/");
+      goHomeAfterAuth();
     } catch (err) {
       setApiError(getRegisterErrorMessage(err));
     }

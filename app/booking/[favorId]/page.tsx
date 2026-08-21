@@ -11,13 +11,14 @@ import {
 } from '@/app/buyer/store/buyerBookingsAPI';
 import { extractBookingId } from '@/app/buyer/store/buyerBookingsTypes';
 import { useGetBuyerFavorByIdQuery } from '@/app/buyer/store/buyerFavorsAPI';
-import type { BuyerFavorAddOn } from '@/app/buyer/store/buyerFavorsTypes';
 import { useGetBuyerLocationsQuery } from '@/app/buyer/store/buyerLocationsAPI';
+import { useGetBuyerBookingTermsQuery } from '@/app/buyer/store/buyerLegalAPI';
 import {
   useCreateStripeSetupIntentMutation,
   useGetBuyerStripeCardsQuery,
 } from '@/app/buyer/store/buyerStripeAPI';
 import { useAppSelector } from '@/store/hooks';
+import { getAxiosErrorMessage } from '@/lib/axios';
 import { showSuccess } from '@/lib/swal';
 import { showToast } from '@/lib/toast';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
@@ -37,17 +38,6 @@ const FAVOR = {
   seller:       'Alfonzo Schuessler',
   sellerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80',
   badge:        'Pro',
-  basePrice:    200,
-  platformFee:  8,
-  requirements: [
-    { id: 'type',     question: 'What type of cleaning do you need done?',              type: 'select' as const, options: ['Deep cleaning','Regular cleaning','Move-out cleaning','Post-construction cleaning'] },
-    { id: 'location', question: 'What kind of location is this?',                       type: 'select' as const, options: ['Residential','Office','Commercial','Other'] },
-    { id: 'area',     question: 'Mention approximate area in sq. ft that you want to cover.', type: 'input'  as const, placeholder: 'Type here' },
-  ],
-  addons: [
-    { id: 'stain',    label: 'Deep stain removal for carpets, sofas, or mattresses',           price: 15 },
-    { id: 'sanitize', label: 'Sanitization & disinfection service for kitchens and bathrooms', price: 30 },
-  ],
 };
 
 const LOCS: BookingLocation[] = [
@@ -76,20 +66,6 @@ type RequirementField = {
   options?: string[];
   placeholder?: string;
 };
-
-type AddonField = {
-  id: string;
-  label: string;
-  price: number;
-};
-
-const CONDITIONS = [
-  'If you cancel the favor, you must provide a valid reason.',
-  'If the seller cancels, the seller must also provide a valid reason.',
-  'If the seller arrives at your location and you are unavailable, the seller will upload photo or video proof.',
-  'If your absence is proved, the seller will receive full payment.',
-  'The favor will be marked as Completed – Buyer Not Available.',
-];
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -142,19 +118,22 @@ function toFavorTime(hour: string, period: 'AM' | 'PM'): string {
   return `${String(h).padStart(2, '0')}:00`;
 }
 
-function normalizeQuestion(item: unknown, index: number): RequirementField {
+function normalizeQuestion(item: unknown, index: number): RequirementField | null {
   if (typeof item === 'string') {
-    return { id: `q${index}`, question: item, type: 'input', placeholder: 'Type here' };
+    const question = item.trim();
+    if (!question) return null;
+    return { id: `q${index}`, question, type: 'input', placeholder: 'Type here' };
   }
 
   if (item && typeof item === 'object') {
     const q = item as Record<string, unknown>;
-    const question = String(q.question ?? q.text ?? q.title ?? `Question ${index + 1}`);
+    const question = String(q.question ?? q.text ?? q.title ?? q.label ?? '').trim();
+    if (!question) return null;
     const options = Array.isArray(q.options) ? q.options.map(String).filter(Boolean) : undefined;
     const rawType = String(q.type ?? (options?.length ? 'select' : 'input')).toLowerCase();
     const type: RequirementField['type'] = rawType === 'select' || (options?.length ?? 0) > 0 ? 'select' : 'input';
     return {
-      id: String(q.id ?? index),
+      id: String(q.id ?? `q${index}`),
       question,
       type,
       options,
@@ -162,15 +141,7 @@ function normalizeQuestion(item: unknown, index: number): RequirementField {
     };
   }
 
-  return { id: `q${index}`, question: `Question ${index + 1}`, type: 'input', placeholder: 'Type here' };
-}
-
-function normalizeAddOn(item: BuyerFavorAddOn, index: number): AddonField {
-  return {
-    id: String(item.id ?? index),
-    label: item.label || item.name || item.title || item.description || `Add-on ${index + 1}`,
-    price: Number(item.price) || 0,
-  };
+  return null;
 }
 
 function CardIcon({ brand }: { brand: string }) {
@@ -287,7 +258,6 @@ export default function BookingPage() {
   const [media,        setMedia]        = useState<MediaItem[]>([]);
   const [cardId,       setCardId]       = useState('');
   const [answers,      setAnswers]      = useState<Record<string, string>>({});
-  const [selAddons,    setSelAddons]    = useState<Set<string>>(new Set());
   const [authOpen,     setAuthOpen]     = useState(false);
   const [isPlacing,    setIsPlacing]    = useState(false);
   const [setupSession, setSetupSession] = useState<{ clientSecret: string; publishableKey?: string } | null>(null);
@@ -300,6 +270,13 @@ export default function BookingPage() {
   const [confirmPayment] = useConfirmBuyerBookingPaymentMutation();
   const { data: favorResponse } = useGetBuyerFavorByIdQuery(favorId, { skip: skipFavor });
   const { data: locationsResponse } = useGetBuyerLocationsQuery(undefined, { skip: !token });
+  const {
+    data: termsResponse,
+    isLoading: isLoadingTerms,
+    isError: isTermsError,
+    error: termsError,
+    refetch: refetchTerms,
+  } = useGetBuyerBookingTermsQuery();
   const {
     data: cardsResponse,
     isLoading: isLoadingCards,
@@ -332,13 +309,9 @@ export default function BookingPage() {
   }, [locationsResponse]);
 
   const requirementItems = useMemo<RequirementField[]>(() => {
-    const fromApi = (favor?.questions ?? []).map(normalizeQuestion).filter((item) => item.question.trim());
-    return fromApi.length ? fromApi : FAVOR.requirements;
-  }, [favor]);
-
-  const addonItems = useMemo<AddonField[]>(() => {
-    const fromApi = (favor?.addOns ?? []).map(normalizeAddOn);
-    return fromApi.length ? fromApi : FAVOR.addons;
+    return (favor?.questions ?? [])
+      .map(normalizeQuestion)
+      .filter((item): item is RequirementField => Boolean(item));
   }, [favor]);
 
   const favorCard = {
@@ -347,7 +320,7 @@ export default function BookingPage() {
     seller: favor?.seller?.fullName || favor?.user?.fullName || FAVOR.seller,
     sellerAvatar: favor?.seller?.profileImage || favor?.user?.profileImage || FAVOR.sellerAvatar,
     badge: FAVOR.badge,
-    price: Number(favor?.budget) || FAVOR.basePrice,
+    price: Number(favor?.budget) || 0,
   };
 
   useEffect(() => {
@@ -380,13 +353,9 @@ export default function BookingPage() {
     };
   }, []);
 
-  const toggleAddon = (id: string) =>
-    setSelAddons(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
-
   const days = getCalDays(calYear, calMonth);
   const loc  = bookingLocations.find(l => l.id === locId) ?? bookingLocations[0] ?? LOCS[0];
-  const addonsTotal = addonItems.filter(a => selAddons.has(a.id)).reduce((s, a) => s + a.price, 0);
-  const total = favorCard.price + addonsTotal + FAVOR.platformFee;
+  const total = favorCard.price;
   const dateStr = selDay ? `${MONTHS_SHORT[calMonth]} ${selDay}, ${calYear}` : '—';
   const timeStr = `${hour}:00 ${period}`;
 
@@ -473,9 +442,6 @@ export default function BookingPage() {
       question: req.question,
       answer: (answers[req.id] || '').trim(),
     }));
-    const selectedAddOnIndices = addonItems
-      .map((addon, index) => (selAddons.has(addon.id) ? index : -1))
-      .filter((index) => index >= 0);
     const details = note.trim()
       || questionAnswers.filter((item) => item.answer).map((item) => `${item.question}: ${item.answer}`).join('; ')
       || 'Booking request';
@@ -490,7 +456,7 @@ export default function BookingPage() {
         lat: loc.lat,
         lng: loc.lng,
         address: loc.address,
-        selectedAddOnIndices,
+        selectedAddOnIndices: [],
         images: media.filter((item) => item.file.type.startsWith('image/')).map((item) => item.file),
         videos: media.filter((item) => item.file.type.startsWith('video/')).map((item) => item.file),
         questionAnswers,
@@ -516,25 +482,65 @@ export default function BookingPage() {
   };
 
   const canPlaceBooking = Boolean(cardId) && !isLoadingCards && !isPlacing;
+  const bookingTerms = termsResponse?.data;
+  const termsPoints = bookingTerms?.points?.filter(Boolean) ?? [];
+  const canAcceptTerms = Boolean(bookingTerms) && termsPoints.length > 0 && !isLoadingTerms && !isTermsError;
 
   /* ── Step 0: Disclaimer ── */
   if (step === 0) return (
     <>
       <Navbar />
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}>
-        <div style={{ background: '#fff', borderRadius: 24, padding: '36px 32px', maxWidth: 480, width: '100%', boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
-          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 22, color: '#101828', marginBottom: 10, lineHeight: 1.3 }}>Before You Confirm Your Booking</h2>
-          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#475467', lineHeight: 1.7, marginBottom: 18 }}>Please review and accept these conditions to continue.</p>
-          <ul style={{ paddingLeft: 20, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {CONDITIONS.map((c, i) => (
-              <li key={i} style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#344054', lineHeight: 1.6 }}>{c}</li>
-            ))}
-          </ul>
-          <button onClick={() => setStep(1)}
-            style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: 14, cursor: 'pointer', boxShadow: '0 4px 16px rgba(165,74,255,0.3)', marginBottom: 10, transition: 'opacity 0.15s' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+        <div style={{ background: '#fff', borderRadius: 24, padding: '36px 32px', maxWidth: 480, width: '100%', maxHeight: 'calc(100vh - 48px)', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
+          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 22, color: '#101828', marginBottom: 10, lineHeight: 1.3 }}>
+            {bookingTerms?.title || 'Before You Confirm Your Booking'}
+          </h2>
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#475467', lineHeight: 1.7, marginBottom: 18 }}>
+            {bookingTerms?.intro || 'Please review and accept these conditions to continue.'}
+          </p>
+          {isLoadingTerms ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '0 0 28px' }}>
+              {[92, 78, 86, 70, 80].map((width, i) => (
+                <div key={i} style={{ height: 14, width: `${width}%`, borderRadius: 6, background: '#EAECF0' }} />
+              ))}
+            </div>
+          ) : isTermsError ? (
+            <div style={{ margin: '0 0 28px', padding: '14px 16px', background: '#FEF3F2', border: '1px solid #FECDCA', borderRadius: 12 }}>
+              <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#B42318', lineHeight: 1.6, marginBottom: 10 }}>
+                {getAxiosErrorMessage(termsError) || 'Could not load booking terms. Please try again.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => { void refetchTerms(); }}
+                style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <>
+              <ul style={{ paddingLeft: 20, margin: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {termsPoints.map((c, i) => (
+                  <li key={i} style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#344054', lineHeight: 1.6 }}>{c}</li>
+                ))}
+              </ul>
+              {bookingTerms?.footer ? (
+                <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', lineHeight: 1.65, margin: '0 0 28px' }}>
+                  {bookingTerms.footer}
+                </p>
+              ) : (
+                <div style={{ marginBottom: 28 }} />
+              )}
+            </>
+          )}
+          <button
+            type="button"
+            disabled={!canAcceptTerms}
+            onClick={() => { if (canAcceptTerms) setStep(1); }}
+            style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: canAcceptTerms ? GRAD : '#E4E7EC', border: 'none', borderRadius: PILL, padding: 14, cursor: canAcceptTerms ? 'pointer' : 'not-allowed', boxShadow: canAcceptTerms ? '0 4px 16px rgba(165,74,255,0.3)' : 'none', marginBottom: 10, transition: 'opacity 0.15s' }}
+            onMouseEnter={e => { if (canAcceptTerms) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-            Accept and Continue
+            {isLoadingTerms ? 'Loading terms…' : 'Accept and Continue'}
           </button>
           <button onClick={() => router.back()}
             style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#667085', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: PILL, padding: 12, cursor: 'pointer', transition: 'background 0.15s' }}
@@ -570,7 +576,7 @@ export default function BookingPage() {
               <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px', marginBottom: 20 }}>
                 <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 16, color: '#101828', marginBottom: 20 }}>Describe your requirements</h3>
 
-                {/* Per-question fields */}
+                {requirementItems.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 24 }}>
                   {requirementItems.map(req => (
                     <div key={req.id}>
@@ -601,24 +607,7 @@ export default function BookingPage() {
                     </div>
                   ))}
                 </div>
-
-                {/* Add-ons */}
-                <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#101828', marginBottom: 12 }}>Select Add-ons (optional)</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-                  {addonItems.map(addon => {
-                    const checked = selAddons.has(addon.id);
-                    return (
-                      <div key={addon.id} onClick={() => toggleAddon(addon.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: `1.5px solid ${checked ? BRAND : '#EAECF0'}`, borderRadius: 12, cursor: 'pointer', background: checked ? '#F9F5FF' : '#fff', transition: 'all 0.15s' }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 6, background: checked ? '#17B26A' : '#fff', border: `1.5px solid ${checked ? '#17B26A' : '#D0D5DD'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-                          {checked && <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                        </div>
-                        <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#344054', flex: 1, lineHeight: 1.45 }}>{addon.label}</span>
-                        <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: BRAND, flexShrink: 0 }}>{formatUsd(addon.price)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                )}
 
                 {/* Additional notes */}
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', marginBottom: 8 }}>Add any additional information you want to share with the seller.</p>
@@ -921,19 +910,13 @@ export default function BookingPage() {
 
                 {/* Fee breakdown */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
-                  {[
-                    { label: 'Service fee',  amount: favorCard.price },
-                    { label: 'Add-ons',      amount: addonsTotal },
-                    { label: 'Platform fee', amount: FAVOR.platformFee },
-                  ].map(row => (
-                    <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085' }}>{row.label}</span>
-                      <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatUsd(row.amount)}</span>
-                    </div>
-                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085' }}>Starting price</span>
+                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatUsd(favorCard.price)}</span>
+                  </div>
                   <div style={{ height: 1, background: '#EAECF0' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#101828' }}>Subtotal</span>
+                    <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#101828' }}>Total</span>
                     <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 17, color: BRAND }}>{formatUsd(total)}</span>
                   </div>
                 </div>

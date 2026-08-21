@@ -10,6 +10,10 @@ import type {
 } from '@/app/buyer/store/buyerNotificationsTypes';
 import type { PushMessage } from '@/lib/fcm';
 import { refreshBuyerBookings, refreshBuyerInbox } from '@/lib/conversationCache';
+import {
+  getIncomingEventTargetPath,
+  getNotificationTargetPath,
+} from '@/lib/notificationRoutes';
 import { getAppStore, getAuthToken } from '@/lib/storeAccess';
 import { showToastOnce } from '@/lib/toast';
 import type { AppDispatch, RootState } from '@/store';
@@ -251,17 +255,17 @@ function markNotificationShown(id: string): boolean {
   return true;
 }
 
-function showPushToast(title: string, body: string, toastKey: string): void {
+function showPushToast(title: string, body: string, toastKey: string, href?: string): void {
   const heading = title.trim() || 'WhoCan';
   const message = body.trim();
-  console.warn('[WHCAN_NOTIFY] showing toast', { heading, message, key: toastKey });
+  console.warn('[WHCAN_NOTIFY] showing toast', { heading, message, key: toastKey, href });
 
   if (message && message !== heading) {
-    showToastOnce(toastKey, message, 'info', 4000, heading);
+    showToastOnce(toastKey, message, 'info', 4000, heading, href);
     return;
   }
 
-  showToastOnce(toastKey, heading, 'info');
+  showToastOnce(toastKey, heading, 'info', 4000, undefined, href);
 }
 
 export async function handleIncomingBuyerPush(
@@ -289,8 +293,13 @@ export async function handleIncomingBuyerPush(
   const title = pickString(data.title, message.title, 'WhoCan');
   const rawBody = pickString(data.description, data.body, message.body);
   const body = bookingEvent ? enrichBookingBody(data, rawBody, sellerName) : rawBody;
+  const href = getIncomingEventTargetPath({
+    ...data,
+    title,
+    description: body,
+  });
 
-  showPushToast(title, body, toastId);
+  showPushToast(title, body, toastId, href ?? undefined);
 }
 
 export async function handleIncomingBuyerInboxItem(
@@ -323,6 +332,7 @@ export async function handleIncomingBuyerInboxItem(
   const title = pickString(notification.title, 'WhoCan');
   const rawBody = pickString(notification.message, notification.description);
   const body = bookingEvent ? enrichBookingBody(data, rawBody, sellerName) : rawBody;
+  const href = getNotificationTargetPath(notification);
 
-  showPushToast(title, body, toastId);
+  showPushToast(title, body, toastId, href ?? undefined);
 }

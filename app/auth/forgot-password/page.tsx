@@ -600,11 +600,9 @@ export default function ForgotPasswordPage() {
             disabled={busy}
             aria-label="Back"
             style={{
-              position: "absolute",
-              top: "-8px",
-              left: 0,
               width: "40px",
               height: "40px",
+              marginBottom: "16px",
               background: "#ffffff",
               border: "1px solid #EAECF0",
               borderRadius: "12px",

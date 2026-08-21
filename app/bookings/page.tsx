@@ -10,14 +10,13 @@ import {
   useWithdrawBuyerBookingMutation,
 } from '@/app/buyer/store/buyerBookingsAPI';
 import {
+  formatBuyerBookingStatusLabel,
   isActiveListingBookingStatus,
-  isAwaitingCompleteBookingStatus,
-  isCancelledBookingStatus,
-  isFinishedBookingStatus,
+  mapBuyerBookingUiStatus,
   mergeBuyerBookings,
-  normalizeBookingStatus,
   type BuyerBooking,
   type BuyerBookingListTab,
+  type BuyerBookingUiStatus,
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
@@ -27,7 +26,7 @@ const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const BRAND = '#A54AFF';
 const PILL  = '9999px';
 
-type Status = 'InProgress' | 'Upcoming' | 'Pending' | 'Declined' | 'Cancelled' | 'Complete' | 'Completed';
+type Status = BuyerBookingUiStatus;
 
 interface Booking {
   id: string;
@@ -69,18 +68,11 @@ const MODAL_OVERLAY: React.CSSProperties = {
 };
 const MODAL_SHADOW = '0 20px 24px -4px rgba(16,24,40,0.08), 0 8px 8px -4px rgba(16,24,40,0.03)';
 
-function mapApiStatus(status: string, tab: BuyerBookingListTab): Status {
-  const key = normalizeBookingStatus(status);
-  if (['inprogress', 'started', 'active', 'ongoing', 'working'].includes(key)) return 'InProgress';
-  if (['upcoming', 'accepted', 'confirmed', 'scheduled', 'approved'].includes(key)) return 'Upcoming';
-  if (['pending', 'request', 'requested'].includes(key)) return 'Pending';
-  if (['declined', 'rejected'].includes(key)) return 'Declined';
-  if (isCancelledBookingStatus(status)) return 'Cancelled';
-  if (isFinishedBookingStatus(status) || (tab === 'history' && isAwaitingCompleteBookingStatus(status))) return 'Completed';
-  if (isAwaitingCompleteBookingStatus(status)) return 'Complete';
-  if (tab === 'upcoming') return 'Upcoming';
-  if (tab === 'history') return 'Completed';
-  return 'Pending';
+function mapApiStatus(item: BuyerBooking, tab: BuyerBookingListTab): Status {
+  return mapBuyerBookingUiStatus(item.status, {
+    tab,
+    booking: item,
+  });
 }
 
 function formatFavorDate(value: string): string {
@@ -113,25 +105,27 @@ function toBookingCard(item: BuyerBooking, tab: BuyerBookingListTab): Booking {
     time: formatFavorTime(item.favorTime),
     location: item.isBuyerComing ? 'Work' : 'Home',
     address: item.address || 'Address not provided',
-    status: mapApiStatus(item.status, tab),
+    status: mapApiStatus(item, tab),
   };
 }
 
 const STATUS_CFG: Record<Status, { bg: string; color: string }> = {
-  InProgress: { bg: '#FFF4ED', color: '#C4320A' },
-  Upcoming:   { bg: '#ECFDF3', color: '#079455' },
-  Pending:    { bg: '#FFFAEB', color: '#B54708' },
-  Declined:   { bg: '#FEF3F2', color: '#B42318' },
-  Cancelled:  { bg: '#F2F4F7', color: '#667085' },
-  Complete:   { bg: '#F9F5FF', color: '#6941C6' },
-  Completed:  { bg: '#EEF4FF', color: '#3538CD' },
+  InProgress:         { bg: '#FFF4ED', color: '#C4320A' },
+  Upcoming:           { bg: '#ECFDF3', color: '#079455' },
+  Pending:            { bg: '#FFFAEB', color: '#B54708' },
+  DeclinedBySeller:   { bg: '#FEF3F2', color: '#B42318' },
+  CancelledByBuyer:   { bg: '#F2F4F7', color: '#667085' },
+  CancelledBySeller:  { bg: '#F2F4F7', color: '#667085' },
+  Cancelled:          { bg: '#F2F4F7', color: '#667085' },
+  Complete:           { bg: '#F9F5FF', color: '#6941C6' },
+  Completed:          { bg: '#EEF4FF', color: '#3538CD' },
 };
 
 function StatusBadge({ status }: { status: Status }) {
   const { bg, color } = STATUS_CFG[status];
   return (
     <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, fontWeight: 600, background: bg, color, borderRadius: PILL, padding: '4px 12px' }}>
-      {status === 'InProgress' ? 'In Progress' : status}
+      {formatBuyerBookingStatusLabel(status)}
     </span>
   );
 }
@@ -194,7 +188,7 @@ function KebabMenu({ status, onWithdraw, onDelete, onCancel, onViewDetails }: { 
                 Withdraw request
               </button>
             )}
-            {status === 'Declined' && (
+            {status === 'DeclinedBySeller' && (
               <button onClick={() => { onDelete(); setOpen(false); }}
                 style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FEF3F2'; }}

@@ -4,6 +4,7 @@ export type ToastPayload = {
   message: string;
   title?: string;
   severity?: ToastSeverity;
+  href?: string;
 };
 
 type ToastListener = (payload: ToastPayload) => void;
@@ -21,13 +22,20 @@ export const showToast = (
   message: string,
   severity: ToastSeverity = 'error',
   title?: string,
+  href?: string,
 ): void => {
   const text = message.trim();
   const heading = title?.trim();
+  const link = href?.trim();
   if (!text && !heading) return;
 
   listeners.forEach((listener) =>
-    listener({ message: text || heading || '', title: heading, severity }),
+    listener({
+      message: text || heading || '',
+      title: heading,
+      severity,
+      href: link || undefined,
+    }),
   );
 };
 
@@ -40,10 +48,11 @@ export const showToastOnce = (
   severity: ToastSeverity = 'info',
   windowMs = 4000,
   title?: string,
+  href?: string,
 ): void => {
   const now = Date.now();
   if (key === lastToastKey && now - lastToastAt < windowMs) return;
   lastToastKey = key;
   lastToastAt = now;
-  showToast(message, severity, title);
+  showToast(message, severity, title, href);
 };

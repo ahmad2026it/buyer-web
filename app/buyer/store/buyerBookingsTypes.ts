@@ -254,10 +254,154 @@ export const isAwaitingCompleteBookingStatus = (status: string): boolean => {
   );
 };
 
+export const isDeclinedBookingStatus = (status: string): boolean => {
+  const key = normalizeBookingStatus(status);
+  return key.includes("declin") || key.includes("reject");
+};
+
 export const isCancelledBookingStatus = (status: string): boolean => {
   const key = normalizeBookingStatus(status);
-  return key.includes("cancel");
+  return key.includes("cancel") || key.includes("withdraw");
 };
+
+export type BuyerBookingUiStatus =
+  | "InProgress"
+  | "Upcoming"
+  | "Pending"
+  | "DeclinedBySeller"
+  | "CancelledByBuyer"
+  | "CancelledBySeller"
+  | "Cancelled"
+  | "Complete"
+  | "Completed";
+
+const CANCELLED_BY_FIELDS = [
+  "cancelledBy",
+  "canceledBy",
+  "cancelled_by",
+  "canceled_by",
+  "cancelBy",
+  "cancelledByRole",
+  "canceledByRole",
+  "cancelledByUserId",
+  "canceledByUserId",
+  "cancelled_by_user_id",
+  "canceled_by_user_id",
+] as const;
+
+const asCancelParty = (value: string): "buyer" | "seller" | null => {
+  const key = normalizeBookingStatus(value);
+  if (!key) return null;
+  if (key.includes("buyer") || key === "user" || key === "customer") return "buyer";
+  if (key.includes("seller") || key === "provider") return "seller";
+  return null;
+};
+
+export const readBookingCancelledBy = (booking: object): string | null => {
+  const rec = booking as Record<string, unknown>;
+  for (const field of CANCELLED_BY_FIELDS) {
+    const value = rec[field];
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return null;
+};
+
+export const resolveBookingCancelParty = (
+  status: string,
+  cancelledBy?: string | null,
+  booking?: Pick<BuyerBooking, "buyerUserId" | "sellerUserId">,
+): "buyer" | "seller" | null => {
+  const key = normalizeBookingStatus(status);
+  if (
+    key.includes("bybuyer") ||
+    key.includes("buyercancel") ||
+    key.includes("buyercanceled") ||
+    key.includes("withdraw")
+  ) {
+    return "buyer";
+  }
+  if (
+    key.includes("byseller") ||
+    key.includes("sellercancel") ||
+    key.includes("sellercanceled")
+  ) {
+    return "seller";
+  }
+  if (key.includes("cancel") && key.includes("buyer") && !key.includes("seller")) {
+    return "buyer";
+  }
+  if (key.includes("cancel") && key.includes("seller") && !key.includes("buyer")) {
+    return "seller";
+  }
+
+  const fromLabel = asCancelParty(cancelledBy ?? "");
+  if (fromLabel) return fromLabel;
+
+  const byId = Number(cancelledBy);
+  if (booking && Number.isFinite(byId) && byId > 0) {
+    if (byId === booking.buyerUserId) return "buyer";
+    if (byId === booking.sellerUserId) return "seller";
+  }
+
+  return null;
+};
+
+export const mapBuyerBookingUiStatus = (
+  status: string,
+  options?: {
+    tab?: BuyerBookingListTab;
+    cancelledBy?: string | null;
+    booking?: Pick<BuyerBooking, "buyerUserId" | "sellerUserId"> & object;
+  },
+): BuyerBookingUiStatus => {
+  const key = normalizeBookingStatus(status);
+  if (isInProgressBookingStatus(status)) return "InProgress";
+  if (isUpcomingBookingStatus(status)) return "Upcoming";
+  if (["pending", "request", "requested"].includes(key)) return "Pending";
+  if (isDeclinedBookingStatus(status)) return "DeclinedBySeller";
+
+  const cancelledBy =
+    options?.cancelledBy ??
+    (options?.booking ? readBookingCancelledBy(options.booking) : null);
+  const party = resolveBookingCancelParty(status, cancelledBy, options?.booking);
+  if (party === "buyer") return "CancelledByBuyer";
+  if (party === "seller") return "CancelledBySeller";
+  if (isCancelledBookingStatus(status)) return "Cancelled";
+
+  if (
+    isFinishedBookingStatus(status) ||
+    (options?.tab === "history" && isAwaitingCompleteBookingStatus(status))
+  ) {
+    return "Completed";
+  }
+  if (isAwaitingCompleteBookingStatus(status)) return "Complete";
+  if (options?.tab === "upcoming") return "Upcoming";
+  if (options?.tab === "history") return "Completed";
+  return "Pending";
+};
+
+export const formatBuyerBookingStatusLabel = (
+  status: BuyerBookingUiStatus,
+): string => {
+  switch (status) {
+    case "InProgress":
+      return "In Progress";
+    case "DeclinedBySeller":
+      return "Declined by seller";
+    case "CancelledByBuyer":
+      return "Cancelled by buyer";
+    case "CancelledBySeller":
+      return "Cancelled by seller";
+    default:
+      return status;
+  }
+};
+
+export const isCancelledUiStatus = (status: BuyerBookingUiStatus): boolean =>
+  status === "Cancelled" ||
+  status === "CancelledByBuyer" ||
+  status === "CancelledBySeller";
 
 export const isFinishedBookingStatus = (status: string): boolean => {
   const key = normalizeBookingStatus(status);
@@ -344,6 +488,9 @@ export type BuyerBooking = {
   stripeCustomerId: string | null;
   paymentStatus: string;
   cancelReason: string | null;
+  cancelledBy?: string | null;
+  canceledBy?: string | null;
+  cancelled_by?: string | null;
   images: string[];
   videos: string[];
   isBuyerComing: boolean;

@@ -19,12 +19,16 @@ import {
   useStartBuyerConversationByBookingMutation,
 } from '@/app/buyer/store/buyerConversationsAPI';
 import { showToast } from '@/lib/toast';
-import type {
-  BuyerBooking,
-  BuyerBookingAddOn,
-  BuyerBookingReview,
+import {
+  formatBuyerBookingStatusLabel,
+  isAwaitingCompleteBookingStatus,
+  isCancelledUiStatus,
+  mapBuyerBookingUiStatus,
+  type BuyerBooking,
+  type BuyerBookingAddOn,
+  type BuyerBookingReview,
+  type BuyerBookingUiStatus,
 } from '@/app/buyer/store/buyerBookingsTypes';
-import { isAwaitingCompleteBookingStatus, isCancelledBookingStatus, isFinishedBookingStatus } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 
@@ -40,7 +44,7 @@ const BRAND = '#A54AFF';
 const PILL  = '9999px';
 
 /* ─── Types ─────────────────────────────────────────────── */
-type Status = 'InProgress' | 'Upcoming' | 'Pending' | 'Declined' | 'Cancelled' | 'Complete' | 'Completed';
+type Status = BuyerBookingUiStatus;
 
 interface StatusUpdate { time: string; text: string; type: 'arrival' | 'working' | 'update'; }
 interface Requirement  { q: string; a: string; }
@@ -69,20 +73,10 @@ interface DetailedBooking {
 
 const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80';
 
-function normalizeStatus(status: string): string {
-  return status.toLowerCase().replace(/[-_\s]/g, '');
-}
-
-function mapApiStatus(status: string): Status {
-  const key = normalizeStatus(status);
-  if (['inprogress', 'started', 'active', 'ongoing', 'working'].includes(key)) return 'InProgress';
-  if (['upcoming', 'accepted', 'confirmed', 'scheduled', 'approved'].includes(key)) return 'Upcoming';
-  if (['pending', 'request', 'requested'].includes(key)) return 'Pending';
-  if (['declined', 'rejected'].includes(key)) return 'Declined';
-  if (isCancelledBookingStatus(status)) return 'Cancelled';
-  if (isFinishedBookingStatus(status)) return 'Completed';
-  if (isAwaitingCompleteBookingStatus(status)) return 'Complete';
-  return 'Pending';
+function mapApiStatus(item: BuyerBooking): Status {
+  return mapBuyerBookingUiStatus(item.status, {
+    booking: item,
+  });
 }
 
 function displayCategory(type: string): string {
@@ -139,7 +133,7 @@ function toDetailedBooking(item: BuyerBooking, review: BuyerBookingReview): Deta
   const reviewText = review?.comment || review?.text || review?.review || '';
   const rating = Number(review?.rating);
   const hasReview = Boolean(reviewText) || (Number.isFinite(rating) && rating > 0);
-  const mappedStatus = mapApiStatus(item.status);
+  const mappedStatus = mapApiStatus(item);
   return {
     id: String(item.id),
     status: mappedStatus === 'Complete' && hasReview ? 'Completed' : mappedStatus,
@@ -1520,19 +1514,21 @@ export default function BookingDetailPage() {
 
   /* Status pill (inline header) */
   function StatusPill() {
-    const cfg: Record<Status, { bg: string; border: string; color: string; label: string }> = {
-      InProgress: { bg:'#FFF4ED', border:'#F9DBAF', color:'#C4320A', label:'In Progress' },
-      Upcoming:   { bg:'#ECFDF3', border:'#A9EFC5', color:'#079455', label:'Upcoming' },
-      Pending:    { bg:'#FFFAEB', border:'#FEDF89', color:'#B54708', label:'Pending' },
-      Declined:   { bg:'#FEF3F2', border:'#FECDCA', color:'#B42318', label:'Declined' },
-      Cancelled:  { bg:'#F2F4F7', border:'#D0D5DD', color:'#667085', label:'Cancelled' },
-      Complete:   { bg:'#F9F5FF', border:'#E9D7FE', color:'#6941C6', label:'Complete' },
-      Completed:  { bg:'#EEF4FF', border:'#C7D7FE', color:'#3538CD', label:'Completed' },
+    const cfg: Record<Status, { bg: string; border: string; color: string }> = {
+      InProgress:        { bg:'#FFF4ED', border:'#F9DBAF', color:'#C4320A' },
+      Upcoming:          { bg:'#ECFDF3', border:'#A9EFC5', color:'#079455' },
+      Pending:           { bg:'#FFFAEB', border:'#FEDF89', color:'#B54708' },
+      DeclinedBySeller:  { bg:'#FEF3F2', border:'#FECDCA', color:'#B42318' },
+      CancelledByBuyer:  { bg:'#F2F4F7', border:'#D0D5DD', color:'#667085' },
+      CancelledBySeller: { bg:'#F2F4F7', border:'#D0D5DD', color:'#667085' },
+      Cancelled:         { bg:'#F2F4F7', border:'#D0D5DD', color:'#667085' },
+      Complete:          { bg:'#F9F5FF', border:'#E9D7FE', color:'#6941C6' },
+      Completed:         { bg:'#EEF4FF', border:'#C7D7FE', color:'#3538CD' },
     };
     const c = cfg[booking!.status];
     return (
       <span style={{ display:'inline-flex', alignItems:'center', background:c.bg, border:`1.5px solid ${c.border}`, borderRadius:9999, padding:'6px 14px', fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:13, color:c.color, flexShrink:0, whiteSpace:'nowrap' }}>
-        {c.label}
+        {formatBuyerBookingStatusLabel(booking!.status)}
       </span>
     );
   }
@@ -1550,20 +1546,22 @@ export default function BookingDetailPage() {
       </div>
     );
     const CFG: Record<Status, { bg:string; border:string; color:string; text:string; iconPath:string; }> = {
-      InProgress: { bg:'#FFF4ED', border:'#F9DBAF', color:'#C4320A', text:'', iconPath:'' },
-      Upcoming:  { bg:'#ECFDF3', border:'#A9EFC5', color:'#079455', text: days>1?`Booking starts in ${days} days`:days===1?'Booking starts tomorrow':days===0?'Ready to start today':`Booking date has passed`, iconPath:'M8 12l3 3 5-5' },
-      Pending:   { bg:'#FFFAEB', border:'#FEDF89', color:'#B54708', text:'Awaiting seller response', iconPath:'M12 8v4M12 16h.01' },
-      Declined:  { bg:'#FEF3F2', border:'#FECDCA', color:'#B42318', text:'Your request was declined', iconPath:'M15 9l-6 6M9 9l6 6' },
-      Cancelled: { bg:'#F2F4F7', border:'#D0D5DD', color:'#667085', text:bk.cancelledReason||'Booking was cancelled', iconPath:'M15 9l-6 6M9 9l6 6' },
-      Complete:  { bg:'#F9F5FF', border:'#E9D7FE', color:'#6941C6', text:'Seller marked this favor complete. Approve or reject to finish.', iconPath:'M8 12l3 3 5-5' },
-      Completed: { bg:'#EEF4FF', border:'#C7D7FE', color:'#3538CD', text:'Service completed', iconPath:'M8 12l3 3 5-5' },
+      InProgress:        { bg:'#FFF4ED', border:'#F9DBAF', color:'#C4320A', text:'', iconPath:'' },
+      Upcoming:          { bg:'#ECFDF3', border:'#A9EFC5', color:'#079455', text: days>1?`Booking starts in ${days} days`:days===1?'Booking starts tomorrow':days===0?'Ready to start today':`Booking date has passed`, iconPath:'M8 12l3 3 5-5' },
+      Pending:           { bg:'#FFFAEB', border:'#FEDF89', color:'#B54708', text:'Awaiting seller response', iconPath:'M12 8v4M12 16h.01' },
+      DeclinedBySeller:  { bg:'#FEF3F2', border:'#FECDCA', color:'#B42318', text:'The seller declined this request', iconPath:'M15 9l-6 6M9 9l6 6' },
+      CancelledByBuyer:  { bg:'#F2F4F7', border:'#D0D5DD', color:'#667085', text:bk.cancelledReason||'You cancelled this booking', iconPath:'M15 9l-6 6M9 9l6 6' },
+      CancelledBySeller: { bg:'#F2F4F7', border:'#D0D5DD', color:'#667085', text:bk.cancelledReason||'The seller cancelled this booking', iconPath:'M15 9l-6 6M9 9l6 6' },
+      Cancelled:         { bg:'#F2F4F7', border:'#D0D5DD', color:'#667085', text:bk.cancelledReason||'Booking was cancelled', iconPath:'M15 9l-6 6M9 9l6 6' },
+      Complete:          { bg:'#F9F5FF', border:'#E9D7FE', color:'#6941C6', text:'Seller marked this favor complete. Approve or reject to finish.', iconPath:'M8 12l3 3 5-5' },
+      Completed:         { bg:'#EEF4FF', border:'#C7D7FE', color:'#3538CD', text:'Service completed', iconPath:'M8 12l3 3 5-5' },
     };
     const c = CFG[bk.status];
     return (
       <div style={{ background:c.bg, border:`1.5px solid ${c.border}`, borderRadius:14, padding:'14px 18px', display:'flex', alignItems:'center', gap:12 }}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke={c.color} strokeWidth="2"/><path d={c.iconPath} stroke={c.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:14, color:c.color, margin:0, flex:1 }}>{c.text}</p>
-        {bk.status==='Cancelled' && bk.refundAmount && (
+        {isCancelledUiStatus(bk.status) && bk.refundAmount && (
           <span style={{ fontFamily:'Poppins,sans-serif', fontSize:13, color:'#667085' }}>{formatUsd(bk.refundAmount)} refunded</span>
         )}
       </div>
