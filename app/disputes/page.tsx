@@ -325,19 +325,6 @@ export default function DisputeCenterPage() {
               {disputes.map(d => <DisputeCard key={d.id} dispute={d} />)}
             </div>
           )}
-
-          <div style={{ marginTop: 48, textAlign: 'center' }}>
-            <p style={{ fontFamily: FONT, fontSize: '14px', color: '#667085' }}>
-              Have any issue?{' '}
-              <button
-                style={{ fontFamily: FONT, fontSize: '14px', fontWeight: 600, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'underline'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'none'; }}
-              >
-                Contact Support
-              </button>
-            </p>
-          </div>
         </div>
       </main>
       <Footer />

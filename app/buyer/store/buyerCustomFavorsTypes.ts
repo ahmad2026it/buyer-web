@@ -12,12 +12,18 @@ export type CreateBuyerCustomFavorRequest = {
   lat: string | number;
   lng: string | number;
   locationId: number;
+  location?: string;
+  locationDetail?: string;
   addOns?: CustomFavorAddOn[];
   questions?: string[];
   invitedSellerIds?: number[];
   images?: File[];
   videos?: File[];
   sellersRequired?: number;
+};
+
+export type UpdateBuyerCustomFavorRequest = CreateBuyerCustomFavorRequest & {
+  id: number;
 };
 
 export type CreatedCustomFavor = {
@@ -31,6 +37,14 @@ export type CreateBuyerCustomFavorResponse = {
   status?: number;
   message: string;
   data?: CreatedCustomFavor;
+};
+
+export type UpdateBuyerCustomFavorResponse = CreateBuyerCustomFavorResponse;
+
+export type DeleteBuyerCustomFavorResponse = {
+  success: boolean;
+  status?: number;
+  message: string;
 };
 
 export type BuyerCustomFavorUser = {
@@ -276,4 +290,27 @@ export const getCustomFavorSellersRequired = (favor: BuyerCustomFavor): number =
   const required = toCount(favor.sellersRequired);
   if (required > 0) return required;
   return Math.max(1, favor.invitedSellerIds?.length ?? 1);
+};
+
+export const parseCustomFavorAddOns = (value: unknown[] | null | undefined): CustomFavorAddOn[] => {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const rec = item as Record<string, unknown>;
+    const description = String(rec.description ?? rec.name ?? '').trim();
+    const price = Number(rec.price);
+    if (!description || !Number.isFinite(price)) return [];
+    return [{ description, price }];
+  });
+};
+
+export const parseCustomFavorQuestions = (value: unknown[] | null | undefined): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (typeof item === 'string' && item.trim()) return [item.trim()];
+    if (!item || typeof item !== 'object') return [];
+    const rec = item as Record<string, unknown>;
+    const question = String(rec.question ?? rec.text ?? rec.title ?? '').trim();
+    return question ? [question] : [];
+  });
 };

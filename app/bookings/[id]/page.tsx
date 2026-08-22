@@ -11,6 +11,7 @@ import {
   useCancelBuyerBookingMutation,
   useGetBuyerBookingByIdQuery,
   useReportBuyerBookingMutation,
+  useUpdateBuyerBookingMutation,
   useWithdrawBuyerBookingMutation,
 } from '@/app/buyer/store/buyerBookingsAPI';
 import {
@@ -53,13 +54,14 @@ interface Addon        { label: string; price: number; }
 interface DetailedBooking {
   id: string; status: Status;
   title: string; category: string; image: string | null; price: number;
-  date: string; dateIso: string; time: string; location: string; address: string;
+  date: string; dateIso: string; time: string; timeRaw: string; location: string; address: string;
   lat: number | null; lng: number | null;
   isTeam: boolean;
   sellerName: string; sellerAvatar: string; sellerBadge: 'Pro' | 'Team'; sellerDistance?: number;
   teamName?: string; teamLogo?: string;
   providerName?: string; providerAvatar?: string; providerDistance?: number;
   plan?: string;
+  isCustom: boolean;
   requirements: Requirement[];
   addons: Addon[];
   note: string; media: string[];
@@ -130,6 +132,7 @@ function normalizeAddOns(items: unknown[] | undefined): Addon[] {
 function toDetailedBooking(item: BuyerBooking, review: BuyerBookingReview): DetailedBooking {
   const favorType = item.favor?.favorType?.toLowerCase() ?? '';
   const isTeam = favorType.includes('team');
+  const isCustom = favorType.includes('custom');
   const reviewText = review?.comment || review?.text || review?.review || '';
   const rating = Number(review?.rating);
   const hasReview = Boolean(reviewText) || (Number.isFinite(rating) && rating > 0);
@@ -144,6 +147,7 @@ function toDetailedBooking(item: BuyerBooking, review: BuyerBookingReview): Deta
     date: formatFavorDate(item.favorDate),
     dateIso: item.favorDate,
     time: formatFavorTime(item.favorTime),
+    timeRaw: item.favorTime,
     location: item.isBuyerComing ? 'Work' : 'Home',
     address: item.address || 'Address not provided',
     lat: parseCoord(item.lat) ?? parseCoord(item.favor?.lat),
@@ -157,6 +161,7 @@ function toDetailedBooking(item: BuyerBooking, review: BuyerBookingReview): Deta
     providerName: isTeam ? item.seller?.fullName : undefined,
     providerAvatar: isTeam ? (item.seller?.profileImage || PLACEHOLDER_AVATAR) : undefined,
     plan: favorType && favorType !== 'normal' && favorType !== 'team' ? displayCategory(favorType) : undefined,
+    isCustom,
     requirements: (item.questionAnswers ?? []).map((qa) => ({
       q: qa.question,
       a: qa.answer?.trim() ? qa.answer : '—',
@@ -191,6 +196,37 @@ function getCalDays(y: number, m: number): (number|null)[] {
 }
 function isPast(y:number,m:number,d:number){const n=new Date();n.setHours(0,0,0,0);return new Date(y,m,d)<n;}
 function isToday(y:number,m:number,d:number){const n=new Date();n.setHours(0,0,0,0);return new Date(y,m,d).getTime()===n.getTime();}
+function parseIsoDateParts(iso: string): { year: number; month: number; day: number } {
+  const [yearRaw, monthRaw, dayRaw] = iso.split('-');
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth(), day: now.getDate() };
+  }
+  return { year, month: month - 1, day };
+}
+function parseFavorTimeParts(value: string): { hour: number; ampm: 'AM' | 'PM' } {
+  const hours = Number(value.split(':')[0]);
+  if (!Number.isFinite(hours)) return { hour: 8, ampm: 'AM' };
+  if (hours === 0) return { hour: 12, ampm: 'AM' };
+  if (hours === 12) return { hour: 12, ampm: 'PM' };
+  if (hours > 12) return { hour: hours - 12, ampm: 'PM' };
+  return { hour: hours, ampm: 'AM' };
+}
+function toFavorDate(year: number, month: number, day: number): string {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+function toFavorTime(hour: number, period: 'AM' | 'PM'): string {
+  let h = hour;
+  if (period === 'AM') {
+    if (h === 12) h = 0;
+  } else if (h !== 12) {
+    h += 12;
+  }
+  return `${String(h).padStart(2, '0')}:00`;
+}
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const CANCEL_REASONS = ['Service not started on time','Seller is not responding','Emergency on my end','Changed plans','Not satisfied with the service','Other'];
 const WITHDRAW_REASONS = ['Plans changed','No longer needed','Booked by mistake','Found another option','Other'];
@@ -681,7 +717,7 @@ function InProgressCancelModal({
         <div style={{ padding: '20px 24px 0', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 17, color: '#101828', margin: 0, lineHeight: 1.3 }}>
-              {isReject ? <>Tell us why you want to<br/>reject this completion</> : <>Tell us why you want to<br/>cancel this favor</>}
+              {isReject ? <>Tell us why you want to<br/>reject this completion</> : 'Cancel Booking?'}
             </h2>
             <ModalCloseBtn onClose={isSubmitting ? () => undefined : onClose} />
           </div>
@@ -693,8 +729,9 @@ function InProgressCancelModal({
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.65, marginBottom: 24 }}>
             {isReject
               ? "Please tell us why you're rejecting this completion. Payment will be withheld on both sides and will release after review within 72h. For further assistance, contact our "
-              : "Please tell us why you're cancelling this favor. Try adding photos/videos to proof your case. Payment will be withheld on both sides and will release after review within 72h. For further assistance, contact our "}
-            <span style={{ color: BRAND, fontWeight: 600, cursor: 'pointer' }}>support team</span>.
+              : "Please tell us why you're cancelling this booking. Your reason helps us process the request smoothly."}
+            {isReject && <span style={{ color: BRAND, fontWeight: 600, cursor: 'pointer' }}>support team</span>}
+            {isReject && '.'}
           </p>
 
           <div style={{ marginBottom: 18 }}>
@@ -729,6 +766,12 @@ function InProgressCancelModal({
               </button>
             </div>
           </div>
+
+          {!isReject && (
+            <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#D92D20', lineHeight: 1.55, margin: '18px 0 0' }}>
+              Note: Only 80% of the money you can refund from your payment according to our policy.
+            </p>
+          )}
         </div>
 
         {/* Footer */}
@@ -737,9 +780,9 @@ function InProgressCancelModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1, transition: 'background 0.15s' }}
-            onMouseEnter={e => { if (!isSubmitting) (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}
+            style={isReject
+              ? { flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1 }
+              : { flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
           >
             {keepLabel}
           </button>
@@ -751,7 +794,9 @@ function InProgressCancelModal({
               if (ok) setDone(true);
             }}
             disabled={!canSubmit}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.5, transition: 'opacity 0.15s' }}
+            style={isReject
+              ? { flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.5 }
+              : { flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: canSubmit ? '#344054' : '#98A2B3', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.6 }}
           >
             {isSubmitting ? submittingLabel : submitLabel}
           </button>
@@ -1023,7 +1068,6 @@ function WithdrawModal({
 
 /* ─── CancelModal (upcoming — 80% refund) ────────────────── */
 function CancelModal({
-  booking,
   onConfirm,
   onClose,
   onDone,
@@ -1038,8 +1082,6 @@ function CancelModal({
   const [reason, setReason] = useState('');
   const [note, setNote] = useState('');
   const [done, setDone] = useState(false);
-  const refund = Math.round(booking.price * 0.8 * 100) / 100;
-  const fee    = Math.round(booking.price * 0.2 * 100) / 100;
   const cancelReason = reason === 'Other' ? (note.trim() || 'Other') : reason;
   const canSubmit = Boolean(reason) && (reason !== 'Other' || Boolean(note.trim())) && !isSubmitting;
 
@@ -1084,23 +1126,10 @@ function CancelModal({
         {/* Body */}
         <div style={{ padding: 24 }}>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 20 }}>
-            This action cannot be undone. Per our cancellation policy, you will receive an 80% refund of your payment.
+            Please tell us why you&apos;re cancelling this booking. Your reason helps us process the request smoothly.
           </p>
 
-          <div style={{ background: '#FEF3F2', border: '1px solid #FECDCA', borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
-            {[['Amount paid', `$${booking.price.toFixed(2)}`, '#344054'], ['Cancellation fee (20%)', `-$${fee.toFixed(2)}`, '#D92D20']].map(([l, v, c], i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085' }}>{l}</span>
-                <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: c }}>{v}</span>
-              </div>
-            ))}
-            <div style={{ borderTop: '1px solid #FECDCA', paddingTop: 10, display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#344054' }}>You will receive</span>
-              <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#079455' }}>${refund.toFixed(2)}</span>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: reason === 'Other' ? 18 : 0 }}>
+          <div style={{ marginBottom: reason === 'Other' ? 18 : 16 }}>
             <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 8 }}>Select reason</p>
             <ModalSelect value={reason} onChange={setReason} options={WITHDRAW_REASONS} placeholder="Select one" />
           </div>
@@ -1110,9 +1139,13 @@ function CancelModal({
               disabled={isSubmitting}
               onChange={e => setNote(e.target.value)}
               placeholder="Tell us why you're cancelling"
-              style={{ width: '100%', minHeight: 90, fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#101828', border: '1px solid #D0D5DD', borderRadius: 12, padding: '12px 14px', outline: 'none', resize: 'none', boxSizing: 'border-box', display: 'block' }}
+              style={{ width: '100%', minHeight: 90, fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#101828', border: '1px solid #D0D5DD', borderRadius: 12, padding: '12px 14px', outline: 'none', resize: 'none', boxSizing: 'border-box', display: 'block', marginBottom: 16 }}
             />
           )}
+
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#D92D20', lineHeight: 1.55, margin: 0 }}>
+            Note: Only 80% of the money you can refund from your payment according to our policy.
+          </p>
         </div>
 
         {/* Footer */}
@@ -1121,10 +1154,9 @@ function CancelModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1, transition: 'background 0.15s' }}
-            onMouseEnter={e => { if (!isSubmitting) (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}>
-            Keep Booking
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
+          >
+            Don&apos;t Cancel
           </button>
           <button
             type="button"
@@ -1134,9 +1166,9 @@ function CancelModal({
               if (ok) setDone(true);
             }}
             disabled={!canSubmit}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: 'linear-gradient(135deg,#F97066,#D92D20)', border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.5, transition: 'opacity 0.15s' }}
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: canSubmit ? '#344054' : '#98A2B3', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.6, transition: 'opacity 0.15s' }}
           >
-            {isSubmitting ? 'Cancelling...' : 'Confirm Cancel'}
+            {isSubmitting ? 'Cancelling...' : 'Cancel Booking'}
           </button>
         </div>
       </div>
@@ -1146,29 +1178,51 @@ function CancelModal({
 
 /* ─── EditModal ──────────────────────────────────────────── */
 function EditModal({ booking, onClose }: { booking: DetailedBooking; onClose: () => void }) {
-  const init  = new Date(booking.date);
-  const [year,  setYear]  = useState(init.getFullYear());
-  const [month, setMonth] = useState(init.getMonth());
-  const [day,   setDay]   = useState(init.getDate());
-  const [hour,  setHour]  = useState(parseInt(booking.time.split(':')[0]));
-  const [ampm,  setAmpm]  = useState<'AM'|'PM'>(booking.time.includes('PM')?'PM':'AM');
-  const [addr,  setAddr]  = useState(booking.address);
+  const init = parseIsoDateParts(booking.dateIso || booking.date);
+  const initTime = parseFavorTimeParts(booking.timeRaw || booking.time);
+  const [year,  setYear]  = useState(init.year);
+  const [month, setMonth] = useState(init.month);
+  const [day,   setDay]   = useState(init.day);
+  const [hour,  setHour]  = useState(initTime.hour);
+  const [ampm,  setAmpm]  = useState<'AM'|'PM'>(initTime.ampm);
+  const [addr,  setAddr]  = useState(booking.address === 'Address not provided' ? '' : booking.address);
+  const [updateBooking, { isLoading }] = useUpdateBuyerBookingMutation();
   const calDays = getCalDays(year, month);
+  const canSave = Boolean(addr.trim()) && !isLoading && !isPast(year, month, day);
   const selSt: React.CSSProperties = { fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', background:'#fff', border:'1.5px solid #D0D5DD', borderRadius:PILL, padding:'8px 14px', outline:'none', cursor:'pointer' };
+
+  const handleSave = async () => {
+    if (!canSave) return;
+    try {
+      const response = await updateBooking({
+        bookingId: Number(booking.id),
+        favorDate: toFavorDate(year, month, day),
+        favorTime: toFavorTime(hour, ampm),
+        address: addr.trim(),
+        ...(booking.lat != null ? { lat: booking.lat } : {}),
+        ...(booking.lng != null ? { lng: booking.lng } : {}),
+      }).unwrap();
+      showToast(response.message || 'Booking updated.', 'success');
+      onClose();
+    } catch {
+      // axios interceptor already toasts API errors
+    }
+  };
+
   return (
-    <div onClick={e => { if (e.target === e.currentTarget) onClose(); }} style={{ position:'fixed', inset:0, background:'rgba(16,24,40,0.52)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+    <div onClick={e => { if (e.target === e.currentTarget && !isLoading) onClose(); }} style={{ position:'fixed', inset:0, background:'rgba(16,24,40,0.52)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
       <div style={{ background:'#fff', borderRadius:16, maxWidth:560, width:'100%', maxHeight:'90vh', overflow:'auto', boxShadow: MODAL_SHADOW }}>
         <div style={{ padding:'22px 24px 18px', borderBottom:'1px solid #EAECF0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:17, color:'#101828', margin:0 }}>Edit Booking</p>
-          <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', border:'1.5px solid #EAECF0', background:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <button onClick={() => { if (!isLoading) onClose(); }} style={{ width:32, height:32, borderRadius:'50%', border:'1.5px solid #EAECF0', background:'none', cursor: isLoading ? 'not-allowed' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#667085" strokeWidth="2" strokeLinecap="round"/></svg>
           </button>
         </div>
         <div style={{ padding:24 }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <button onClick={() => { if(month===0){setMonth(11);setYear(y=>y-1);}else setMonth(m=>m-1); }} style={{ width:30, height:30, borderRadius:'50%', border:'1.5px solid #EAECF0', background:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+            <button type="button" onClick={() => { if(month===0){setMonth(11);setYear(y=>y-1);}else setMonth(m=>m-1); }} style={{ width:30, height:30, borderRadius:'50%', border:'1.5px solid #EAECF0', background:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
             <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:15, color:'#101828' }}>{MONTHS[month]} {year}</span>
-            <button onClick={() => { if(month===11){setMonth(0);setYear(y=>y+1);}else setMonth(m=>m+1); }} style={{ width:30, height:30, borderRadius:'50%', border:'1.5px solid #EAECF0', background:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+            <button type="button" onClick={() => { if(month===11){setMonth(0);setYear(y=>y+1);}else setMonth(m=>m+1); }} style={{ width:30, height:30, borderRadius:'50%', border:'1.5px solid #EAECF0', background:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:6 }}>
             {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <div key={d} style={{ textAlign:'center', fontFamily:'Poppins,sans-serif', fontSize:11, color:'#98A2B3', fontWeight:600, padding:'4px 0' }}>{d}</div>)}
@@ -1177,17 +1231,17 @@ function EditModal({ booking, onClose }: { booking: DetailedBooking; onClose: ()
             {calDays.map((d,i) => {
               if(!d) return <div key={`n${i}`}/>;
               const past=isPast(year,month,d), today=isToday(year,month,d), sel=d===day&&!past;
-              return <button key={d} onClick={() => { if(!past) setDay(d); }} disabled={past} style={{ aspectRatio:'1', borderRadius:'50%', border:'none', fontFamily:'Poppins,sans-serif', fontSize:13, cursor:past?'not-allowed':'pointer', background:sel?BRAND:today?'#F4EBFF':'transparent', color:sel?'#fff':past?'#D0D5DD':today?BRAND:'#344054', fontWeight:sel||today?700:400 }}>{d}</button>;
+              return <button type="button" key={d} onClick={() => { if(!past) setDay(d); }} disabled={past} style={{ aspectRatio:'1', borderRadius:'50%', border:'none', fontFamily:'Poppins,sans-serif', fontSize:13, cursor:past?'not-allowed':'pointer', background:sel?BRAND:today?'#F4EBFF':'transparent', color:sel?'#fff':past?'#D0D5DD':today?BRAND:'#344054', fontWeight:sel||today?700:400 }}>{d}</button>;
             })}
           </div>
           <div style={{ display:'flex', gap:10, marginBottom:18 }}>
             <select value={hour} onChange={e => setHour(Number(e.target.value))} style={selSt}>{Array.from({length:12},(_,i)=>i+1).map(h=><option key={h} value={h}>{String(h).padStart(2,'0')}:00</option>)}</select>
             <select value={ampm} onChange={e => setAmpm(e.target.value as 'AM'|'PM')} style={selSt}><option>AM</option><option>PM</option></select>
           </div>
-          <input value={addr} onChange={e => setAddr(e.target.value)} style={{ width:'100%', fontFamily:'Poppins,sans-serif', fontSize:14, color:'#101828', border:'1.5px solid #D0D5DD', borderRadius:PILL, padding:'10px 16px', outline:'none', boxSizing:'border-box', marginBottom:22, transition:'border-color 0.15s' }} onFocus={e=>{(e.currentTarget as HTMLElement).style.borderColor=BRAND;}} onBlur={e=>{(e.currentTarget as HTMLElement).style.borderColor='#D0D5DD';}}/>
+          <input value={addr} onChange={e => setAddr(e.target.value)} placeholder="Address" style={{ width:'100%', fontFamily:'Poppins,sans-serif', fontSize:14, color:'#101828', border:'1.5px solid #D0D5DD', borderRadius:PILL, padding:'10px 16px', outline:'none', boxSizing:'border-box', marginBottom:22, transition:'border-color 0.15s' }} onFocus={e=>{(e.currentTarget as HTMLElement).style.borderColor=BRAND;}} onBlur={e=>{(e.currentTarget as HTMLElement).style.borderColor='#D0D5DD';}}/>
           <div style={{ display:'flex', gap:12 }}>
-            <button onClick={onClose} style={{ flex:1, fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:14, color:'#344054', background:'#fff', border:'1.5px solid #D0D5DD', borderRadius:PILL, padding:'13px', cursor:'pointer' }}>Cancel</button>
-            <button onClick={onClose} style={{ flex:1, fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:'#fff', background:GRAD, border:'none', borderRadius:PILL, padding:'13px', cursor:'pointer' }}>Save changes</button>
+            <button type="button" onClick={() => { if (!isLoading) onClose(); }} disabled={isLoading} style={{ flex:1, fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:14, color:'#344054', background:'#fff', border:'1.5px solid #D0D5DD', borderRadius:PILL, padding:'13px', cursor: isLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1 }}>Cancel</button>
+            <button type="button" onClick={() => { void handleSave(); }} disabled={!canSave} style={{ flex:1, fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:'#fff', background:GRAD, border:'none', borderRadius:PILL, padding:'13px', cursor: canSave ? 'pointer' : 'not-allowed', opacity: canSave ? 1 : 0.5 }}>{isLoading ? 'Saving...' : 'Save changes'}</button>
           </div>
         </div>
       </div>
@@ -1395,8 +1449,13 @@ export default function BookingDetailPage() {
   const isLive    = booking.status === 'InProgress';
   const isAwaitingComplete = booking.status === 'Complete';
   const canRate = booking.status === 'Completed' && !booking.rating;
+  const isMessagingDisabled = booking.status === 'Completed';
   const days      = getDaysUntil(booking.dateIso || booking.date);
-  const canWithdraw = booking.status === 'Pending';
+  const canWithdraw = booking.status === 'Pending' && !booking.isCustom;
+  const canReportSeller =
+    booking.status !== 'Pending' &&
+    booking.status !== 'DeclinedBySeller' &&
+    booking.status !== 'CancelledBySeller';
 
   const handleDoneSuccess = () => { setShowDoneSuccess(false); };
   const handlePreCancelConfirm = () => { setShowPreCancel(false); router.push('/bookings'); };
@@ -1651,7 +1710,9 @@ export default function BookingDetailPage() {
                       Rate seller
                     </button>
                   )}
-                  <ThreeDotMenu onReport={() => setShowReport(true)} />
+                  {booking.status !== 'Pending' && canReportSeller && (
+                    <ThreeDotMenu onReport={() => setShowReport(true)} />
+                  )}
                 </div>
               )}
 
@@ -1702,7 +1763,7 @@ export default function BookingDetailPage() {
                           <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:15, color:'#101828', marginBottom:4 }}>{booking.teamName}</p>
                           <span style={{ fontFamily:'Poppins,sans-serif', fontSize:11, fontWeight:700, background:'#344054', color:'#fff', borderRadius:PILL, padding:'2px 8px' }}>Team</span>
                         </div>
-                        <MessageButton label="Message team" onClick={() => { void handleOpenChat(booking.teamName!); }} disabled={isStartingChat} />
+                        <MessageButton label="Message team" onClick={() => { void handleOpenChat(booking.teamName!); }} disabled={isStartingChat || isMessagingDisabled} />
                       </div>
                       <div style={{ paddingTop:16, borderTop:'1px solid #EAECF0' }}>
                         <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:13, color:'#667085', marginBottom:12 }}>Your favor provider from the team</p>
@@ -1712,7 +1773,7 @@ export default function BookingDetailPage() {
                             <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:15, color:'#101828', marginBottom:3 }}>{booking.providerName}</p>
                             <MilesAway miles={booking.providerDistance} />
                           </div>
-                          <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.providerName!); }} disabled={isStartingChat} />
+                          <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.providerName!); }} disabled={isStartingChat || isMessagingDisabled} />
                         </div>
                       </div>
                     </div>
@@ -1726,7 +1787,7 @@ export default function BookingDetailPage() {
                           <MilesAway miles={booking.sellerDistance} />
                         </div>
                       </div>
-                      <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.sellerName); }} disabled={isStartingChat} />
+                      <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.sellerName); }} disabled={isStartingChat || isMessagingDisabled} />
                     </div>
                   )}
                 </Section>
@@ -1818,7 +1879,6 @@ export default function BookingDetailPage() {
                   <LiveLocationMap
                     lat={booking.lat}
                     lng={booking.lng}
-                    sellerAvatar={booking.sellerAvatar}
                     sellerName={booking.sellerName}
                     address={booking.address}
                   />
@@ -1871,7 +1931,7 @@ export default function BookingDetailPage() {
                           <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:15, color:'#101828', marginBottom:4 }}>{booking.teamName}</p>
                           <span style={{ fontFamily:'Poppins,sans-serif', fontSize:11, fontWeight:700, background:'#344054', color:'#fff', borderRadius:PILL, padding:'2px 8px' }}>Team</span>
                         </div>
-                        <MessageButton label="Message team" onClick={() => { void handleOpenChat(booking.teamName!); }} disabled={isStartingChat} />
+                        <MessageButton label="Message team" onClick={() => { void handleOpenChat(booking.teamName!); }} disabled={isStartingChat || isMessagingDisabled} />
                       </div>
                       <div style={{ paddingTop:16, borderTop:'1px solid #EAECF0' }}>
                         <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:13, color:'#667085', marginBottom:12 }}>Your favor provider from the team</p>
@@ -1881,7 +1941,7 @@ export default function BookingDetailPage() {
                             <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:15, color:'#101828', marginBottom:3 }}>{booking.providerName}</p>
                             <MilesAway miles={booking.providerDistance} />
                           </div>
-                          <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.providerName!); }} disabled={isStartingChat} />
+                          <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.providerName!); }} disabled={isStartingChat || isMessagingDisabled} />
                         </div>
                       </div>
                     </div>
@@ -1895,7 +1955,7 @@ export default function BookingDetailPage() {
                           <MilesAway miles={booking.sellerDistance} />
                         </div>
                       </div>
-                      <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.sellerName); }} disabled={isStartingChat} />
+                      <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.sellerName); }} disabled={isStartingChat || isMessagingDisabled} />
                     </div>
                   )}
                 </Section>
@@ -2028,7 +2088,7 @@ export default function BookingDetailPage() {
                           <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:15, color:'#101828', marginBottom:4 }}>{booking.teamName}</p>
                           <span style={{ fontFamily:'Poppins,sans-serif', fontSize:11, fontWeight:700, background:'#344054', color:'#fff', borderRadius:PILL, padding:'2px 8px' }}>Team</span>
                         </div>
-                        <MessageButton label="Message team" onClick={() => { void handleOpenChat(booking.teamName!); }} disabled={isStartingChat} />
+                        <MessageButton label="Message team" onClick={() => { void handleOpenChat(booking.teamName!); }} disabled={isStartingChat || isMessagingDisabled} />
                       </div>
                       <div style={{ paddingTop:16, borderTop:'1px solid #EAECF0' }}>
                         <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:13, color:'#667085', marginBottom:12 }}>Your favor provider from the team</p>
@@ -2038,7 +2098,7 @@ export default function BookingDetailPage() {
                             <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:15, color:'#101828', marginBottom:3 }}>{booking.providerName}</p>
                             <MilesAway miles={booking.providerDistance} />
                           </div>
-                          <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.providerName!); }} disabled={isStartingChat} />
+                          <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.providerName!); }} disabled={isStartingChat || isMessagingDisabled} />
                         </div>
                       </div>
                     </div>
@@ -2052,7 +2112,7 @@ export default function BookingDetailPage() {
                           <MilesAway miles={booking.sellerDistance} />
                         </div>
                       </div>
-                      <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.sellerName); }} disabled={isStartingChat} />
+                      <MessageButton label="Message" onClick={() => { void handleOpenChat(booking.sellerName); }} disabled={isStartingChat || isMessagingDisabled} />
                     </div>
                   )}
                 </Section>

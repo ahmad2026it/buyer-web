@@ -14,7 +14,9 @@ import {
 } from '@/lib/conversationCache';
 import {
   CONVERSATION_EVENTS,
+  INCOMING_MESSAGE_EVENTS,
   NOTIFICATION_EVENTS,
+  bindSocketEvents,
   getActiveBuyerConversationId,
   normalizeIncomingMessage,
 } from '@/lib/conversationSocketTypes';
@@ -82,7 +84,8 @@ export function useBuyerRealtime(): void {
       }, 1500);
     };
 
-    const handleNewMessage = (raw: unknown) => {
+    const handleNewMessage = (...args: unknown[]) => {
+      const raw = args[0];
       console.log('[notification] socket chat message', raw);
       const message = normalizeIncomingMessage(raw);
       if (!message) {
@@ -142,7 +145,11 @@ export function useBuyerRealtime(): void {
       handler: handleNamedNotification(eventName),
     }));
 
-    socket.on(CONVERSATION_EVENTS.messageNew, handleNewMessage);
+    const unbindIncomingMessages = bindSocketEvents(
+      socket,
+      INCOMING_MESSAGE_EVENTS,
+      handleNewMessage,
+    );
     socket.on(CONVERSATION_EVENTS.ready, joinKnownConversations);
     socket.on('connect', handleConnect);
     socket.onAny(handleAnySocketEvent);
@@ -159,7 +166,7 @@ export function useBuyerRealtime(): void {
     return () => {
       cancelled = true;
       if (notificationRefreshTimer) clearTimeout(notificationRefreshTimer);
-      socket.off(CONVERSATION_EVENTS.messageNew, handleNewMessage);
+      unbindIncomingMessages();
       socket.off(CONVERSATION_EVENTS.ready, joinKnownConversations);
       socket.off('connect', handleConnect);
       socket.offAny(handleAnySocketEvent);

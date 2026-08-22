@@ -148,8 +148,9 @@ export const buyerFavorsAPI = createApi({
     }),
     unmarkBuyerFavorite: builder.mutation<MarkBuyerFavoriteResponse, number>({
       query: (favorId) => ({
-        url: `/api/buyer/favorites/${favorId}`,
-        method: "DELETE",
+        url: "/api/buyer/favorites",
+        method: "POST",
+        body: { favor_id: favorId },
       }),
       async onQueryStarted(favorId, { dispatch, queryFulfilled }) {
         const detailPatch = dispatch(

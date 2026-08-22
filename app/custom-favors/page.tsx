@@ -7,6 +7,7 @@ import AuthGateModal from '@/components/AuthGateModal';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 import {
   BUYER_CUSTOM_FAVORS_LIST_PARAMS,
+  useDeleteBuyerCustomFavorMutation,
   useGetBuyerCustomFavorsQuery,
 } from '@/app/buyer/store/buyerCustomFavorsAPI';
 import {
@@ -22,6 +23,8 @@ import {
   type CustomFavorListStatus,
 } from '@/app/buyer/store/buyerCustomFavorsTypes';
 import { useAppSelector } from '@/store/hooks';
+import { confirmDelete } from '@/lib/swal';
+import { showToast } from '@/lib/toast';
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
@@ -62,7 +65,52 @@ function toCustomFavorCard(favor: BuyerCustomFavor): CustomFavorCard {
   };
 }
 
-function ActiveFavorCard({ favor }: { favor: CustomFavorCard }) {
+function FavorActionsMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: 'relative', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', border: '1.5px solid #EAECF0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.5" fill="#667085"/><circle cx="12" cy="12" r="1.5" fill="#667085"/><circle cx="12" cy="19" r="1.5" fill="#667085"/></svg>
+      </button>
+      {open && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9 }} onClick={() => setOpen(false)} />
+          <div style={{ position: 'absolute', top: 36, right: 0, background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 12, padding: 6, minWidth: 160, boxShadow: '0 8px 24px rgba(16,24,40,0.12)', zIndex: 10 }}>
+            <button
+              onClick={() => { setOpen(false); onEdit(); }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8 }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => { setOpen(false); onDelete(); }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#D92D20', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8 }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FEF3F2'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+            >
+              Delete
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ActiveFavorCard({
+  favor,
+  onEdit,
+  onDelete,
+}: {
+  favor: CustomFavorCard;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
   const router = useRouter();
   const hasRequests = favor.requests > 0;
   const isFull = favor.hires >= favor.sellersRequired;
@@ -96,6 +144,7 @@ function ActiveFavorCard({ favor }: { favor: CustomFavorCard }) {
             </span>
           </div>
         </div>
+        <FavorActionsMenu onEdit={onEdit} onDelete={onDelete} />
       </div>
 
       <div style={{ padding: '0 16px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -242,6 +291,7 @@ export default function CustomFavorsPage() {
   const token = useAppSelector((state) => state.auth.token);
   const skip = !token;
   const page = pages[tab];
+  const [deleteCustomFavor] = useDeleteBuyerCustomFavorMutation();
 
   const activeQuery = useGetBuyerCustomFavorsQuery(
     { status: 'active', page: tab === 'active' ? page : 1, limit: BUYER_CUSTOM_FAVORS_LIST_PARAMS.limit },
@@ -278,6 +328,20 @@ export default function CustomFavorsPage() {
 
   const loadMore = () => {
     setPages((current) => ({ ...current, [tab]: current[tab] + 1 }));
+  };
+
+  const handleDeleteFavor = async (favor: CustomFavorCard) => {
+    const confirmed = await confirmDelete(favor.title, {
+      title: 'Delete custom favor?',
+      entity: 'this custom favor',
+    });
+    if (!confirmed) return;
+    try {
+      const response = await deleteCustomFavor(favor.id).unwrap();
+      showToast(response.message || 'Custom favor deleted.', 'success');
+    } catch {
+      // axios interceptor already toasts API errors
+    }
   };
 
   return (
@@ -383,7 +447,14 @@ export default function CustomFavorsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {favors.map((favor) =>
                 isActive
-                  ? <ActiveFavorCard key={favor.id} favor={favor} />
+                  ? (
+                    <ActiveFavorCard
+                      key={favor.id}
+                      favor={favor}
+                      onEdit={() => router.push(`/custom-favors/new?id=${favor.id}`)}
+                      onDelete={() => { void handleDeleteFavor(favor); }}
+                    />
+                  )
                   : <HistoryFavorCard key={favor.id} favor={favor} />,
               )}
               {hasMore && (

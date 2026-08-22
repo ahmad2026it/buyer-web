@@ -68,21 +68,24 @@ export type BuyerFavorQuestion = {
   placeholder?: string;
 };
 
+export type BuyerFavorReviewer = {
+  id?: number;
+  fullName?: string;
+  profileImage?: string | null;
+};
+
 export type BuyerFavorReview = {
   id?: number;
   rating?: number;
-  comment?: string;
+  comment?: string | null;
   text?: string;
   review?: string;
   createdAt?: string;
   date?: string;
   author?: string;
   avatar?: string | null;
-  user?: {
-    id?: number;
-    fullName?: string;
-    profileImage?: string | null;
-  } | null;
+  reviewer?: BuyerFavorReviewer | null;
+  user?: BuyerFavorReviewer | null;
 };
 
 export type BuyerFavorDetail = {

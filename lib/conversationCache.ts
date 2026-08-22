@@ -20,7 +20,10 @@ export function upsertBuyerConversationMessage(
       'getBuyerConversationMessages',
       { conversationId: message.conversationId, limit: BUYER_CONVERSATION_MESSAGES_LIMIT },
       (draft) => {
-        if (!draft.data?.messages) return;
+        if (!draft.data) return;
+        if (!Array.isArray(draft.data.messages)) {
+          draft.data.messages = [];
+        }
 
         const byClient = message.clientMsgId
           ? draft.data.messages.findIndex((item) => item.clientMsgId === message.clientMsgId)

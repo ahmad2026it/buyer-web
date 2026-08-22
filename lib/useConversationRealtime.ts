@@ -1,7 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  BUYER_CONVERSATION_MESSAGES_LIMIT,
+  buyerConversationsAPI,
+  useSendBuyerConversationMessageMutation,
+} from '@/app/buyer/store/buyerConversationsAPI';
 import type { BuyerConversationMessage } from '@/app/buyer/store/buyerConversationsTypes';
+import { selectAuthToken } from '@/app/auth/store/authSlice';
+import { getAxiosErrorMessage } from '@/lib/axios';
 import { getBuyerSocket } from '@/lib/buyerSocket';
 import {
   removeOptimisticBuyerMessage,
@@ -10,17 +17,17 @@ import {
 } from '@/lib/conversationCache';
 import {
   CONVERSATION_EVENTS,
+  INCOMING_MESSAGE_EVENTS,
+  bindSocketEvents,
   createClientMsgId,
   normalizeIncomingMessage,
   setActiveBuyerConversationId,
   toNumericId,
   type ConversationAck,
   type ConversationReadPayload,
-  type ConversationSendAckData,
   type ConversationTypingPayload,
 } from '@/lib/conversationSocketTypes';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { selectAuthToken } from '@/app/auth/store/authSlice';
 
 type UseConversationRealtimeArgs = {
   enabled: boolean;
@@ -47,6 +54,7 @@ export function useConversationRealtime({
 }: UseConversationRealtimeArgs) {
   const dispatch = useAppDispatch();
   const token = useAppSelector(selectAuthToken);
+  const [sendBuyerMessage] = useSendBuyerConversationMessageMutation();
   const [sending, setSending] = useState(false);
   const [joined, setJoined] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
@@ -76,8 +84,8 @@ export function useConversationRealtime({
     let cancelled = false;
     setOtherUserTyping(false);
 
-    const handleNewMessage = (raw: unknown) => {
-      const message = normalizeIncomingMessage(raw);
+    const handleNewMessage = (...args: unknown[]) => {
+      const message = normalizeIncomingMessage(args[0]);
       if (!message || message.conversationId !== conversationIdRef.current) return;
 
       upsertBuyerConversationMessage(dispatch, message);
@@ -130,7 +138,11 @@ export function useConversationRealtime({
       );
     };
 
-    socket.on(CONVERSATION_EVENTS.messageNew, handleNewMessage);
+    const unbindIncomingMessages = bindSocketEvents(
+      socket,
+      INCOMING_MESSAGE_EVENTS,
+      handleNewMessage,
+    );
     socket.on(CONVERSATION_EVENTS.typing, handleTyping);
     socket.on(CONVERSATION_EVENTS.messageRead, handleRead);
     socket.on('connect', joinConversation);
@@ -143,7 +155,7 @@ export function useConversationRealtime({
 
     return () => {
       cancelled = true;
-      socket.off(CONVERSATION_EVENTS.messageNew, handleNewMessage);
+      unbindIncomingMessages();
       socket.off(CONVERSATION_EVENTS.typing, handleTyping);
       socket.off(CONVERSATION_EVENTS.messageRead, handleRead);
       socket.off('connect', joinConversation);
@@ -199,14 +211,11 @@ export function useConversationRealtime({
     async (body: string): Promise<SendResult> => {
       const activeConversationId = conversationIdRef.current;
       if (!activeConversationId || !token) {
-        return { ok: false, error: 'Socket is not ready' };
+        return { ok: false, error: 'Not ready to send' };
       }
 
       const trimmed = body.trim();
       if (!trimmed) return { ok: false, error: 'Message is empty' };
-
-      const socket = getBuyerSocket(token);
-      if (!socket) return { ok: false, error: 'Socket is not ready' };
 
       stopTyping();
       setSending(true);
@@ -232,54 +241,49 @@ export function useConversationRealtime({
         senderUserId: optimistic.senderUserId,
       });
 
-      return new Promise((resolve) => {
-        let settled = false;
+      try {
+        const response = await sendBuyerMessage({
+          conversationId: activeConversationId,
+          body: trimmed,
+          clientMsgId,
+        }).unwrap();
 
-        const finish = (result: SendResult) => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timeout);
-          setSending(false);
-          resolve(result);
+        const message =
+          normalizeIncomingMessage(response.data?.message) ??
+          normalizeIncomingMessage(response.data);
+
+        if (message) {
+          upsertBuyerConversationMessage(dispatch, message);
+          touchBuyerConversationPreview(dispatch, {
+            conversationId: message.conversationId,
+            preview: message.body,
+            at: message.createdAt,
+            senderUserId: message.senderUserId,
+          });
+        } else {
+          void dispatch(
+            buyerConversationsAPI.endpoints.getBuyerConversationMessages.initiate(
+              {
+                conversationId: activeConversationId,
+                limit: BUYER_CONVERSATION_MESSAGES_LIMIT,
+              },
+              { forceRefetch: true, subscribe: false },
+            ),
+          );
+        }
+
+        return { ok: true, message: message ?? optimistic };
+      } catch (error) {
+        removeOptimisticBuyerMessage(dispatch, activeConversationId, clientMsgId);
+        return {
+          ok: false,
+          error: getAxiosErrorMessage(error) || 'Failed to send message',
         };
-
-        const timeout = setTimeout(() => {
-          removeOptimisticBuyerMessage(dispatch, activeConversationId, clientMsgId);
-          finish({ ok: false, error: 'Failed to send message' });
-        }, 15000);
-
-        socket.emit(
-          CONVERSATION_EVENTS.messageSend,
-          { conversationId: activeConversationId, body: trimmed, clientMsgId },
-          (ack?: ConversationAck<ConversationSendAckData>) => {
-            if (!ack?.success) {
-              removeOptimisticBuyerMessage(dispatch, activeConversationId, clientMsgId);
-              finish({
-                ok: false,
-                error: ack?.message || 'Failed to send message',
-              });
-              return;
-            }
-
-            const message = ack.data?.message
-              ? normalizeIncomingMessage(ack.data.message)
-              : null;
-            if (message) {
-              upsertBuyerConversationMessage(dispatch, message);
-              touchBuyerConversationPreview(dispatch, {
-                conversationId: message.conversationId,
-                preview: message.body,
-                at: message.createdAt,
-                senderUserId: message.senderUserId,
-              });
-            }
-
-            finish({ ok: true, message: message ?? undefined });
-          },
-        );
-      });
+      } finally {
+        setSending(false);
+      }
     },
-    [dispatch, stopTyping, token],
+    [dispatch, sendBuyerMessage, stopTyping, token],
   );
 
   return {

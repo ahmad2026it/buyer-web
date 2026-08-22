@@ -7,6 +7,8 @@ import type {
   GetBuyerBookingByIdResponse,
   GetBuyerBookingsParams,
   GetBuyerBookingsResponse,
+  UpdateBuyerBookingRequest,
+  UpdateBuyerBookingResponse,
   WithdrawBuyerBookingRequest,
   WithdrawBuyerBookingResponse,
   CancelBuyerBookingRequest,
@@ -113,6 +115,17 @@ export const buyerBookingsAPI = createApi({
       }),
       invalidatesTags: ["BuyerBookings"],
     }),
+    updateBuyerBooking: builder.mutation<
+      UpdateBuyerBookingResponse,
+      UpdateBuyerBookingRequest
+    >({
+      query: ({ bookingId, ...body }) => ({
+        url: `/api/buyer/bookings/${bookingId}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["BuyerBookings"],
+    }),
     confirmBuyerBookingPayment: builder.mutation<
       ConfirmBuyerBookingPaymentResponse,
       ConfirmBuyerBookingPaymentRequest
@@ -205,6 +218,7 @@ export const {
   useGetBuyerBookingsQuery,
   useGetBuyerBookingByIdQuery,
   useCreateBuyerBookingMutation,
+  useUpdateBuyerBookingMutation,
   useConfirmBuyerBookingPaymentMutation,
   useWithdrawBuyerBookingMutation,
   useCancelBuyerBookingMutation,

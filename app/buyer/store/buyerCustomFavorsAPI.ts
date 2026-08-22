@@ -4,11 +4,14 @@ import type {
   AcceptBuyerCustomFavorRequestResponse,
   CreateBuyerCustomFavorRequest,
   CreateBuyerCustomFavorResponse,
+  DeleteBuyerCustomFavorResponse,
   GetBuyerCustomFavorByIdResponse,
   GetBuyerCustomFavorsParams,
   GetBuyerCustomFavorsResponse,
   RejectBuyerCustomFavorRequestRequest,
   RejectBuyerCustomFavorRequestResponse,
+  UpdateBuyerCustomFavorRequest,
+  UpdateBuyerCustomFavorResponse,
 } from "./buyerCustomFavorsTypes";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
 
@@ -27,7 +30,7 @@ const appendIfPresent = (
   formData.append(key, String(value));
 };
 
-const buildCreateCustomFavorFormData = (
+const buildCustomFavorFormData = (
   payload: CreateBuyerCustomFavorRequest,
 ): FormData => {
   const formData = new FormData();
@@ -40,6 +43,8 @@ const buildCreateCustomFavorFormData = (
   formData.append("lat", String(payload.lat));
   formData.append("lng", String(payload.lng));
   formData.append("locationId", String(payload.locationId));
+  appendIfPresent(formData, "location", payload.location);
+  appendIfPresent(formData, "locationDetail", payload.locationDetail);
 
   if (payload.addOns?.length) {
     formData.append("addOns", JSON.stringify(payload.addOns));
@@ -176,9 +181,40 @@ export const buyerCustomFavorsAPI = createApi({
       query: (payload) => ({
         url: "/api/buyer/custom-favors",
         method: "POST",
-        body: buildCreateCustomFavorFormData(payload),
+        body: buildCustomFavorFormData(payload),
       }),
-      invalidatesTags: [{ type: "BuyerCustomFavors", id: "LIST" }],
+      invalidatesTags: [
+        { type: "BuyerCustomFavors", id: "LIST" },
+        { type: "BuyerCustomFavors", id: "LIST-active" },
+      ],
+    }),
+    updateBuyerCustomFavor: builder.mutation<
+      UpdateBuyerCustomFavorResponse,
+      UpdateBuyerCustomFavorRequest
+    >({
+      query: ({ id, ...payload }) => ({
+        url: `/api/buyer/custom-favors/${id}`,
+        method: "PUT",
+        body: buildCustomFavorFormData(payload),
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "BuyerCustomFavors", id: arg.id },
+        { type: "BuyerCustomFavors", id: "LIST" },
+        { type: "BuyerCustomFavors", id: "LIST-active" },
+        { type: "BuyerCustomFavors", id: "LIST-history" },
+      ],
+    }),
+    deleteBuyerCustomFavor: builder.mutation<DeleteBuyerCustomFavorResponse, number>({
+      query: (id) => ({
+        url: `/api/buyer/custom-favors/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "BuyerCustomFavors", id },
+        { type: "BuyerCustomFavors", id: "LIST" },
+        { type: "BuyerCustomFavors", id: "LIST-active" },
+        { type: "BuyerCustomFavors", id: "LIST-history" },
+      ],
     }),
   }),
 });
@@ -189,4 +225,6 @@ export const {
   useAcceptBuyerCustomFavorRequestMutation,
   useRejectBuyerCustomFavorRequestMutation,
   useCreateBuyerCustomFavorMutation,
+  useUpdateBuyerCustomFavorMutation,
+  useDeleteBuyerCustomFavorMutation,
 } = buyerCustomFavorsAPI;

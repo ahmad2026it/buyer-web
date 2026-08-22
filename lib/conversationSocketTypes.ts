@@ -30,13 +30,38 @@ export const CONVERSATION_EVENTS = {
   join: 'conversation:join',
   leave: 'conversation:leave',
   messageSend: 'conversation:message:send',
-  messageNew: 'conversation:message:new',
+  messageNew: 'message:new',
   messageRead: 'conversation:message:read',
   typing: 'conversation:typing',
   typingStart: 'conversation:typing:start',
   typingStop: 'conversation:typing:stop',
   ready: 'ready',
 } as const;
+
+export const INCOMING_MESSAGE_EVENTS = [
+  CONVERSATION_EVENTS.messageNew,
+  'conversation:message:new',
+] as const;
+
+type SocketEventTarget = {
+  on: (event: string, handler: (...args: unknown[]) => void) => unknown;
+  off: (event: string, handler: (...args: unknown[]) => void) => unknown;
+};
+
+export function bindSocketEvents(
+  socket: SocketEventTarget,
+  events: readonly string[],
+  handler: (...args: unknown[]) => void,
+): () => void {
+  for (const event of events) {
+    socket.on(event, handler);
+  }
+  return () => {
+    for (const event of events) {
+      socket.off(event, handler);
+    }
+  };
+}
 
 export const NOTIFICATION_EVENTS = [
   'notification:new',

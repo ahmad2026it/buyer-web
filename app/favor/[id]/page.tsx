@@ -66,10 +66,11 @@ function formatDate(value?: string | null): string {
 }
 
 function normalizeReview(item: BuyerFavorReview, index: number) {
+  const reviewer = item.reviewer || item.user;
   return {
     id: item.id ?? index,
-    author: item.user?.fullName || item.author || 'Buyer',
-    avatar: item.user?.profileImage || item.avatar || PLACEHOLDER_AVATAR,
+    author: reviewer?.fullName || item.author || 'Buyer',
+    avatar: reviewer?.profileImage || item.avatar || PLACEHOLDER_AVATAR,
     rating: Number(item.rating) || 0,
     date: formatDate(item.createdAt || item.date),
     text: item.comment || item.text || item.review || '',

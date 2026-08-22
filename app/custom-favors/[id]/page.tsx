@@ -8,6 +8,7 @@ import AuthGateModal from '@/components/AuthGateModal';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 import {
   useAcceptBuyerCustomFavorRequestMutation,
+  useDeleteBuyerCustomFavorMutation,
   useGetBuyerCustomFavorByIdQuery,
   useRejectBuyerCustomFavorRequestMutation,
 } from '@/app/buyer/store/buyerCustomFavorsAPI';
@@ -17,6 +18,7 @@ import {
   formatCustomFavorDueDate,
   formatCustomFavorTime,
   getCustomFavorLocationLabel,
+  resolveCustomFavorStatus,
   type BuyerCustomFavor,
   type BuyerCustomFavorRequest,
 } from '@/app/buyer/store/buyerCustomFavorsTypes';
@@ -25,7 +27,7 @@ import {
   useGetBuyerStripeCardsQuery,
 } from '@/app/buyer/store/buyerStripeAPI';
 import { useAppSelector } from '@/store/hooks';
-import { showSuccess } from '@/lib/swal';
+import { confirmDelete, showSuccess } from '@/lib/swal';
 import { showToast } from '@/lib/toast';
 
 const AddPaymentMethodModal = dynamic(
@@ -51,6 +53,11 @@ type FavorView = {
   photos: string[];
 };
 
+type RequestAddOn = {
+  label: string;
+  price: number;
+};
+
 type RequestItem = {
   id: number;
   sellerId: number;
@@ -64,15 +71,37 @@ type RequestItem = {
   sellerAmount: number;
   platformFee: number;
   totalPrice: number;
+  boostDiscount: number;
+  addOns: RequestAddOn[];
 };
 
-const toMoney = (value: string | number | null | undefined): number => {
-  const amount = Number(value);
-  return Number.isFinite(amount) ? amount : 0;
+const readMoney = (...values: unknown[]): number => {
+  for (const value of values) {
+    if (value === undefined || value === null || value === '') continue;
+    const amount = typeof value === 'number' ? value : Number(String(value).replace(/[^0-9.-]/g, ''));
+    if (Number.isFinite(amount)) return amount;
+  }
+  return 0;
 };
 
 const formatMoney = (value: number): string =>
   Number.isFinite(value) ? `$${value.toFixed(2)}` : '$0.00';
+
+const parseRequestAddOns = (items: unknown[] | undefined): RequestAddOn[] => {
+  if (!Array.isArray(items)) return [];
+  return items.map((item, index) => {
+    if (typeof item === 'string') return { label: item, price: 0 };
+    if (typeof item === 'number') return { label: `Add-on ${index + 1}`, price: item };
+    if (item && typeof item === 'object') {
+      const addon = item as Record<string, unknown>;
+      return {
+        label: String(addon.label || addon.name || addon.title || addon.description || `Add-on ${index + 1}`),
+        price: readMoney(addon.price, addon.amount),
+      };
+    }
+    return { label: `Add-on ${index + 1}`, price: 0 };
+  });
+};
 
 function toFavorView(favor: BuyerCustomFavor): FavorView {
   const photos = (favor.images ?? []).filter(Boolean);
@@ -92,6 +121,10 @@ function toFavorView(favor: BuyerCustomFavor): FavorView {
 
 function toRequestItem(item: BuyerCustomFavorRequest): RequestItem {
   const details = item.details?.trim() || 'No additional details provided.';
+  const rec = item as BuyerCustomFavorRequest & Record<string, unknown>;
+  const sellerAmount = readMoney(rec.sellerAmount, rec.seller_amount);
+  const platformFee = readMoney(rec.platformFeeAmount, rec.platform_fee_amount, rec.platformFee, rec.serviceFee);
+  const totalPrice = readMoney(rec.totalPrice, rec.total_price);
   return {
     id: item.id,
     sellerId: item.seller?.id ?? item.sellerUserId,
@@ -99,10 +132,12 @@ function toRequestItem(item: BuyerCustomFavorRequest): RequestItem {
     avatar: item.seller?.profileImage ?? null,
     shortText: details,
     fullText: details,
-    price: toMoney(item.sellerAmount || item.totalPrice),
-    sellerAmount: toMoney(item.sellerAmount),
-    platformFee: toMoney(item.platformFeeAmount),
-    totalPrice: toMoney(item.totalPrice),
+    price: totalPrice,
+    sellerAmount,
+    platformFee,
+    totalPrice,
+    boostDiscount: readMoney(rec.boostDiscountAmount, rec.boost_discount_amount),
+    addOns: parseRequestAddOns(item.selectedAddOns),
   };
 }
 
@@ -265,7 +300,7 @@ function RequestModal({ req, onClose, onHire, onDecline }: { req: RequestItem; o
           {/* Price offered */}
           <div style={{ background: '#F9F5FF', border: '1px solid rgba(165,74,255,0.15)', borderRadius: 14, padding: '14px 18px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontFamily: FONT, fontSize: 14, color: '#667085', fontWeight: 500 }}>Offered price</span>
-            <span style={{ fontFamily: FONT, fontSize: 22, fontWeight: 800, color: BRAND }}>{formatMoney(req.totalPrice || req.price)}</span>
+            <span style={{ fontFamily: FONT, fontSize: 22, fontWeight: 800, color: BRAND }}>{formatMoney(req.totalPrice)}</span>
           </div>
 
           {/* CTAs */}
@@ -432,9 +467,10 @@ function PaymentModal({
   onClose: () => void;
   onSuccess: (sellerName: string) => void;
 }) {
-  const sellerOffer = req.sellerAmount || req.price;
+  const sellerOffer = req.sellerAmount;
   const serviceFee = req.platformFee;
-  const total = req.totalPrice || sellerOffer + serviceFee;
+  const boostDiscount = req.boostDiscount;
+  const total = req.totalPrice;
 
   const token = useAppSelector((state) => state.auth.token);
   const user = useAppSelector((state) => state.auth.user);
@@ -569,15 +605,28 @@ function PaymentModal({
 
             <div style={{ padding: '14px 16px' }}>
               <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 13, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>Price summary</p>
-              {[
-                { label: "Seller's offer",   value: formatMoney(sellerOffer) },
-                { label: 'Service fee', value: formatMoney(serviceFee) },
-              ].map(r => (
-                <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                  <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>{r.label}</span>
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054' }}>{r.value}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Seller's offer</span>
+                <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatMoney(sellerOffer)}</span>
+              </div>
+              {req.addOns.map((addon, index) => (
+                <div key={`${addon.label}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                  <span style={{ fontFamily: FONT, fontSize: 13, color: '#98A2B3', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 12 }}>
+                    Add-on: {addon.label}
+                  </span>
+                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054', flexShrink: 0 }}>+{formatMoney(addon.price)}</span>
                 </div>
               ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Service fee</span>
+                <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatMoney(serviceFee)}</span>
+              </div>
+              {boostDiscount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                  <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Boost discount</span>
+                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#079455' }}>-{formatMoney(boostDiscount)}</span>
+                </div>
+              )}
               <div style={{ height: 1, background: '#EAECF0', margin: '12px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                 <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 700, color: '#101828' }}>Total</span>
@@ -696,8 +745,10 @@ export default function CustomFavorDetailPage() {
   const skip = skipId || !token;
 
   const { data, isLoading, isError, refetch } = useGetBuyerCustomFavorByIdQuery(favorId, { skip });
+  const [deleteCustomFavor, { isLoading: isDeleting }] = useDeleteBuyerCustomFavorMutation();
   const apiFavor = data?.data?.favor;
   const favor = useMemo(() => (apiFavor ? toFavorView(apiFavor) : null), [apiFavor]);
+  const canManage = Boolean(apiFavor && resolveCustomFavorStatus(apiFavor) === 'Active');
   const requests = useMemo(
     () =>
       (data?.data?.requests ?? [])
@@ -733,6 +784,22 @@ export default function CustomFavorDetailPage() {
   const handleDeclineSuccess = (sellerName: string) => {
     setDeclineReq(null);
     showToast(`Request from ${sellerName} was declined.`, 'success');
+  };
+
+  const handleDeleteFavor = async () => {
+    if (!favor || isDeleting) return;
+    const confirmed = await confirmDelete(favor.title, {
+      title: 'Delete custom favor?',
+      entity: 'this custom favor',
+    });
+    if (!confirmed) return;
+    try {
+      const response = await deleteCustomFavor(favor.id).unwrap();
+      showToast(response.message || 'Custom favor deleted.', 'success');
+      router.push('/custom-favors');
+    } catch {
+      // axios interceptor already toasts API errors
+    }
   };
 
   return (
@@ -774,6 +841,29 @@ export default function CustomFavorDetailPage() {
                   <>
                     <div onClick={() => setDotsOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 100 }} />
                     <div style={{ position: 'absolute', top: 44, right: 0, background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 12, boxShadow: '0 8px 24px rgba(16,24,40,0.12)', zIndex: 200, minWidth: 180, overflow: 'hidden' }}>
+                      {canManage && (
+                        <button
+                          onClick={() => { setDotsOpen(false); router.push(`/custom-favors/new?id=${favorId}`); }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 14, fontWeight: 600, color: '#344054', transition: 'background 0.1s' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          Edit
+                        </button>
+                      )}
+                      {canManage && (
+                        <button
+                          onClick={() => { setDotsOpen(false); void handleDeleteFavor(); }}
+                          disabled={isDeleting}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '12px 16px', background: 'none', border: 'none', cursor: isDeleting ? 'not-allowed' : 'pointer', fontFamily: FONT, fontSize: 14, fontWeight: 600, color: '#D92D20', opacity: isDeleting ? 0.6 : 1, transition: 'background 0.1s' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FEF3F2'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="#D92D20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" stroke="#D92D20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#D92D20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          {isDeleting ? 'Deleting…' : 'Delete'}
+                        </button>
+                      )}
                       <button
                         onClick={() => { setDotsOpen(false); setCloseConf(true); }}
                         style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 14, fontWeight: 600, color: '#D92D20', transition: 'background 0.1s' }}

@@ -645,13 +645,13 @@ const PROFILE_MENU = [
 /* ═══════════════════════════════════════════════════════════
    NAVBAR COMPONENT
 ═══════════════════════════════════════════════════════════ */
-export default function Navbar() {
+export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const token = useAppSelector((state) => state.auth.token);
 
-  const [scrolled, setScrolled]         = useState(false);
+  const [scrolled, setScrolled]         = useState(solid);
   const [exploreOpen, setExploreOpen]   = useState(false);
   const [authOpen, setAuthOpen]         = useState(false);
   const [isLoggedIn, setIsLoggedIn]     = useState(false);
@@ -733,10 +733,15 @@ export default function Navbar() {
   useEffect(() => {
     setIsLoggedIn(localStorage.getItem('whoCan_loggedIn') === 'true');
     setMounted(true);
+    if (solid) {
+      setScrolled(true);
+      return;
+    }
     const h = () => setScrolled(window.scrollY > 20);
+    h();
     window.addEventListener('scroll', h, { passive: true });
     return () => window.removeEventListener('scroll', h);
-  }, []);
+  }, [solid]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -987,7 +992,7 @@ export default function Navbar() {
             <div style={{ width: '148px', height: '36px' }} />
           ) : !isLoggedIn ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <a href="#app" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828', background: '#FEC84B', padding: '8px 16px', borderRadius: PILL, transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+              <a href="/#app" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828', background: '#FEC84B', padding: '8px 16px', borderRadius: PILL, transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FDB022'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#FEC84B'; }}>
                 Get App
@@ -1002,7 +1007,7 @@ export default function Navbar() {
           ) : (
             /* ── Logged-in icon bar ── */
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <a href="#app" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828', background: '#FEC84B', padding: '8px 16px', borderRadius: PILL, transition: 'all 0.2s ease', whiteSpace: 'nowrap', textDecoration: 'none' }}
+              <a href="/#app" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828', background: '#FEC84B', padding: '8px 16px', borderRadius: PILL, transition: 'all 0.2s ease', whiteSpace: 'nowrap', textDecoration: 'none' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FDB022'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#FEC84B'; }}>
                 Get App

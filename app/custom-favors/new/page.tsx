@@ -1,16 +1,26 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AuthGateModal from '@/components/AuthGateModal';
-import { useCreateBuyerCustomFavorMutation } from '@/app/buyer/store/buyerCustomFavorsAPI';
+import {
+  useCreateBuyerCustomFavorMutation,
+  useGetBuyerCustomFavorByIdQuery,
+  useUpdateBuyerCustomFavorMutation,
+} from '@/app/buyer/store/buyerCustomFavorsAPI';
 import { useGetBuyerCategoriesQuery } from '@/app/buyer/store/buyerCategoriesAPI';
 import { useGetBuyerFavorsQuery } from '@/app/buyer/store/buyerFavorsAPI';
 import { useGetBuyerLocationsQuery } from '@/app/buyer/store/buyerLocationsAPI';
 import { useAppSelector } from '@/store/hooks';
 import { showToast } from '@/lib/toast';
-import { formatCustomFavorBudget } from '@/app/buyer/store/buyerCustomFavorsTypes';
+import {
+  formatCustomFavorBudget,
+  getCustomFavorSellersRequired,
+  parseCustomFavorAddOns,
+  parseCustomFavorQuestions,
+  type CustomFavorAddOn,
+} from '@/app/buyer/store/buyerCustomFavorsTypes';
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
@@ -24,14 +34,18 @@ const YEARS  = [2025,2026,2027,2028,2029];
 const HOURS  = ['1','2','3','4','5','6','7','8','9','10','11','12'];
 
 type MediaItem = {
-  file: File;
+  file: File | null;
   url: string;
+  isRemote?: boolean;
+  isVideo?: boolean;
 };
 
 type SavedLocation = {
   id: number;
   label: string;
   address: string;
+  location: string;
+  locationDetail?: string;
   lat: number;
   lng: number;
   isSelected?: boolean;
@@ -148,8 +162,14 @@ function SectionCard({ children, style }: { children: React.ReactNode; style?: R
 
 export default function NewCustomFavorPage() {
   const router  = useRouter();
+  const searchParams = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
   const mediaRef = useRef<MediaItem[]>([]);
+  const prefilledRef = useRef(false);
+
+  const editIdRaw = searchParams.get('id');
+  const editId = Number(editIdRaw);
+  const isEditing = Number.isFinite(editId) && editId > 0;
 
   const today = new Date();
   const [step,        setStep]        = useState(1);
@@ -171,12 +191,22 @@ export default function NewCustomFavorPage() {
   const [invitedSellers, setInvitedSellers] = useState<Set<number>>(new Set());
   const [done,        setDone]        = useState(false);
   const [authOpen,    setAuthOpen]    = useState(false);
+  const [existingAddOns, setExistingAddOns] = useState<CustomFavorAddOn[]>([]);
+  const [existingQuestions, setExistingQuestions] = useState<string[]>([]);
 
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const token = useAppSelector((state) => state.auth.token);
   const [createCustomFavor, { isLoading: isCreating }] = useCreateBuyerCustomFavorMutation();
+  const [updateCustomFavor, { isLoading: isUpdating }] = useUpdateBuyerCustomFavorMutation();
+  const isSaving = isCreating || isUpdating;
   const { data: categoriesResponse } = useGetBuyerCategoriesQuery(undefined, { skip: !token });
   const { data: locationsResponse } = useGetBuyerLocationsQuery(undefined, { skip: !token });
+  const {
+    data: editResponse,
+    isLoading: isLoadingEdit,
+    isError: isEditError,
+    refetch: refetchEdit,
+  } = useGetBuyerCustomFavorByIdQuery(editId, { skip: !isEditing || !token });
 
   const serviceTypes = useMemo(() => {
     const names = (categoriesResponse?.data?.categories ?? [])
@@ -205,6 +235,8 @@ export default function NewCustomFavorPage() {
         id: item.id,
         label: item.label?.trim() || 'Location',
         address: detail ? `${item.location}, ${detail}` : item.location,
+        location: item.location,
+        locationDetail: detail || undefined,
         lat,
         lng,
         isSelected: Boolean(item.isSelected),
@@ -236,6 +268,61 @@ export default function NewCustomFavorPage() {
   }, [favorsResponse]);
 
   useEffect(() => {
+    if (!isEditing || prefilledRef.current) return;
+    const favor = editResponse?.data?.favor;
+    if (!favor || !serviceTypes.length) return;
+
+    const type = (favor.type ?? '').trim();
+    const match = serviceTypes.find((item) => item.toLowerCase() === type.toLowerCase() && item !== 'Others');
+    if (match) {
+      setServiceType(match);
+      setCustomType('');
+    } else if (type) {
+      setServiceType('Others');
+      setCustomType(type);
+    }
+
+    setTitle(favor.title ?? '');
+    setDescription(favor.description ?? '');
+    setBudget(favor.budget == null || favor.budget === '' ? '' : String(favor.budget));
+    setSellersRequired(String(getCustomFavorSellersRequired(favor)));
+    setExistingAddOns(parseCustomFavorAddOns(favor.addOns));
+    setExistingQuestions(parseCustomFavorQuestions(favor.questions));
+
+    if (favor.dateTime) {
+      const date = new Date(favor.dateTime);
+      if (!Number.isNaN(date.getTime())) {
+        setCalYear(date.getFullYear());
+        setCalMonth(date.getMonth());
+        setSelDay(date.getDate());
+        const hours = date.getHours();
+        setPeriod(hours >= 12 ? 'PM' : 'AM');
+        setHour(String(hours % 12 || 12));
+      }
+    }
+
+    if (favor.locationId) setLocId(favor.locationId);
+
+    const invitedIds = (favor.invitedSellerIds ?? []).filter((id) => Number.isInteger(id) && id > 0);
+    if (invitedIds.length) {
+      setInvitedSellers(new Set(invitedIds));
+      setInvitedList(invitedIds.map((id) => ({
+        id: String(id),
+        sellerId: id,
+        name: `Seller #${id}`,
+        email: String(id),
+      })));
+    }
+
+    setMedia([
+      ...(favor.images ?? []).filter(Boolean).map((url) => ({ file: null, url, isRemote: true, isVideo: false })),
+      ...(favor.videos ?? []).filter(Boolean).map((url) => ({ file: null, url, isRemote: true, isVideo: true })),
+    ]);
+
+    prefilledRef.current = true;
+  }, [editResponse, isEditing, serviceTypes]);
+
+  useEffect(() => {
     if (!savedLocations.length) {
       setLocId(null);
       return;
@@ -252,7 +339,9 @@ export default function NewCustomFavorPage() {
 
   useEffect(() => {
     return () => {
-      mediaRef.current.forEach((item) => URL.revokeObjectURL(item.url));
+      mediaRef.current.forEach((item) => {
+        if (!item.isRemote) URL.revokeObjectURL(item.url);
+      });
     };
   }, []);
 
@@ -283,13 +372,15 @@ export default function NewCustomFavorPage() {
     setMedia((prev) => {
       const next = [...prev];
       const [removed] = next.splice(index, 1);
-      if (removed) URL.revokeObjectURL(removed.url);
+      if (removed && !removed.isRemote) URL.revokeObjectURL(removed.url);
       return next;
     });
   };
 
   const resetForm = () => {
-    media.forEach((item) => URL.revokeObjectURL(item.url));
+    media.forEach((item) => {
+      if (!item.isRemote) URL.revokeObjectURL(item.url);
+    });
     setDone(false);
     setStep(1);
     setTitle('');
@@ -302,6 +393,9 @@ export default function NewCustomFavorPage() {
     setServiceType('');
     setCustomType('');
     setSellersRequired('1');
+    setExistingAddOns([]);
+    setExistingQuestions([]);
+    prefilledRef.current = false;
   };
 
   const handleInviteByInput = () => {
@@ -335,12 +429,12 @@ export default function NewCustomFavorPage() {
     });
   };
 
-  const handleCreateFavor = async () => {
+  const handleSubmitFavor = async () => {
     if (!isAuthenticated || !token) {
       setAuthOpen(true);
       return;
     }
-    if (isCreating) return;
+    if (isSaving) return;
     if (!typeValue) {
       showToast('Please select a service type.', 'error');
       setStep(1);
@@ -367,21 +461,31 @@ export default function NewCustomFavorPage() {
       ...invitedList.map((member) => member.sellerId).filter((id): id is number => Boolean(id)),
     ]));
 
+    const payload = {
+      type: typeValue,
+      title: title.trim(),
+      description: description.trim(),
+      budget,
+      dateTime: toDateTimeISO(calYear, calMonth, selDay, hour, period),
+      lat: loc.lat,
+      lng: loc.lng,
+      locationId: loc.id,
+      location: loc.location,
+      locationDetail: loc.locationDetail,
+      addOns: existingAddOns.length ? existingAddOns : undefined,
+      questions: existingQuestions.length ? existingQuestions : undefined,
+      invitedSellerIds,
+      images: media.filter((item) => item.file?.type.startsWith('image/')).map((item) => item.file as File),
+      videos: media.filter((item) => item.file?.type.startsWith('video/')).map((item) => item.file as File),
+      sellersRequired: Number(sellersRequired) || 1,
+    };
+
     try {
-      await createCustomFavor({
-        type: typeValue,
-        title: title.trim(),
-        description: description.trim(),
-        budget,
-        dateTime: toDateTimeISO(calYear, calMonth, selDay, hour, period),
-        lat: loc.lat,
-        lng: loc.lng,
-        locationId: loc.id,
-        invitedSellerIds,
-        images: media.filter((item) => item.file.type.startsWith('image/')).map((item) => item.file),
-        videos: media.filter((item) => item.file.type.startsWith('video/')).map((item) => item.file),
-        sellersRequired: Number(sellersRequired) || 1,
-      }).unwrap();
+      if (isEditing) {
+        await updateCustomFavor({ id: editId, ...payload }).unwrap();
+      } else {
+        await createCustomFavor(payload).unwrap();
+      }
       setDone(true);
     } catch {
       // axios interceptor already toasts API errors
@@ -399,26 +503,32 @@ export default function NewCustomFavorPage() {
               <path d="M20 6L9 17l-5-5" stroke="#079455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h2 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 24, color: '#101828', marginBottom: 10 }}>Favor Posted!</h2>
+          <h2 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 24, color: '#101828', marginBottom: 10 }}>
+            {isEditing ? 'Favor Updated!' : 'Favor Posted!'}
+          </h2>
           <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', lineHeight: 1.7, marginBottom: 32 }}>
-            Your custom favor has been created. Sellers will start sending requests soon.
+            {isEditing
+              ? 'Your custom favor has been updated. Sellers will see the latest details.'
+              : 'Your custom favor has been created. Sellers will start sending requests soon.'}
           </p>
           <button
-            onClick={() => router.push('/custom-favors')}
+            onClick={() => router.push(isEditing ? `/custom-favors/${editId}` : '/custom-favors')}
             style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: 14, cursor: 'pointer', boxShadow: '0 4px 16px rgba(165,74,255,0.3)', marginBottom: 12, transition: 'opacity 0.15s' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
           >
-            View My Favors
+            {isEditing ? 'View Favor' : 'View My Favors'}
           </button>
-          <button
-            onClick={() => { setDone(false); resetForm(); }}
-            style={{ width: '100%', fontFamily: FONT, fontWeight: 600, fontSize: 14, color: '#667085', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: PILL, padding: 13, cursor: 'pointer', transition: 'background 0.15s' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}
-          >
-            Create another favor
-          </button>
+          {!isEditing && (
+            <button
+              onClick={() => { setDone(false); resetForm(); }}
+              style={{ width: '100%', fontFamily: FONT, fontWeight: 600, fontSize: 14, color: '#667085', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: PILL, padding: 13, cursor: 'pointer', transition: 'background 0.15s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}
+            >
+              Create another favor
+            </button>
+          )}
         </div>
       </main>
       {authOpen && (
@@ -433,7 +543,22 @@ export default function NewCustomFavorPage() {
 
   /* ── Step progress indicator ── */
   const Progress = () => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 32 }}>
+    <>
+      {isEditing && (
+        <div style={{ marginBottom: 24 }}>
+          <button
+            onClick={() => router.push(`/custom-favors/${editId}`)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontSize: 14, fontWeight: 600, color: '#667085', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 12, transition: 'color 0.15s' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#101828'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#667085'; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Back to favor
+          </button>
+          <h1 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 26, color: '#101828', margin: 0 }}>Edit custom favor</h1>
+        </div>
+      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 32 }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
         <StepDot n={1} active={step === 1} done={step > 1} />
         <StepLabel label="Describe" active={step === 1} done={step > 1} />
@@ -449,7 +574,48 @@ export default function NewCustomFavorPage() {
         <StepLabel label="Invite Sellers" active={step === 3} done={false} />
       </div>
     </div>
+    </>
   );
+
+  if (isEditing && token && isLoadingEdit) {
+    return (
+      <>
+        <Navbar />
+        <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+            <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: 24 }}>
+              <div style={{ width: '40%', height: 22, borderRadius: 6, background: '#F2F4F7', marginBottom: 16 }} />
+              <div style={{ width: '70%', height: 14, borderRadius: 6, background: '#F2F4F7', marginBottom: 10 }} />
+              <div style={{ width: '55%', height: 14, borderRadius: 6, background: '#F2F4F7' }} />
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (isEditing && token && (isEditError || !editResponse?.data?.favor)) {
+    return (
+      <>
+        <Navbar />
+        <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+            <div style={{ textAlign: 'center', padding: '80px 24px', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20 }}>
+              <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>Couldn’t load this custom favor. Please try again.</p>
+              <button
+                onClick={() => { void refetchEdit(); }}
+                style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 24px', cursor: 'pointer' }}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   /* ── Step 1: Describe Task ── */
   if (step === 1) return (
@@ -568,21 +734,26 @@ export default function NewCustomFavorPage() {
                 <input ref={fileRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={addMedia} />
                 {media.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                    {media.map((item, i) => (
+                    {media.map((item, i) => {
+                      const isVideo = Boolean(item.isVideo || item.file?.type.startsWith('video/'));
+                      return (
                       <div key={item.url} style={{ position: 'relative', width: 88, height: 80, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
-                        {item.file.type.startsWith('video/') ? (
+                        {isVideo ? (
                           <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
                           <img src={item.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         )}
-                        <button
-                          onClick={() => removeMedia(i)}
-                          style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/></svg>
-                        </button>
+                        {!item.isRemote && (
+                          <button
+                            onClick={() => removeMedia(i)}
+                            style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/></svg>
+                          </button>
+                        )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </SectionCard>
@@ -885,13 +1056,13 @@ export default function NewCustomFavorPage() {
                   Back
                 </button>
                 <button
-                  onClick={handleCreateFavor}
-                  disabled={isCreating}
-                  style={{ flex: 2, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: isCreating ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 13, cursor: isCreating ? 'not-allowed' : 'pointer', boxShadow: isCreating ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
-                  onMouseEnter={e => { if (!isCreating) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+                  onClick={handleSubmitFavor}
+                  disabled={isSaving}
+                  style={{ flex: 2, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: isSaving ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 13, cursor: isSaving ? 'not-allowed' : 'pointer', boxShadow: isSaving ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
+                  onMouseEnter={e => { if (!isSaving) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
                 >
-                  {isCreating ? 'Creating…' : 'Create Favor'}
+                  {isSaving ? (isEditing ? 'Saving…' : 'Creating…') : (isEditing ? 'Save Changes' : 'Create Favor')}
                 </button>
               </div>
             </div>

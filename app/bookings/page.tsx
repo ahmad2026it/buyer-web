@@ -41,6 +41,7 @@ interface Booking {
   location: string;
   address: string;
   status: Status;
+  isCustom: boolean;
   rating?: number;
 }
 
@@ -106,6 +107,7 @@ function toBookingCard(item: BuyerBooking, tab: BuyerBookingListTab): Booking {
     location: item.isBuyerComing ? 'Work' : 'Home',
     address: item.address || 'Address not provided',
     status: mapApiStatus(item, tab),
+    isCustom: favorType.includes('custom'),
   };
 }
 
@@ -158,7 +160,7 @@ function PulsingDot() {
   );
 }
 
-function KebabMenu({ status, onWithdraw, onDelete, onCancel, onViewDetails }: { status: Status; onWithdraw: () => void; onDelete: () => void; onCancel: () => void; onViewDetails: () => void }) {
+function KebabMenu({ status, isCustom, onWithdraw, onCancel, onViewDetails }: { status: Status; isCustom?: boolean; onWithdraw: () => void; onCancel: () => void; onViewDetails: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -180,20 +182,12 @@ function KebabMenu({ status, onWithdraw, onDelete, onCancel, onViewDetails }: { 
                 Cancel booking
               </button>
             )}
-            {status === 'Pending' && (
+            {status === 'Pending' && !isCustom && (
               <button onClick={() => { onWithdraw(); setOpen(false); }}
                 style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#B54708', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FFFAEB'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}>
                 Withdraw request
-              </button>
-            )}
-            {status === 'DeclinedBySeller' && (
-              <button onClick={() => { onDelete(); setOpen(false); }}
-                style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FEF3F2'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}>
-                Delete
               </button>
             )}
             <button
@@ -211,7 +205,6 @@ function KebabMenu({ status, onWithdraw, onDelete, onCancel, onViewDetails }: { 
 }
 
 function CancelBookingModal({
-  booking,
   onClose,
   onConfirm,
   isSubmitting,
@@ -226,9 +219,6 @@ function CancelBookingModal({
   const [done, setDone] = useState(false);
   const cancelReason = reason === 'Other' ? (note.trim() || 'Other') : reason;
   const canSubmit = Boolean(reason) && (reason !== 'Other' || Boolean(note.trim())) && !isSubmitting;
-  const isUpcoming = booking.status === 'Upcoming';
-  const refund = Math.round(booking.price * 0.8 * 100) / 100;
-  const fee = Math.round(booking.price * 0.2 * 100) / 100;
 
   if (done) {
     return (
@@ -275,27 +265,10 @@ function CancelBookingModal({
 
         <div style={{ padding: 24 }}>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 20 }}>
-            {isUpcoming
-              ? 'This action cannot be undone. Per our cancellation policy, you will receive an 80% refund of your payment.'
-              : "Please tell us why you're cancelling this favor. Payment will be withheld on both sides and will release after review within 72h."}
+            Please tell us why you&apos;re cancelling this booking. Your reason helps us process the request smoothly.
           </p>
 
-          {isUpcoming && (
-            <div style={{ background: '#FEF3F2', border: '1px solid #FECDCA', borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
-              {[['Amount paid', `$${booking.price.toFixed(2)}`, '#344054'], ['Cancellation fee (20%)', `-$${fee.toFixed(2)}`, '#D92D20']].map(([label, value, color], i) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: i === 0 ? 8 : 0 }}>
-                  <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085' }}>{label}</span>
-                  <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color }}>{value}</span>
-                </div>
-              ))}
-              <div style={{ borderTop: '1px solid #FECDCA', paddingTop: 10, marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#344054' }}>You will receive</span>
-                <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#079455' }}>${refund.toFixed(2)}</span>
-              </div>
-            </div>
-          )}
-
-          <div style={{ marginBottom: reason === 'Other' ? 18 : 0 }}>
+          <div style={{ marginBottom: reason === 'Other' ? 18 : 16 }}>
             <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 8 }}>Select reason</p>
             <select
               value={reason}
@@ -316,9 +289,13 @@ function CancelBookingModal({
               disabled={isSubmitting}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Tell us why you're cancelling"
-              style={{ width: '100%', minHeight: 90, fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#101828', border: '1px solid #D0D5DD', borderRadius: 12, padding: '12px 14px', outline: 'none', resize: 'none', boxSizing: 'border-box', display: 'block' }}
+              style={{ width: '100%', minHeight: 90, fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#101828', border: '1px solid #D0D5DD', borderRadius: 12, padding: '12px 14px', outline: 'none', resize: 'none', boxSizing: 'border-box', display: 'block', marginBottom: 16 }}
             />
           )}
+
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#D92D20', lineHeight: 1.55, margin: 0 }}>
+            Note: Only 80% of the money you can refund from your payment according to our policy.
+          </p>
         </div>
 
         <div style={{ flexShrink: 0, borderTop: '1px solid #EAECF0', padding: '16px 24px 24px', display: 'flex', gap: 12 }}>
@@ -326,9 +303,9 @@ function CancelBookingModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
           >
-            Keep Booking
+            Don&apos;t Cancel
           </button>
           <button
             type="button"
@@ -338,9 +315,9 @@ function CancelBookingModal({
               if (ok) setDone(true);
             }}
             disabled={!canSubmit}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: 'linear-gradient(135deg,#F97066,#D92D20)', border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.5 }}
+            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: canSubmit ? '#344054' : '#98A2B3', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.6 }}
           >
-            {isSubmitting ? 'Cancelling...' : 'Confirm Cancel'}
+            {isSubmitting ? 'Cancelling...' : 'Cancel Booking'}
           </button>
         </div>
       </div>
@@ -507,8 +484,8 @@ function BookingCard({ booking, onCancel, onWithdraw }: { booking: Booking; onCa
         <div data-nomove>
           <KebabMenu
             status={booking.status}
+            isCustom={booking.isCustom}
             onWithdraw={onWithdraw}
-            onDelete={() => undefined}
             onCancel={onCancel}
             onViewDetails={() => router.push(`/bookings/${booking.id}`)}
           />

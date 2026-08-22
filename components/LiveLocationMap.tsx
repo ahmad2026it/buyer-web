@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { GoogleMap, OverlayViewF, OVERLAY_MOUSE_TARGET, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 
 import {
   GOOGLE_MAPS_LIBRARIES,
@@ -12,7 +12,6 @@ import {
 type LiveLocationMapProps = {
   lat: number | null;
   lng: number | null;
-  sellerAvatar: string;
   sellerName: string;
   address?: string;
   height?: number;
@@ -35,72 +34,6 @@ function toLatLng(lat: number | null, lng: number | null): { lat: number; lng: n
     return null;
   }
   return { lat, lng };
-}
-
-function SellerPin({ avatar, name }: { avatar: string; name: string }) {
-  const [broken, setBroken] = useState(false);
-  const showPhoto = Boolean(avatar) && !broken;
-
-  return (
-    <div
-      style={{
-        position: 'relative',
-        width: 36,
-        height: 48,
-        transform: 'translate(-50%, calc(-100% + 6px))',
-        pointerEvents: 'none',
-        filter: 'drop-shadow(0 8px 16px rgba(16,24,40,0.28))',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          left: '50%',
-          bottom: 2,
-          width: 14,
-          height: 14,
-          marginLeft: -7,
-          borderRadius: '50%',
-          background: 'rgba(165,74,255,0.28)',
-          animation: 'liveMapPulse 1.8s ease-out infinite',
-        }}
-      />
-      <svg width="36" height="48" viewBox="0 0 36 48" fill="none" aria-hidden>
-        <path
-          d="M18 47C18 47 33 31.2 33 18.5C33 10.04 26.28 3.2 18 3.2C9.72 3.2 3 10.04 3 18.5C3 31.2 18 47 18 47Z"
-          fill={BRAND}
-        />
-        <path
-          d="M18 47C18 47 33 31.2 33 18.5C33 10.04 26.28 3.2 18 3.2C9.72 3.2 3 10.04 3 18.5C3 31.2 18 47 18 47Z"
-          stroke="#fff"
-          strokeWidth="2.2"
-        />
-        <circle cx="18" cy="18" r="10.5" fill="#fff" />
-        {!showPhoto && (
-          <path
-            d="M18 12.4a3.1 3.1 0 1 1 0 6.2 3.1 3.1 0 0 1 0-6.2Zm0 7.4c2.6 0 5.2 1.3 5.2 3.1v.9H12.8v-.9c0-1.8 2.6-3.1 5.2-3.1Z"
-            fill={BRAND}
-          />
-        )}
-      </svg>
-      {showPhoto && (
-        <img
-          src={avatar}
-          alt={name}
-          onError={() => setBroken(true)}
-          style={{
-            position: 'absolute',
-            top: 9,
-            left: 9,
-            width: 18,
-            height: 18,
-            borderRadius: '50%',
-            objectFit: 'cover',
-          }}
-        />
-      )}
-    </div>
-  );
 }
 
 function MapFallback({ message }: { message: string }) {
@@ -128,7 +61,6 @@ function MapFallback({ message }: { message: string }) {
 export default function LiveLocationMap({
   lat,
   lng,
-  sellerAvatar,
   sellerName,
   address,
   height = 210,
@@ -175,12 +107,6 @@ export default function LiveLocationMap({
 
   return (
     <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', height }}>
-      <style>{`
-        @keyframes liveMapPulse {
-          0% { transform: scale(0.6); opacity: 0.55; }
-          100% { transform: scale(2.8); opacity: 0; }
-        }
-      `}</style>
       <GoogleMap
         mapContainerStyle={MAP_CONTAINER_STYLE}
         center={mapCenter}
@@ -198,9 +124,7 @@ export default function LiveLocationMap({
           zoomControl: true,
         }}
       >
-        <OverlayViewF position={position} mapPaneName={OVERLAY_MOUSE_TARGET}>
-          <SellerPin avatar={sellerAvatar} name={sellerName} />
-        </OverlayViewF>
+        <Marker position={position} title={sellerName} />
       </GoogleMap>
       {mapsUrl && (
         <a

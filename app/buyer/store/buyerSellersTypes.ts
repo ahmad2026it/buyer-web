@@ -71,6 +71,12 @@ export type BuyerSeller = {
   isOnline?: boolean;
 };
 
+export type GetBuyerSellersParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
 export type BuyerSellersPagination = {
   total: number;
   page: number;

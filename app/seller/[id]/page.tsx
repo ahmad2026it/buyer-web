@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -372,24 +372,10 @@ export default function SellerProfilePage() {
   const [likedFavors, setLikedFavors] = useState<Set<string>>(new Set());
   const [authOpen, setAuthOpen] = useState(false);
   const [showMore, setShowMore] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [dotsOpen, setDotsOpen] = useState(false);
-  const dotsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setShowMore(false);
-    setDotsOpen(false);
   }, [sellerId]);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dotsRef.current && !dotsRef.current.contains(e.target as Node)) {
-        setDotsOpen(false);
-      }
-    };
-    if (dotsOpen) document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [dotsOpen]);
 
   const toggleFavorLike = (_id: string) => setAuthOpen(true);
 
@@ -477,60 +463,6 @@ export default function SellerProfilePage() {
                         <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#475467' }}>{distance}</span>
                       </div>
                     ) : null}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                  <button
-                    onClick={() => setAuthOpen(true)}
-                    aria-label="Save seller"
-                    style={{ width: '44px', height: '44px', borderRadius: '9999px', background: liked ? '#FFF1F3' : '#F9FAFB', border: `1.5px solid ${liked ? '#F43F5E' : '#EAECF0'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                        stroke={liked ? '#F43F5E' : '#98A2B3'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                        fill={liked ? '#F43F5E' : 'none'} style={{ transition: 'all 0.15s' }} />
-                    </svg>
-                  </button>
-
-                  <div ref={dotsRef} style={{ position: 'relative' }}>
-                    <button
-                      onClick={() => setDotsOpen(o => !o)}
-                      aria-label="More options"
-                      style={{ width: '44px', height: '44px', borderRadius: '9999px', background: '#F9FAFB', border: '1.5px solid #EAECF0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#D0D5DD'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#EAECF0'; }}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="5" r="1.5" fill="#667085"/>
-                        <circle cx="12" cy="12" r="1.5" fill="#667085"/>
-                        <circle cx="12" cy="19" r="1.5" fill="#667085"/>
-                      </svg>
-                    </button>
-
-                    {dotsOpen && (
-                      <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: '#fff', border: '1px solid #EAECF0', borderRadius: '12px', boxShadow: '0 8px 24px rgba(16,24,40,0.12)', zIndex: 100, minWidth: '172px', padding: '6px' }}>
-                        <button
-                          onClick={() => { setDotsOpen(false); navigator.clipboard?.writeText(window.location.href).catch(() => {}); }}
-                          style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', fontFamily: 'Poppins,sans-serif', fontSize: '13px', fontWeight: 500, color: '#344054', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '8px' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                        >
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="18" cy="5" r="3" stroke="#667085" strokeWidth="2"/><circle cx="6" cy="12" r="3" stroke="#667085" strokeWidth="2"/><circle cx="18" cy="19" r="3" stroke="#667085" strokeWidth="2"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="#667085" strokeWidth="2"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="#667085" strokeWidth="2"/></svg>
-                          Share profile
-                        </button>
-                        <div style={{ height: '1px', background: '#EAECF0', margin: '4px 6px' }} />
-                        <button
-                          onClick={() => { setDotsOpen(false); setAuthOpen(true); }}
-                          style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', fontFamily: 'Poppins,sans-serif', fontSize: '13px', fontWeight: 500, color: '#B42318', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '8px' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FEF3F2'; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                        >
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" stroke="#B42318" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="4" y1="22" x2="4" y2="15" stroke="#B42318" strokeWidth="2" strokeLinecap="round"/></svg>
-                          Report seller
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>

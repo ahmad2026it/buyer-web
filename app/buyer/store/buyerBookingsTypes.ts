@@ -32,6 +32,23 @@ export type CreateBuyerBookingResponse = {
   };
 };
 
+export type UpdateBuyerBookingRequest = {
+  bookingId: number;
+  favorDate?: string;
+  favorTime?: string;
+  details?: string;
+  lat?: number | null;
+  lng?: number | null;
+  address?: string;
+};
+
+export type UpdateBuyerBookingResponse = {
+  success: boolean;
+  status?: number;
+  message: string;
+  data?: unknown;
+};
+
 export type ConfirmBuyerBookingPaymentRequest = {
   booking_id: number;
   payment_method_id: string;
