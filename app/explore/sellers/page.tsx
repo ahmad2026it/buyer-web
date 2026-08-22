@@ -23,7 +23,7 @@ function sellerMatchesQuery(
 }
 
 export default function AllSellersPage() {
-  const [page, setPage] = useState(BUYER_SELLERS_LIST_PARAMS.page);
+  const [page, setPage] = useState<number>(BUYER_SELLERS_LIST_PARAMS.page);
   const [query, setQuery] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
 
