@@ -11,7 +11,6 @@ import {
   useCancelBuyerBookingMutation,
   useGetBuyerBookingByIdQuery,
   useReportBuyerBookingMutation,
-  useUpdateBuyerBookingMutation,
   useWithdrawBuyerBookingMutation,
 } from '@/app/buyer/store/buyerBookingsAPI';
 import {
@@ -188,46 +187,6 @@ function getDaysUntil(dateStr: string) {
   now.setHours(0,0,0,0); d.setHours(0,0,0,0);
   return Math.ceil((d.getTime() - now.getTime()) / 86400000);
 }
-function getCalDays(y: number, m: number): (number|null)[] {
-  const first = new Date(y,m,1).getDay(), total = new Date(y,m+1,0).getDate();
-  const days: (number|null)[] = Array(first).fill(null);
-  for (let d=1;d<=total;d++) days.push(d);
-  return days;
-}
-function isPast(y:number,m:number,d:number){const n=new Date();n.setHours(0,0,0,0);return new Date(y,m,d)<n;}
-function isToday(y:number,m:number,d:number){const n=new Date();n.setHours(0,0,0,0);return new Date(y,m,d).getTime()===n.getTime();}
-function parseIsoDateParts(iso: string): { year: number; month: number; day: number } {
-  const [yearRaw, monthRaw, dayRaw] = iso.split('-');
-  const year = Number(yearRaw);
-  const month = Number(monthRaw);
-  const day = Number(dayRaw);
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
-    const now = new Date();
-    return { year: now.getFullYear(), month: now.getMonth(), day: now.getDate() };
-  }
-  return { year, month: month - 1, day };
-}
-function parseFavorTimeParts(value: string): { hour: number; ampm: 'AM' | 'PM' } {
-  const hours = Number(value.split(':')[0]);
-  if (!Number.isFinite(hours)) return { hour: 8, ampm: 'AM' };
-  if (hours === 0) return { hour: 12, ampm: 'AM' };
-  if (hours === 12) return { hour: 12, ampm: 'PM' };
-  if (hours > 12) return { hour: hours - 12, ampm: 'PM' };
-  return { hour: hours, ampm: 'AM' };
-}
-function toFavorDate(year: number, month: number, day: number): string {
-  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-function toFavorTime(hour: number, period: 'AM' | 'PM'): string {
-  let h = hour;
-  if (period === 'AM') {
-    if (h === 12) h = 0;
-  } else if (h !== 12) {
-    h += 12;
-  }
-  return `${String(h).padStart(2, '0')}:00`;
-}
-const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const CANCEL_REASONS = ['Service not started on time','Seller is not responding','Emergency on my end','Changed plans','Not satisfied with the service','Other'];
 const WITHDRAW_REASONS = ['Plans changed','No longer needed','Booked by mistake','Found another option','Other'];
 
@@ -406,11 +365,15 @@ function ThreeDotMenu({ onReport }: { onReport: () => void }) {
 }
 
 /* ─── UpcomingActionsMenu ────────────────────────────────── */
-function UpcomingActionsMenu({ onEdit, onCancel }: { onEdit: () => void; onCancel: () => void }) {
+function UpcomingActionsMenu({ onCancel }: { onCancel: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ position: 'relative' }}>
-      <button onClick={() => setOpen(o => !o)}
+      <button
+        type="button"
+        aria-label="Booking actions"
+        aria-expanded={open}
+        onClick={() => setOpen(o => !o)}
         style={{ width: 36, height: 36, borderRadius: '50%', background: '#fff', border: '1.5px solid #EAECF0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.15s' }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor='#D0D5DD'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor='#EAECF0'; }}>
@@ -420,14 +383,7 @@ function UpcomingActionsMenu({ onEdit, onCancel }: { onEdit: () => void; onCance
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 9 }} onClick={() => setOpen(false)}/>
           <div style={{ position: 'absolute', top: 42, right: 0, background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 12, padding: 6, minWidth: 190, boxShadow: '0 8px 28px rgba(16,24,40,0.14)', zIndex: 10 }}>
-            <button onClick={() => { onEdit(); setOpen(false); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#344054', background: 'none', border: 'none', cursor: 'pointer', padding: '9px 12px', borderRadius: 8 }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='#F9FAFB'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='none'; }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Edit Booking
-            </button>
-            <button onClick={() => { onCancel(); setOpen(false); }}
+            <button type="button" onClick={() => { onCancel(); setOpen(false); }}
               style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20', background: 'none', border: 'none', cursor: 'pointer', padding: '9px 12px', borderRadius: 8 }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='#FEF3F2'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='none'; }}>
@@ -1176,79 +1132,6 @@ function CancelModal({
   );
 }
 
-/* ─── EditModal ──────────────────────────────────────────── */
-function EditModal({ booking, onClose }: { booking: DetailedBooking; onClose: () => void }) {
-  const init = parseIsoDateParts(booking.dateIso || booking.date);
-  const initTime = parseFavorTimeParts(booking.timeRaw || booking.time);
-  const [year,  setYear]  = useState(init.year);
-  const [month, setMonth] = useState(init.month);
-  const [day,   setDay]   = useState(init.day);
-  const [hour,  setHour]  = useState(initTime.hour);
-  const [ampm,  setAmpm]  = useState<'AM'|'PM'>(initTime.ampm);
-  const [addr,  setAddr]  = useState(booking.address === 'Address not provided' ? '' : booking.address);
-  const [updateBooking, { isLoading }] = useUpdateBuyerBookingMutation();
-  const calDays = getCalDays(year, month);
-  const canSave = Boolean(addr.trim()) && !isLoading && !isPast(year, month, day);
-  const selSt: React.CSSProperties = { fontFamily:'Poppins,sans-serif', fontSize:13, color:'#344054', background:'#fff', border:'1.5px solid #D0D5DD', borderRadius:PILL, padding:'8px 14px', outline:'none', cursor:'pointer' };
-
-  const handleSave = async () => {
-    if (!canSave) return;
-    try {
-      const response = await updateBooking({
-        bookingId: Number(booking.id),
-        favorDate: toFavorDate(year, month, day),
-        favorTime: toFavorTime(hour, ampm),
-        address: addr.trim(),
-        ...(booking.lat != null ? { lat: booking.lat } : {}),
-        ...(booking.lng != null ? { lng: booking.lng } : {}),
-      }).unwrap();
-      showToast(response.message || 'Booking updated.', 'success');
-      onClose();
-    } catch {
-      // axios interceptor already toasts API errors
-    }
-  };
-
-  return (
-    <div onClick={e => { if (e.target === e.currentTarget && !isLoading) onClose(); }} style={{ position:'fixed', inset:0, background:'rgba(16,24,40,0.52)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
-      <div style={{ background:'#fff', borderRadius:16, maxWidth:560, width:'100%', maxHeight:'90vh', overflow:'auto', boxShadow: MODAL_SHADOW }}>
-        <div style={{ padding:'22px 24px 18px', borderBottom:'1px solid #EAECF0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <p style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:17, color:'#101828', margin:0 }}>Edit Booking</p>
-          <button onClick={() => { if (!isLoading) onClose(); }} style={{ width:32, height:32, borderRadius:'50%', border:'1.5px solid #EAECF0', background:'none', cursor: isLoading ? 'not-allowed' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#667085" strokeWidth="2" strokeLinecap="round"/></svg>
-          </button>
-        </div>
-        <div style={{ padding:24 }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <button type="button" onClick={() => { if(month===0){setMonth(11);setYear(y=>y-1);}else setMonth(m=>m-1); }} style={{ width:30, height:30, borderRadius:'50%', border:'1.5px solid #EAECF0', background:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
-            <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:15, color:'#101828' }}>{MONTHS[month]} {year}</span>
-            <button type="button" onClick={() => { if(month===11){setMonth(0);setYear(y=>y+1);}else setMonth(m=>m+1); }} style={{ width:30, height:30, borderRadius:'50%', border:'1.5px solid #EAECF0', background:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:6 }}>
-            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <div key={d} style={{ textAlign:'center', fontFamily:'Poppins,sans-serif', fontSize:11, color:'#98A2B3', fontWeight:600, padding:'4px 0' }}>{d}</div>)}
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2, marginBottom:18 }}>
-            {calDays.map((d,i) => {
-              if(!d) return <div key={`n${i}`}/>;
-              const past=isPast(year,month,d), today=isToday(year,month,d), sel=d===day&&!past;
-              return <button type="button" key={d} onClick={() => { if(!past) setDay(d); }} disabled={past} style={{ aspectRatio:'1', borderRadius:'50%', border:'none', fontFamily:'Poppins,sans-serif', fontSize:13, cursor:past?'not-allowed':'pointer', background:sel?BRAND:today?'#F4EBFF':'transparent', color:sel?'#fff':past?'#D0D5DD':today?BRAND:'#344054', fontWeight:sel||today?700:400 }}>{d}</button>;
-            })}
-          </div>
-          <div style={{ display:'flex', gap:10, marginBottom:18 }}>
-            <select value={hour} onChange={e => setHour(Number(e.target.value))} style={selSt}>{Array.from({length:12},(_,i)=>i+1).map(h=><option key={h} value={h}>{String(h).padStart(2,'0')}:00</option>)}</select>
-            <select value={ampm} onChange={e => setAmpm(e.target.value as 'AM'|'PM')} style={selSt}><option>AM</option><option>PM</option></select>
-          </div>
-          <input value={addr} onChange={e => setAddr(e.target.value)} placeholder="Address" style={{ width:'100%', fontFamily:'Poppins,sans-serif', fontSize:14, color:'#101828', border:'1.5px solid #D0D5DD', borderRadius:PILL, padding:'10px 16px', outline:'none', boxSizing:'border-box', marginBottom:22, transition:'border-color 0.15s' }} onFocus={e=>{(e.currentTarget as HTMLElement).style.borderColor=BRAND;}} onBlur={e=>{(e.currentTarget as HTMLElement).style.borderColor='#D0D5DD';}}/>
-          <div style={{ display:'flex', gap:12 }}>
-            <button type="button" onClick={() => { if (!isLoading) onClose(); }} disabled={isLoading} style={{ flex:1, fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:14, color:'#344054', background:'#fff', border:'1.5px solid #D0D5DD', borderRadius:PILL, padding:'13px', cursor: isLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1 }}>Cancel</button>
-            <button type="button" onClick={() => { void handleSave(); }} disabled={!canSave} style={{ flex:1, fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:14, color:'#fff', background:GRAD, border:'none', borderRadius:PILL, padding:'13px', cursor: canSave ? 'pointer' : 'not-allowed', opacity: canSave ? 1 : 0.5 }}>{isLoading ? 'Saving...' : 'Save changes'}</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ─── MessageDrawer ──────────────────────────────────────── */
 function MessageDrawer({
   name,
@@ -1352,7 +1235,6 @@ export default function BookingDetailPage() {
   }, [buyerApproved, data]);
 
   const [authOpen, setAuthOpen]       = useState(false);
-  const [showEdit,        setShowEdit]        = useState(false);
   const [showPreCancel,   setShowPreCancel]   = useState(false);
   const [showLiveCancel,  setShowLiveCancel]  = useState(false);
   const [showMarkDone,    setShowMarkDone]    = useState(false);
@@ -1726,7 +1608,7 @@ export default function BookingDetailPage() {
                       </span>
                     </div>
                   )}
-                  <UpcomingActionsMenu onEdit={() => setShowEdit(true)} onCancel={() => setShowPreCancel(true)} />
+                  <UpcomingActionsMenu onCancel={() => setShowPreCancel(true)} />
                 </div>
               )}
             </div>
@@ -2237,7 +2119,6 @@ export default function BookingDetailPage() {
       </main>
 
       {/* ─── Modals ──────────────────────────────────────────── */}
-      {showEdit       && <EditModal booking={booking} onClose={() => setShowEdit(false)}/>}
       {showPreCancel  && (
         <CancelModal
           booking={booking}

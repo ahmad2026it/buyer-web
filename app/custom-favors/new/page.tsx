@@ -17,7 +17,6 @@ import { useAppSelector } from '@/store/hooks';
 import { showToast } from '@/lib/toast';
 import {
   formatCustomFavorBudget,
-  getCustomFavorSellersRequired,
   parseCustomFavorAddOns,
   parseCustomFavorQuestions,
   type CustomFavorAddOn,
@@ -107,6 +106,18 @@ function isPast(y: number, m: number, d: number) {
   const date = new Date(y, m, d); date.setHours(0,0,0,0);
   const now  = new Date();        now.setHours(0,0,0,0);
   return date < now;
+}
+
+function parseBudgetAmount(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const amount = Number(trimmed);
+  return Number.isFinite(amount) ? amount : null;
+}
+
+function isValidBudget(value: string): boolean {
+  const amount = parseBudgetAmount(value);
+  return amount !== null && amount >= 1;
 }
 
 function StepDot({ n, active, done }: { n: number; active: boolean; done: boolean }) {
@@ -222,7 +233,6 @@ export default function NewCustomFavorPage() {
   const [title,            setTitle]            = useState('');
   const [description,      setDescription]      = useState('');
   const [budget,           setBudget]           = useState('');
-  const [sellersRequired,  setSellersRequired]  = useState('1');
   const [media,       setMedia]       = useState<MediaItem[]>([]);
   const [calYear,     setCalYear]     = useState(today.getFullYear());
   const [calMonth,    setCalMonth]    = useState(today.getMonth());
@@ -330,7 +340,6 @@ export default function NewCustomFavorPage() {
     setTitle(favor.title ?? '');
     setDescription(favor.description ?? '');
     setBudget(favor.budget == null || favor.budget === '' ? '' : String(favor.budget));
-    setSellersRequired(String(getCustomFavorSellersRequired(favor)));
     setExistingAddOns(parseCustomFavorAddOns(favor.addOns));
     setExistingQuestions(parseCustomFavorQuestions(favor.questions));
 
@@ -393,8 +402,9 @@ export default function NewCustomFavorPage() {
   const days  = getCalDays(calYear, calMonth);
   const loc   = savedLocations.find(l => l.id === locId) ?? savedLocations[0] ?? null;
   const dateStr = selDay ? `${MONTHS_SHORT[calMonth]} ${selDay}, ${calYear}` : '—';
-  const canDescribe = Boolean(title.trim() && typeValue && budget && description.trim());
+  const canDescribe = Boolean(title.trim() && typeValue && isValidBudget(budget) && description.trim());
   const canSchedule = Boolean(selDay && loc);
+  const budgetInvalid = budget.trim() !== '' && !isValidBudget(budget);
 
   const prevMo = () => {
     if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else setCalMonth(m => m - 1);
@@ -437,7 +447,6 @@ export default function NewCustomFavorPage() {
     setInvitedSellers(new Set());
     setServiceType('');
     setCustomType('');
-    setSellersRequired('1');
     setExistingAddOns([]);
     setExistingQuestions([]);
     prefilledRef.current = false;
@@ -485,8 +494,13 @@ export default function NewCustomFavorPage() {
       setStep(1);
       return;
     }
-    if (!title.trim() || !description.trim() || !budget) {
+    if (!title.trim() || !description.trim() || !budget.trim()) {
       showToast('Please complete the task details.', 'error');
+      setStep(1);
+      return;
+    }
+    if (!isValidBudget(budget)) {
+      showToast('Budget must be at least $1.', 'error');
       setStep(1);
       return;
     }
@@ -517,7 +531,7 @@ export default function NewCustomFavorPage() {
       invitedSellerIds: [],
       images: media.filter((item) => item.file?.type.startsWith('image/')).map((item) => item.file as File),
       videos: media.filter((item) => item.file?.type.startsWith('video/')).map((item) => item.file as File),
-      sellersRequired: Number(sellersRequired) || 1,
+      sellersRequired: 1,
     };
 
     try {
@@ -717,39 +731,30 @@ export default function NewCustomFavorPage() {
                     />
                   </div>
 
-                  {/* Budget + Sellers required row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                    <div>
-                      <FieldLabel>Add your budget</FieldLabel>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: FONT, fontSize: 14, color: '#667085', pointerEvents: 'none' }}>$</span>
-                        <input
-                          type="number"
-                          value={budget}
-                          onChange={e => setBudget(e.target.value)}
-                          placeholder="0"
-                          min="0"
-                          style={{ width: '100%', fontFamily: FONT, fontSize: 14, color: '#101828', background: '#fff', border: '1.5px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px 12px 30px', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                          onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = BRAND; }}
-                          onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = '#D0D5DD'; }}
-                        />
-                      </div>
+                  <div>
+                    <FieldLabel>Add your budget</FieldLabel>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: FONT, fontSize: 14, color: '#667085', pointerEvents: 'none' }}>$</span>
+                      <input
+                        type="number"
+                        value={budget}
+                        onChange={e => setBudget(e.target.value)}
+                        placeholder="e.g. 50"
+                        min="1"
+                        step="0.01"
+                        inputMode="decimal"
+                        aria-invalid={budgetInvalid}
+                        aria-describedby={budgetInvalid ? 'budget-error' : undefined}
+                        style={{ width: '100%', fontFamily: FONT, fontSize: 14, color: '#101828', background: '#fff', border: `1.5px solid ${budgetInvalid ? '#D92D20' : '#D0D5DD'}`, borderRadius: PILL, padding: '12px 16px 12px 30px', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+                        onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = budgetInvalid ? '#D92D20' : BRAND; }}
+                        onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = budgetInvalid ? '#D92D20' : '#D0D5DD'; }}
+                      />
                     </div>
-                    <div>
-                      <FieldLabel>Sellers required</FieldLabel>
-                      <div style={{ position: 'relative' }}>
-                        <select
-                          value={sellersRequired}
-                          onChange={e => setSellersRequired(e.target.value)}
-                          style={{ ...selSt, color: '#101828' }}
-                          onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = BRAND; }}
-                          onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = '#D0D5DD'; }}
-                        >
-                          {[1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n} seller{n > 1 ? 's' : ''}</option>)}
-                        </select>
-                        <svg style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </div>
-                    </div>
+                    {budgetInvalid && (
+                      <p id="budget-error" style={{ fontFamily: FONT, fontSize: 12, fontWeight: 500, color: '#D92D20', marginTop: 8, marginBottom: 0 }}>
+                        Budget must be at least $1.
+                      </p>
+                    )}
                   </div>
                 </div>
               </SectionCard>
@@ -819,7 +824,6 @@ export default function NewCustomFavorPage() {
                     { label: 'Service', value: serviceType === 'Others' ? (customType || '—') : (serviceType || '—') },
                     { label: 'Title', value: title || '—' },
                     { label: 'Budget', value: budget ? formatCustomFavorBudget(budget) : '—' },
-                    { label: 'Sellers needed', value: `${sellersRequired}` },
                     { label: 'Photos', value: media.length > 0 ? `${media.length} attached` : 'None' },
                   ].map(row => (
                     <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
