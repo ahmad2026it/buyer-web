@@ -161,6 +161,49 @@ function SectionCard({ children, style }: { children: React.ReactNode; style?: R
   );
 }
 
+function ComingSoonOverlay({ label }: { label: string }) {
+  return (
+    <div
+      role="status"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        padding: 24,
+        background: 'rgba(255,255,255,0.82)',
+        borderRadius: 20,
+        textAlign: 'center',
+      }}
+    >
+      <span style={{
+        fontFamily: FONT,
+        fontWeight: 700,
+        fontSize: 12,
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase',
+        color: BRAND,
+        background: '#F4EBFF',
+        border: '1.5px solid #E9D7FE',
+        borderRadius: PILL,
+        padding: '6px 12px',
+      }}>
+        Coming soon
+      </span>
+      <p style={{ fontFamily: FONT, fontWeight: 600, fontSize: 16, color: '#101828', margin: 0, textWrap: 'balance' }}>
+        {label}
+      </p>
+      <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', margin: 0, maxWidth: 320, lineHeight: 1.5, textWrap: 'pretty' }}>
+        Seller invites are not available yet. You can still create this favor without inviting anyone.
+      </p>
+    </div>
+  );
+}
+
 export default function NewCustomFavorPage() {
   const router  = useRouter();
   const searchParams = useSearchParams();
@@ -458,11 +501,6 @@ export default function NewCustomFavorPage() {
       return;
     }
 
-    const invitedSellerIds = Array.from(new Set([
-      ...invitedSellers,
-      ...invitedList.map((member) => member.sellerId).filter((id): id is number => Boolean(id)),
-    ]));
-
     const payload = {
       type: typeValue,
       title: title.trim(),
@@ -476,7 +514,7 @@ export default function NewCustomFavorPage() {
       locationDetail: loc.locationDetail,
       addOns: existingAddOns.length ? existingAddOns : undefined,
       questions: existingQuestions.length ? existingQuestions : undefined,
-      invitedSellerIds,
+      invitedSellerIds: [],
       images: media.filter((item) => item.file?.type.startsWith('image/')).map((item) => item.file as File),
       videos: media.filter((item) => item.file?.type.startsWith('video/')).map((item) => item.file as File),
       sellersRequired: Number(sellersRequired) || 1,
@@ -995,7 +1033,13 @@ export default function NewCustomFavorPage() {
       <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
           <Progress />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ position: 'relative' }}>
+          <div
+            aria-hidden
+            {...{ inert: '' }}
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, alignItems: 'flex-start', opacity: 0.45, pointerEvents: 'none', userSelect: 'none' }}
+          >
 
             {/* Left: search + invited */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -1010,6 +1054,8 @@ export default function NewCustomFavorPage() {
                   <div style={{ position: 'relative', flex: 1 }}>
                     <input
                       value={inviteInput}
+                      disabled
+                      readOnly
                       onChange={e => setInviteInput(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleInviteByInput(); }}
                       placeholder="Type seller ID here"
@@ -1039,8 +1085,11 @@ export default function NewCustomFavorPage() {
                         <p style={{ fontFamily: FONT, fontSize: 12, color: '#667085' }}>{inviteInput}</p>
                       </div>
                       <button
+                        type="button"
+                        disabled
+                        tabIndex={-1}
                         onClick={handleInviteByInput}
-                        style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0', flexShrink: 0 }}
+                        style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: BRAND, background: 'none', border: 'none', cursor: 'not-allowed', padding: '6px 0', flexShrink: 0 }}
                       >
                         Invite
                       </button>
@@ -1073,24 +1122,6 @@ export default function NewCustomFavorPage() {
                   </div>
                 )}
               </SectionCard>
-
-              {/* Footer buttons */}
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={() => setStep(2)} style={{ flex: 1, fontFamily: FONT, fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1.5px solid #D0D5DD', borderRadius: PILL, padding: 13, cursor: 'pointer', transition: 'background 0.15s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}>
-                  Back
-                </button>
-                <button
-                  onClick={handleSubmitFavor}
-                  disabled={isSaving}
-                  style={{ flex: 2, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: isSaving ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 13, cursor: isSaving ? 'not-allowed' : 'pointer', boxShadow: isSaving ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
-                  onMouseEnter={e => { if (!isSaving) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
-                >
-                  {isSaving ? (isEditing ? 'Saving…' : 'Creating…') : (isEditing ? 'Save Changes' : 'Create Favor')}
-                </button>
-              </div>
             </div>
 
             {/* Right: recommended sellers */}
@@ -1129,8 +1160,11 @@ export default function NewCustomFavorPage() {
                         </div>
                         <p style={{ fontFamily: FONT, fontSize: 11, color: '#DC6803', fontWeight: 500 }}>{seller.distance}</p>
                         <button
+                          type="button"
+                          disabled
+                          tabIndex={-1}
                           onClick={() => toggleSellerInvite(seller.id)}
-                          style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 13, color: isInvited ? '#079455' : BRAND, background: isInvited ? '#ECFDF3' : 'transparent', border: `1.5px solid ${isInvited ? '#A9EFC5' : BRAND}`, borderRadius: PILL, padding: '8px 0', cursor: 'pointer', transition: 'all 0.15s' }}
+                          style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 13, color: isInvited ? '#079455' : BRAND, background: isInvited ? '#ECFDF3' : 'transparent', border: `1.5px solid ${isInvited ? '#A9EFC5' : BRAND}`, borderRadius: PILL, padding: '8px 0', cursor: 'not-allowed', transition: 'all 0.15s' }}
                         >
                           {isInvited ? 'Invite sent' : 'Invite'}
                         </button>
@@ -1141,6 +1175,27 @@ export default function NewCustomFavorPage() {
                 )}
               </SectionCard>
             </div>
+          </div>
+          <ComingSoonOverlay label="Seller invites coming soon" />
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, maxWidth: 520 }}>
+            <button type="button" onClick={() => setStep(2)} style={{ flex: 1, fontFamily: FONT, fontWeight: 600, fontSize: 14, color: '#344054', background: '#fff', border: '1.5px solid #D0D5DD', borderRadius: PILL, padding: 13, cursor: 'pointer', transition: 'background 0.15s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}>
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmitFavor}
+              disabled={isSaving}
+              style={{ flex: 2, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: isSaving ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 13, cursor: isSaving ? 'not-allowed' : 'pointer', boxShadow: isSaving ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
+              onMouseEnter={e => { if (!isSaving) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+            >
+              {isSaving ? (isEditing ? 'Saving…' : 'Creating…') : (isEditing ? 'Save Changes' : 'Create Favor')}
+            </button>
+          </div>
           </div>
         </div>
       </main>
