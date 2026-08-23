@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AuthGateModal from '@/components/AuthGateModal';
+import AddLocationModal from '@/components/AddLocationModal';
 import {
   useCreateBuyerCustomFavorMutation,
   useGetBuyerCustomFavorByIdQuery,
@@ -186,6 +187,7 @@ export default function NewCustomFavorPage() {
   const [hour,        setHour]        = useState('8');
   const [period,      setPeriod]      = useState<'AM'|'PM'>('AM');
   const [locId,       setLocId]       = useState<number | null>(null);
+  const [addLocOpen,  setAddLocOpen]  = useState(false);
   const [inviteInput, setInviteInput] = useState('');
   const [invitedList, setInvitedList] = useState<InvitedMember[]>([]);
   const [invitedSellers, setInvitedSellers] = useState<Set<number>>(new Set());
@@ -827,16 +829,33 @@ export default function NewCustomFavorPage() {
             {/* Left: location */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <SectionCard>
-                <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 17, color: '#101828', marginBottom: 20 }}>Select location</h3>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
+                  <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 17, color: '#101828', margin: 0 }}>Select location</h3>
+                  <button
+                    type="button"
+                    onClick={() => setAddLocOpen(true)}
+                    style={{ fontFamily: FONT, fontWeight: 600, fontSize: 13, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+                  >
+                    {savedLocations.length === 0 ? 'Add location' : 'Change location'}
+                  </button>
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {savedLocations.length === 0 ? (
                     <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', lineHeight: 1.6 }}>
-                      No saved locations yet. Add one from your profile, then come back to schedule this favor.
+                      No saved locations yet. Add one to schedule this favor.
                     </p>
                   ) : savedLocations.map(l => (
                     <div
                       key={l.id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setLocId(l.id)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setLocId(l.id);
+                        }
+                      }}
                       style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: `1.5px solid ${locId === l.id ? BRAND : '#EAECF0'}`, borderRadius: 14, cursor: 'pointer', background: locId === l.id ? '#F9F5FF' : '#fff', transition: 'all 0.15s' }}
                     >
                       <div style={{ width: 36, height: 36, borderRadius: 10, background: locId === l.id ? '#EDE9FF' : '#F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -952,6 +971,13 @@ export default function NewCustomFavorPage() {
           </div>
         </div>
       </main>
+      {addLocOpen && (
+        <AddLocationModal
+          onClose={() => setAddLocOpen(false)}
+          onAdded={(location) => setLocId(location.id)}
+          isFirstLocation={savedLocations.length === 0}
+        />
+      )}
       {authOpen && (
         <AuthGateModal
           onClose={() => setAuthOpen(false)}
