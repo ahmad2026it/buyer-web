@@ -1,49 +1,35 @@
 'use client';
 
-const FOOTER_LINKS = {
-  Company: ['About Us', 'Careers', 'Blog', 'Press'],
-  Services: ['Cleaning', 'Repairing', 'Electrical', 'Gardening'],
-  Support: ['Help Center', 'Contact Us', 'Safety', 'Community'],
-  Legal: ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Accessibility'],
-};
+import Link from 'next/link';
 
-const FOOTER_HREFS: Record<string, string> = {
-  'Privacy Policy': '/privacy-policy',
-};
+type FooterLink = { label: string; href: string };
 
-const BOTTOM_LINKS = [
-  { label: 'Privacy', href: '/privacy-policy' },
-  { label: 'Terms', href: '#' },
-  { label: 'Cookies', href: '#' },
+const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
+  {
+    group: 'Explore',
+    links: [
+      { label: 'Browse favors', href: '/explore/favors' },
+      { label: 'Find sellers', href: '/explore/search?type=sellers' },
+      { label: 'Categories', href: '/categories' },
+      { label: 'Become a seller', href: '/sellers' },
+    ],
+  },
+  {
+    group: 'Resources',
+    links: [
+      { label: 'How it works', href: '/articles/how-it-works' },
+      { label: 'Trusted providers', href: '/articles/trusted-local-providers' },
+    ],
+  },
+  {
+    group: 'Legal',
+    links: [{ label: 'Privacy Policy', href: '/privacy-policy' }],
+  },
 ];
 
-function LinkedInIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-      <path d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.298v15.403C1 18.418 1.595 19 2.328 19h15.34c.734 0 1.332-.582 1.332-1.299V2.298C19 1.581 18.402 1 17.668 1z" />
-    </svg>
-  );
-}
-
-function TwitterIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
-
-function InstagramIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-      <path
-        fillRule="evenodd"
-        d="M10 2.163c2.518 0 2.815.01 3.803.055.993.045 1.535.21 1.892.35.476.184.815.404 1.172.761.357.357.577.696.762 1.172.14.357.305.9.35 1.892.045.988.055 1.285.055 3.803s-.01 2.815-.055 3.803c-.045.993-.21 1.535-.35 1.892a3.155 3.155 0 01-.762 1.172 3.155 3.155 0 01-1.172.761c-.357.14-.9.305-1.892.35-.988.045-1.285.055-3.803.055s-2.815-.01-3.803-.055c-.993-.045-1.535-.21-1.892-.35a3.155 3.155 0 01-1.172-.761 3.155 3.155 0 01-.761-1.172c-.14-.357-.305-.9-.35-1.892C2.173 12.815 2.163 12.518 2.163 10s.01-2.815.055-3.803c.045-.993.21-1.535.35-1.892.185-.476.404-.815.761-1.172a3.155 3.155 0 011.172-.762c.357-.14.9-.305 1.892-.35C7.185 2.173 7.482 2.163 10 2.163zm0 1.838c-2.473 0-2.745.01-3.712.053-.895.04-1.381.19-1.704.316a2.83 2.83 0 00-1.049.682 2.83 2.83 0 00-.682 1.049c-.125.323-.275.809-.316 1.704-.043.967-.052 1.24-.052 3.712s.01 2.745.052 3.712c.041.895.191 1.381.316 1.704.166.43.39.75.682 1.049.3.3.619.516 1.049.682.323.125.809.275 1.704.316C7.255 17.99 7.527 18 10 18s2.745-.01 3.712-.052c.895-.041 1.381-.191 1.704-.316a2.83 2.83 0 001.049-.682 2.83 2.83 0 00.682-1.049c.125-.323.275-.809.316-1.704.043-.967.052-1.24.052-3.712s-.01-2.745-.052-3.712c-.041-.895-.191-1.381-.316-1.704a2.83 2.83 0 00-.682-1.049 2.83 2.83 0 00-1.049-.682c-.323-.125-.809-.275-1.704-.316C12.745 4.01 12.473 4 10 4zm0 3.135a3.865 3.865 0 110 7.73 3.865 3.865 0 010-7.73zm0 1.838a2.027 2.027 0 100 4.054 2.027 2.027 0 000-4.054zm3.965-3.098a.9.9 0 110 1.8.9.9 0 010-1.8z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
+const BOTTOM_LINKS: FooterLink[] = [
+  { label: 'Privacy', href: '/privacy-policy' },
+];
 
 export default function Footer() {
   return (
@@ -59,7 +45,7 @@ export default function Footer() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr',
+            gridTemplateColumns: '1.6fr 1fr 1fr 1fr',
             gap: '40px',
             marginBottom: '48px',
           }}
@@ -68,6 +54,7 @@ export default function Footer() {
           <div>
             {/* Logo */}
             <div style={{ marginBottom: '16px' }}>
+              <Link href="/" aria-label="WhoCan home" style={{ display: 'inline-flex', lineHeight: 0 }}>
               <svg width="118" height="24" viewBox="0 0 159 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19.3728 2.47801C20.6978 0.134223 23.6737 -0.692738 26.0197 0.630946C28.3657 1.95464 29.1935 4.9277 27.8685 7.27149L15.5022 29.1471C14.1772 31.4909 11.2013 32.3179 8.8553 30.9942C6.50929 29.6705 5.68154 26.6974 7.00648 24.3536L19.3728 2.47801Z" fill="#A54AFF"/>
                 <path d="M1.26277 2.15119C3.04388 -0.22362 6.41297 -0.704966 8.7878 1.07612C11.1626 2.85723 11.644 6.22632 9.86287 8.60114L9.67537 8.85114C7.89426 11.226 4.52517 11.7073 2.15034 9.92622C-0.224467 8.14511 -0.705813 4.77601 1.07527 2.40119L1.26277 2.15119Z" fill="#A54AFF"/>
@@ -79,6 +66,7 @@ export default function Footer() {
                 <path d="M129.52 29.7778V26.371L129.087 25.5278V19.254C129.087 18.2421 128.776 17.4663 128.154 16.9266C127.555 16.3644 126.589 16.0833 125.257 16.0833C124.391 16.0833 123.514 16.2295 122.626 16.5218C121.737 16.7917 120.983 17.1739 120.361 17.6687L118.229 13.3175C119.251 12.6429 120.472 12.1257 121.893 11.7659C123.336 11.3836 124.768 11.1925 126.189 11.1925C129.12 11.1925 131.385 11.8783 132.983 13.25C134.604 14.5992 135.414 16.7242 135.414 19.625V29.7778H129.52ZM124.191 30.0814C122.748 30.0814 121.527 29.834 120.527 29.3393C119.528 28.8446 118.762 28.17 118.229 27.3155C117.719 26.461 117.463 25.5053 117.463 24.4484C117.463 23.3241 117.741 22.3571 118.296 21.5476C118.873 20.7156 119.75 20.086 120.927 19.6587C122.104 19.209 123.625 18.9841 125.49 18.9841H129.753V22.3234H126.356C125.334 22.3234 124.613 22.4921 124.191 22.8294C123.791 23.1667 123.591 23.6164 123.591 24.1786C123.591 24.7407 123.802 25.1905 124.224 25.5278C124.646 25.8651 125.223 26.0337 125.956 26.0337C126.644 26.0337 127.266 25.8651 127.821 25.5278C128.398 25.168 128.82 24.6283 129.087 23.9087L129.952 26.2698C129.619 27.5291 128.964 28.4848 127.988 29.1369C127.033 29.7665 125.767 30.0814 124.191 30.0814Z" fill="white"/>
                 <path d="M151.165 11.1925C152.564 11.1925 153.829 11.4848 154.962 12.0694C156.094 12.6316 156.982 13.5086 157.626 14.7004C158.292 15.8922 158.625 17.4325 158.625 19.3214V29.7778H152.297V20.3671C152.297 19.0628 152.031 18.1184 151.498 17.5337C150.987 16.9266 150.266 16.623 149.333 16.623C148.667 16.623 148.056 16.7804 147.501 17.0952C146.946 17.3876 146.513 17.8485 146.203 18.4782C145.892 19.1078 145.736 19.9286 145.736 20.9405V29.7778H139.409V11.496H145.437V16.6905L144.271 15.1726C144.959 13.8459 145.903 12.8565 147.102 12.2044C148.301 11.5298 149.655 11.1925 151.165 11.1925Z" fill="white"/>
               </svg>
+              </Link>
             </div>
 
             <p
@@ -94,51 +82,10 @@ export default function Footer() {
               Your trusted marketplace for home services — find skilled
               handymen in your neighbourhood, fast.
             </p>
-
-            {/* Social links */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-              {[
-                { icon: <LinkedInIcon />, label: 'LinkedIn' },
-                { icon: <TwitterIcon />, label: 'Twitter' },
-                { icon: <InstagramIcon />, label: 'Instagram' },
-              ].map((social) => (
-                <a
-                  key={social.label}
-                  href="#"
-                  aria-label={social.label}
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '9999px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'rgba(255,255,255,0.5)',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.background = 'rgba(165, 74, 255, 0.2)';
-                    el.style.borderColor = 'rgba(165, 74, 255, 0.4)';
-                    el.style.color = '#CA90FF';
-                  }}
-                  onMouseLeave={(e) => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.background = 'rgba(255,255,255,0.06)';
-                    el.style.borderColor = 'rgba(255,255,255,0.1)';
-                    el.style.color = 'rgba(255,255,255,0.5)';
-                  }}
-                >
-                  {social.icon}
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Link columns */}
-          {Object.entries(FOOTER_LINKS).map(([group, links]) => (
+          {FOOTER_GROUPS.map(({ group, links }) => (
             <div key={group}>
               <h4
                 style={{
@@ -155,9 +102,9 @@ export default function Footer() {
               </h4>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href={FOOTER_HREFS[link] ?? '#'}
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
                       style={{
                         fontFamily: 'Poppins, sans-serif',
                         fontSize: '14px',
@@ -165,15 +112,14 @@ export default function Footer() {
                         transition: 'color 0.2s ease',
                       }}
                       onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.color = '#CA90FF';
+                        e.currentTarget.style.color = '#CA90FF';
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.color =
-                          'rgba(255,255,255,0.45)';
+                        e.currentTarget.style.color = 'rgba(255,255,255,0.45)';
                       }}
                     >
-                      {link}
-                    </a>
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -210,7 +156,7 @@ export default function Footer() {
           </p>
           <div style={{ display: 'flex', gap: '24px' }}>
             {BOTTOM_LINKS.map((item) => (
-              <a
+              <Link
                 key={item.label}
                 href={item.href}
                 style={{
@@ -229,7 +175,7 @@ export default function Footer() {
                 }}
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </div>
         </div>

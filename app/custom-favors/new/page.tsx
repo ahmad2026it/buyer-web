@@ -1041,7 +1041,7 @@ export default function NewCustomFavorPage() {
           <div style={{ position: 'relative' }}>
           <div
             aria-hidden
-            {...{ inert: '' }}
+            inert
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, alignItems: 'flex-start', opacity: 0.45, pointerEvents: 'none', userSelect: 'none' }}
           >
 

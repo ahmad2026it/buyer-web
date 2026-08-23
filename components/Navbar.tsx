@@ -25,7 +25,6 @@ import type { BuyerNotification } from '@/app/buyer/store/buyerNotificationsType
 import { getNotificationTargetPath } from '@/lib/notificationRoutes';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout as logoutAuth } from '@/app/auth/store/authSlice';
-import { disconnectBuyerSocket } from '@/lib/buyerSocket';
 import { confirmDelete, showError } from '@/lib/swal';
 
 const LocationMapPicker = dynamic(() => import('@/components/LocationMapPicker'), {
@@ -744,6 +743,10 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
   }, [solid]);
 
   useEffect(() => {
+    setIsLoggedIn(Boolean(token) || localStorage.getItem('whoCan_loggedIn') === 'true');
+  }, [token]);
+
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (notifRef.current    && !notifRef.current.contains(e.target as Node))    setNotifOpen(false);
       if (profileRef.current  && !profileRef.current.contains(e.target as Node))  setProfileOpen(false);
@@ -890,8 +893,6 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
     });
   };
   const logout = () => {
-    localStorage.removeItem('whoCan_loggedIn');
-    disconnectBuyerSocket();
     dispatch(logoutAuth());
     setIsLoggedIn(false);
     setProfileOpen(false);

@@ -88,6 +88,10 @@ export function getIncomingEventTargetPath(data: Record<string, unknown>): strin
   });
 }
 
+function isCustomFavorRequest(type: string): boolean {
+  return /(custom[_\s-]?favor[_\s-]?request|buyer_new_custom_request)/.test(type);
+}
+
 export function getNotificationTargetPath(notification: BuyerNotification): string | null {
   const payload = parsePayload(notification.payload);
   const nestedData = asRecord(payload?.data);
@@ -102,8 +106,16 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
     payload?.source,
     payload?.type,
     payload?.event,
+    payload?.eventKey,
+    payload?.event_key,
+    payload?.favorType,
+    payload?.favor_type,
     nestedData?.type,
     nestedData?.source,
+    nestedData?.eventKey,
+    nestedData?.event_key,
+    nestedData?.favorType,
+    nestedData?.favor_type,
   ]
     .filter((value) => typeof value === 'string' && value.trim())
     .join(' ')
@@ -117,6 +129,7 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
     (Boolean(notification.actorUserId || notification.actor?.id) &&
       !looksLikeBooking &&
       !/(dispute|bid|favor|offer)/.test(type));
+  const customFavorRequest = isCustomFavorRequest(type);
 
   const explicitUrl = payload?.url ?? payload?.path ?? nestedData?.url ?? nestedData?.path;
   if (typeof explicitUrl === 'string' && explicitUrl.startsWith('/')) return explicitUrl;
@@ -124,20 +137,18 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
   const bookingId =
     firstId(sources, ['bookingId', 'booking_id', 'favorBookingId', 'favor_booking_id']) ??
     pickId(nestedBooking, ['id']) ??
-    (/booking/.test(type) && !isChat ? pickId(payload, ['id']) : null);
+    (/booking/.test(type) && !isChat && !customFavorRequest ? pickId(payload, ['id']) : null);
   const disputeId =
     firstId(sources, ['disputeId', 'dispute_id']) ??
     pickId(asRecord(payload?.dispute), ['id']);
-  const customFavorId = firstId(sources, [
-    'customFavorId',
-    'custom_favor_id',
-    'customFavor_id',
-  ]);
+  const favorId = firstId(sources, ['favorId', 'favor_id']);
+  const customFavorId =
+    firstId(sources, ['customFavorId', 'custom_favor_id', 'customFavor_id']) ??
+    (customFavorRequest ? favorId : null);
   const conversationId =
     firstId(sources, ['conversationId', 'conversation_id', 'chatId', 'chat_id', 'threadId', 'thread_id']) ??
     pickId(nestedConversation, ['id']) ??
     (isChat ? pickId(payload, ['id']) : null);
-  const favorId = firstId(sources, ['favorId', 'favor_id']);
   const sellerId =
     toPositiveId(notification.actorUserId) ??
     toPositiveId(notification.actor?.id) ??
@@ -151,9 +162,10 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
     });
   }
 
+  if (customFavorId) return `/custom-favors/${customFavorId}`;
+  if (customFavorRequest) return '/custom-favors';
   if (bookingId) return `/bookings/${bookingId}`;
   if (disputeId) return `/disputes/${disputeId}`;
-  if (customFavorId) return `/custom-favors/${customFavorId}`;
   if (favorId) return `/favor/${favorId}`;
 
   if (/booking/.test(type)) return '/bookings';

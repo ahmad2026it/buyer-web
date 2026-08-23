@@ -1,5 +1,4 @@
 import axios, { AxiosError, type AxiosRequestConfig, type AxiosResponse } from 'axios';
-import { disconnectBuyerSocket } from '@/lib/buyerSocket';
 import { getAppStore, getAuthToken } from '@/lib/storeAccess';
 import { showToast } from '@/lib/toast';
 
@@ -136,7 +135,6 @@ const isChangePasswordCredentialError = (url?: string, body?: unknown): boolean 
 };
 
 const logoutOnUnauthorized = (): void => {
-  disconnectBuyerSocket();
   getAppStore()?.dispatch({ type: 'auth/logout' });
 
   if (typeof window === 'undefined') return;

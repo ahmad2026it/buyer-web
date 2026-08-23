@@ -1,4 +1,4 @@
-import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore, type Middleware, type UnknownAction } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import {
   FLUSH,
@@ -11,7 +11,7 @@ import {
   persistStore,
 } from 'redux-persist';
 import { authAPI } from '@/app/auth/store/authAPI';
-import authReducer from '@/app/auth/store/authSlice';
+import authReducer, { logout } from '@/app/auth/store/authSlice';
 import { buyerBillingAPI } from '@/app/buyer/store/buyerBillingAPI';
 import { buyerBookingsAPI } from '@/app/buyer/store/buyerBookingsAPI';
 import { buyerConversationsAPI } from '@/app/buyer/store/buyerConversationsAPI';
@@ -23,6 +23,8 @@ import { buyerSellersAPI } from '@/app/buyer/store/buyerSellersAPI';
 import { buyerNotificationsAPI } from '@/app/buyer/store/buyerNotificationsAPI';
 import { buyerStripeAPI } from '@/app/buyer/store/buyerStripeAPI';
 import { buyerLegalAPI } from '@/app/buyer/store/buyerLegalAPI';
+import { disconnectBuyerSocket } from '@/lib/buyerSocket';
+import { purgePersistedClientState } from '@/lib/storeAccess';
 
 type PersistStorage = {
   getItem: (key: string) => Promise<string | null>;
@@ -48,7 +50,7 @@ const authPersistConfig = {
   whitelist: ['user', 'token', 'isAuthenticated'] as string[],
 };
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   [authAPI.reducerPath]: authAPI.reducer,
   [buyerBillingAPI.reducerPath]: buyerBillingAPI.reducer,
@@ -64,6 +66,47 @@ const rootReducer = combineReducers({
   [buyerLegalAPI.reducerPath]: buyerLegalAPI.reducer,
 });
 
+type AppState = ReturnType<typeof appReducer>;
+
+const rootReducer = (state: AppState | undefined, action: UnknownAction): AppState => {
+  if (action.type === logout.type) {
+    return appReducer(undefined, action);
+  }
+  return appReducer(state, action);
+};
+
+const rtkQueryApis = [
+  authAPI,
+  buyerBillingAPI,
+  buyerBookingsAPI,
+  buyerConversationsAPI,
+  buyerCategoriesAPI,
+  buyerCustomFavorsAPI,
+  buyerFavorsAPI,
+  buyerLocationsAPI,
+  buyerSellersAPI,
+  buyerNotificationsAPI,
+  buyerStripeAPI,
+  buyerLegalAPI,
+] as const;
+
+const logoutMiddleware: Middleware = (storeApi) => (next) => (action) => {
+  if (!logout.match(action)) {
+    return next(action);
+  }
+
+  disconnectBuyerSocket();
+  purgePersistedClientState();
+
+  const result = next(action);
+
+  for (const apiSlice of rtkQueryApis) {
+    storeApi.dispatch(apiSlice.util.resetApiState());
+  }
+
+  return result;
+};
+
 export const makeStore = () => {
   const store = configureStore({
     reducer: rootReducer,
@@ -74,7 +117,7 @@ export const makeStore = () => {
           ignoredActionPaths: ['meta.arg', 'meta.baseQueryMeta', 'payload.timestamp'],
           ignoredPaths: ['authAPI.mutations'],
         },
-      }).concat(
+      }).prepend(logoutMiddleware).concat(
         authAPI.middleware,
         buyerBillingAPI.middleware,
         buyerBookingsAPI.middleware,

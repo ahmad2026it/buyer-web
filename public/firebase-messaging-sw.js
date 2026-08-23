@@ -35,10 +35,24 @@ function resolveTargetPath(data) {
   if (!data) return "/";
   if (data.url) return data.url;
 
-  const type = String(data.type || data.key || data.source || data.eventKey || "").toLowerCase();
+  const type = [
+    data.type,
+    data.key,
+    data.source,
+    data.eventKey,
+    data.event_key,
+    data.favorType,
+    data.favor_type,
+    data.title,
+  ]
+    .filter((value) => typeof value === "string" && value.trim())
+    .join(" ")
+    .toLowerCase();
   const conversationId = data.conversationId || data.conversation_id;
   const bookingId = data.bookingId || data.booking_id;
   const sellerId = data.sellerId || data.seller_id;
+  const favorId = data.customFavorId || data.custom_favor_id || data.favorId || data.favor_id;
+  const isCustomFavorRequest = /(custom[_\s-]?favor[_\s-]?request|buyer_new_custom_request)/.test(type);
 
   const isChat = /(message|chat|conversation|support)/.test(type);
   if (conversationId) return `/chat?id=${conversationId}`;
@@ -46,6 +60,8 @@ function resolveTargetPath(data) {
   if (isChat && sellerId) return `/chat?sellerId=${sellerId}`;
   if (isChat) return "/chat";
 
+  if (isCustomFavorRequest && favorId) return `/custom-favors/${favorId}`;
+  if (isCustomFavorRequest) return "/custom-favors";
   if (bookingId) {
     return `/bookings/${bookingId}`;
   }

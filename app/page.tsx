@@ -108,7 +108,6 @@ export default function Home() {
   const router = useRouter();
   const token = useAppSelector((state) => state.auth.token);
   const user = useAppSelector((state) => state.auth.user);
-  const [isLoggedIn, setLoggedIn]   = useState(false);
   const [mounted, setMounted]       = useState(false);
   const [query, setQuery]           = useState('');
   const [typeDropOpen, setTypeDrop] = useState(false);
@@ -160,9 +159,9 @@ export default function Home() {
   }, [completeResponse, inProgressResponse, upcomingResponse]);
 
   const firstName = user?.fullName?.trim().split(/\s+/)[0] || 'there';
+  const isLoggedIn = Boolean(token) || (mounted && localStorage.getItem('whoCan_loggedIn') === 'true');
 
   useEffect(() => {
-    setLoggedIn(localStorage.getItem('whoCan_loggedIn') === 'true');
     setMounted(true);
   }, []);
 

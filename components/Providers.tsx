@@ -6,7 +6,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
 import { makeStore } from '@/store';
-import { injectStore } from '@/lib/storeAccess';
+import { injectPersistor, injectStore } from '@/lib/storeAccess';
 import { muiTheme } from '@/lib/muiTheme';
 import AuthHistoryGuard from '@/components/AuthHistoryGuard';
 import MuiToastProvider from '@/components/MuiToastProvider';
@@ -18,6 +18,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   if (!storeRef.current) {
     storeRef.current = makeStore();
     injectStore(storeRef.current.store);
+    injectPersistor(storeRef.current.persistor);
   }
 
   const { store, persistor } = storeRef.current;

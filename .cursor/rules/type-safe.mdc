@@ -1,0 +1,13 @@
+---
+description: Write TypeScript and React that type-checks and lints cleanly
+alwaysApply: true
+---
+
+# Type-safe, lint-clean code
+
+This project uses `strict: true` TypeScript and `next build` runs type checking. Do not ship code that fails `npm run build` or `npm run lint`.
+
+- Match React 18 DOM types: boolean attributes like `inert` must be `boolean`, not strings (`inert` or `inert={true}`, never `{...{ inert: '' }}`).
+- Do not use type assertions or `any` to silence errors unless the types are genuinely wrong and there is no cleaner fix.
+- After editing `.ts` / `.tsx` files, check lints and fix new errors before finishing.
+- Prefer explicit types that compile under `strict` (no implicit `any`, correct prop types, valid JSX).
