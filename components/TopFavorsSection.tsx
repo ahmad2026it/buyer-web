@@ -53,7 +53,7 @@ export default function TopFavorsSection() {
     <section id="favors" style={{ padding: '96px 0', background: '#ffffff' }}>
       {authOpen && <AuthGateModal onClose={() => setAuthOpen(false)} />}
       <div className="container">
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '48px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '48px' }} className="rs-section-head">
           <div>
             <p data-animate="fade" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: '#A54AFF', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>Most Requested</p>
             <h2 data-animate style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '36px', lineHeight: '1.2', color: '#101828', letterSpacing: '-0.01em' }}>
@@ -71,7 +71,7 @@ export default function TopFavorsSection() {
         </div>
 
         {isLoading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
+          <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
             {Array.from({ length: MAX_FAVORS }, (_, i) => <FavorCardSkeleton key={i} />)}
           </div>
         ) : isError ? (
@@ -92,7 +92,7 @@ export default function TopFavorsSection() {
             <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: 13, color: '#667085', margin: 0 }}>Check back soon — new favors will appear here.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
+          <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
             {favors.map((favor, i) => (
               <FavorListingCard
                 key={favor.id}

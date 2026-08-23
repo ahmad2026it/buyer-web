@@ -401,7 +401,7 @@ function SearchContent() {
           </div>
 
           {searchType === 'sellers' && sellersLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(4, 1fr)`, gap: '24px' }}>
+            <div className="rs-grid-4" style={{ display: 'grid', gridTemplateColumns: `repeat(4, 1fr)`, gap: '24px' }}>
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} style={{ height: 360, borderRadius: 20, background: '#fff', border: '1.5px solid #EAECF0' }} />
               ))}
@@ -412,7 +412,7 @@ function SearchContent() {
               <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#667085' }}>Please try again in a moment.</p>
             </div>
           ) : searchType !== 'sellers' && favorsLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS_FAVORS}, 1fr)`, gap: '24px' }}>
+            <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS_FAVORS}, 1fr)`, gap: '24px' }}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} style={{ height: 360, borderRadius: 20, background: '#fff', border: '1.5px solid #EAECF0' }} />
               ))}
@@ -429,7 +429,7 @@ function SearchContent() {
             </div>
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${colCount}, 1fr)`, gap: '24px' }}>
+              <div className={colCount >= 4 ? 'rs-grid-4' : 'rs-grid-3'} style={{ display: 'grid', gridTemplateColumns: `repeat(${colCount}, 1fr)`, gap: '24px' }}>
                 {searchType !== 'sellers'
                   ? (visibleItems as FavorCard[]).map(favor => {
                       const liked = likedFavors.has(favor.id);

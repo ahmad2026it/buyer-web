@@ -665,6 +665,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
   const [editLoc, setEditLoc]           = useState<LocationEntry | null>(null);
   const [defaultingId, setDefaultingId] = useState<number | null>(null);
   const [defaultError, setDefaultError] = useState('');
+  const [menuOpen, setMenuOpen]         = useState(false);
 
   const [updateLocation] = useUpdateBuyerLocationMutation();
   const [deleteLocation] = useDeleteBuyerLocationMutation();
@@ -745,6 +746,11 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
   useEffect(() => {
     setIsLoggedIn(Boolean(token) || localStorage.getItem('whoCan_loggedIn') === 'true');
   }, [token]);
+
+  useEffect(() => {
+    document.body.classList.toggle('nav-menu-open', menuOpen);
+    return () => document.body.classList.remove('nav-menu-open');
+  }, [menuOpen]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -928,8 +934,8 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
         />
       )}
 
-      <header className="hero-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, padding: '12px 24px', transition: 'all 0.3s ease' }}>
-        <nav style={{ maxWidth: '1200px', margin: '0 auto', background: scrolled ? '#ffffff' : 'rgba(26,10,46,0.75)', backdropFilter: scrolled ? 'none' : 'blur(20px)', WebkitBackdropFilter: scrolled ? 'none' : 'blur(20px)', borderRadius: '9999px', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: scrolled ? '0px 4px 24px rgba(165,74,255,0.12)' : '0px 4px 24px rgba(0,0,0,0.2)', border: scrolled ? '1px solid rgba(165,74,255,0.15)' : '1px solid rgba(255,255,255,0.1)', transition: 'all 0.35s ease' }}>
+      <header className="hero-nav site-header" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, padding: '12px 24px', transition: 'all 0.3s ease' }}>
+        <nav className="site-nav" style={{ maxWidth: '1200px', margin: '0 auto', background: scrolled ? '#ffffff' : 'rgba(26,10,46,0.75)', backdropFilter: scrolled ? 'none' : 'blur(20px)', WebkitBackdropFilter: scrolled ? 'none' : 'blur(20px)', borderRadius: '9999px', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: scrolled ? '0px 4px 24px rgba(165,74,255,0.12)' : '0px 4px 24px rgba(0,0,0,0.2)', border: scrolled ? '1px solid rgba(165,74,255,0.15)' : '1px solid rgba(255,255,255,0.1)', transition: 'all 0.35s ease' }}>
 
           {/* Logo */}
           <a href="/" style={{ display: 'flex', alignItems: 'center', lineHeight: 0 }}>
@@ -937,9 +943,9 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
           </a>
 
           {/* Nav links */}
-          <ul style={{ display: 'flex', listStyle: 'none', gap: '4px', alignItems: 'center' }}>
+          <ul className="nav-desktop-links" style={{ display: 'flex', listStyle: 'none', gap: '4px', alignItems: 'center' }}>
             {NAV_LINKS.map(link =>
-              link.hasDropdown ? (
+              'hasDropdown' in link && link.hasDropdown ? (
                 <li key={link.label} style={{ position: 'relative' }}
                   onMouseEnter={() => setExploreOpen(true)}
                   onMouseLeave={() => setExploreOpen(false)}>
@@ -992,7 +998,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
             /* Placeholder preserves layout width while localStorage is read */
             <div style={{ width: '148px', height: '36px' }} />
           ) : !isLoggedIn ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="nav-guest-ctas" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <a href="/#app" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828', background: '#FEC84B', padding: '8px 16px', borderRadius: PILL, transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FDB022'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#FEC84B'; }}>
@@ -1008,7 +1014,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
           ) : (
             /* ── Logged-in icon bar ── */
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <a href="/#app" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828', background: '#FEC84B', padding: '8px 16px', borderRadius: PILL, transition: 'all 0.2s ease', whiteSpace: 'nowrap', textDecoration: 'none' }}
+              <a href="/#app" className="nav-get-app" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828', background: '#FEC84B', padding: '8px 16px', borderRadius: PILL, transition: 'all 0.2s ease', whiteSpace: 'nowrap', textDecoration: 'none' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FDB022'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#FEC84B'; }}>
                 Get App
@@ -1016,7 +1022,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: GRAD, borderRadius: PILL, padding: '6px 10px' }}>
 
               {/* Favorites heart */}
-              <button onClick={() => router.push('/favorites')}
+              <button className="nav-hide-sm" aria-label="Favorites" onClick={() => router.push('/favorites')}
                 style={{ width: '36px', height: '36px', borderRadius: PILL, background: 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.28)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.15)'; }}>
@@ -1026,7 +1032,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
               </button>
 
               {/* Chat */}
-              <button onClick={() => router.push('/chat')} style={{ width: '36px', height: '36px', borderRadius: PILL, background: 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', position: 'relative' }}
+              <button className="nav-hide-sm" aria-label="Messages" onClick={() => router.push('/chat')} style={{ width: '36px', height: '36px', borderRadius: PILL, background: 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', position: 'relative' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.28)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.15)'; }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -1060,7 +1066,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
                 </button>
 
                 {notifOpen && (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 14px)', right: '-8px', width: '360px', background: '#ffffff', borderRadius: '20px', boxShadow: '0 20px 48px rgba(16,24,40,0.16)', border: '1px solid #EAECF0', overflow: 'hidden', zIndex: 500 }}>
+                  <div className="nav-popover" style={{ position: 'absolute', top: 'calc(100% + 14px)', right: '-8px', width: '360px', background: '#ffffff', borderRadius: '20px', boxShadow: '0 20px 48px rgba(16,24,40,0.16)', border: '1px solid #EAECF0', overflow: 'hidden', zIndex: 500 }}>
                     <div style={{ position: 'absolute', top: '-6px', right: '18px', width: '12px', height: '12px', background: '#ffffff', border: '1px solid #EAECF0', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }}/>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px' }}>
                       <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '16px', color: '#101828' }}>Notifications</h3>
@@ -1128,7 +1134,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
               </div>
 
               {/* Location pin */}
-              <div ref={locationRef} style={{ position: 'relative' }}>
+              <div ref={locationRef} className="nav-hide-sm" style={{ position: 'relative' }}>
                 <button onClick={() => { setLocOpen(o => !o); setNotifOpen(false); setProfileOpen(false); }}
                   style={{ width: '36px', height: '36px', borderRadius: PILL, background: locationOpen ? '#ffffff' : 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
                   onMouseEnter={e => { if (!locationOpen) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.28)'; }}
@@ -1141,7 +1147,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
 
                 {/* Location dropdown */}
                 {locationOpen && (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 14px)', right: '-8px', width: '360px', background: '#ffffff', borderRadius: '20px', boxShadow: '0 20px 48px rgba(16,24,40,0.16)', border: '1px solid #EAECF0', overflow: 'hidden', zIndex: 500 }}>
+                  <div className="nav-popover" style={{ position: 'absolute', top: 'calc(100% + 14px)', right: '-8px', width: '360px', background: '#ffffff', borderRadius: '20px', boxShadow: '0 20px 48px rgba(16,24,40,0.16)', border: '1px solid #EAECF0', overflow: 'hidden', zIndex: 500 }}>
                     <div style={{ position: 'absolute', top: '-6px', right: '18px', width: '12px', height: '12px', background: '#ffffff', border: '1px solid #EAECF0', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }}/>
 
                     {/* Header */}
@@ -1242,7 +1248,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
 
                 {/* Profile dropdown — matches reference */}
                 {profileOpen && (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 14px)', right: '-8px', width: '240px', background: '#ffffff', borderRadius: '20px', boxShadow: '0 20px 48px rgba(16,24,40,0.14)', border: '1px solid #EAECF0', overflow: 'hidden', zIndex: 500 }}>
+                  <div className="nav-popover" style={{ position: 'absolute', top: 'calc(100% + 14px)', right: '-8px', width: '240px', background: '#ffffff', borderRadius: '20px', boxShadow: '0 20px 48px rgba(16,24,40,0.14)', border: '1px solid #EAECF0', overflow: 'hidden', zIndex: 500 }}>
                     <div style={{ position: 'absolute', top: '-6px', right: '18px', width: '12px', height: '12px', background: '#ffffff', border: '1px solid #EAECF0', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }}/>
 
                     {/* User info */}
@@ -1290,8 +1296,109 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
             </div>
             </div>
           )}
+
+          <button
+            type="button"
+            className="nav-hamburger"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            onClick={() => {
+              setMenuOpen((open) => !open);
+              setNotifOpen(false);
+              setProfileOpen(false);
+              setLocOpen(false);
+            }}
+            style={{ background: scrolled ? '#F2F4F7' : 'rgba(255,255,255,0.16)', color: scrolled ? '#344054' : '#ffffff' }}
+          >
+            {menuOpen ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>
+            )}
+          </button>
         </nav>
       </header>
+
+      {menuOpen && (
+        <>
+          <div className="nav-drawer-backdrop" onClick={() => setMenuOpen(false)} />
+          <div className="nav-drawer" role="dialog" aria-label="Site menu">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 16, color: '#101828' }}>Menu</p>
+              <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#667085" strokeWidth="2.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {NAV_LINKS.map((link) => (
+                <div key={link.label}>
+                  {link.protected && mounted && !isLoggedIn ? (
+                    <button
+                      type="button"
+                      onClick={() => { setMenuOpen(false); setAuthOpen(true); }}
+                      style={{ width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 15, color: '#101828', padding: '12px 4px', background: 'none' }}
+                    >
+                      {link.label}
+                    </button>
+                  ) : (
+                    <a
+                      href={link.href}
+                      onClick={() => setMenuOpen(false)}
+                      style={{ display: 'block', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 15, color: '#101828', padding: '12px 4px' }}
+                    >
+                      {link.label}
+                    </a>
+                  )}
+                  {'hasDropdown' in link && link.hasDropdown && (
+                    <div style={{ paddingLeft: 12, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {EXPLORE_ITEMS.map((item) => (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          onClick={() => setMenuOpen(false)}
+                          style={{ display: 'block', fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#475467', padding: '8px 4px' }}
+                        >
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {mounted && isLoggedIn ? (
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #EAECF0', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <a href="/favorites" onClick={() => setMenuOpen(false)} style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 15, color: '#101828', padding: '12px 4px' }}>Favorites</a>
+                <a href="/chat" onClick={() => setMenuOpen(false)} style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 15, color: '#101828', padding: '12px 4px' }}>Messages</a>
+                <button
+                  type="button"
+                  onClick={() => { setMenuOpen(false); setLocOpen(true); }}
+                  style={{ width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 15, color: '#101828', padding: '12px 4px', background: 'none' }}
+                >
+                  Locations
+                </button>
+                {PROFILE_MENU.map((item) => (
+                  <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)} style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 500, fontSize: 15, color: '#344054', padding: '12px 4px' }}>
+                    {item.label}
+                  </a>
+                ))}
+                <a href="/#app" onClick={() => setMenuOpen(false)} style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 15, color: '#101828', padding: '12px 4px' }}>Get App</a>
+                <button type="button" onClick={() => { setMenuOpen(false); logout(); }} style={{ width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 15, color: '#D92D20', padding: '12px 4px', background: 'none' }}>
+                  Log out
+                </button>
+              </div>
+            ) : (
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #EAECF0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <a href="/#app" onClick={() => setMenuOpen(false)} style={{ display: 'block', textAlign: 'center', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', background: '#FEC84B', padding: '12px 16px', borderRadius: PILL }}>Get App</a>
+                <a href="/auth/login" onClick={() => setMenuOpen(false)} style={{ display: 'block', textAlign: 'center', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#344054', border: '1.5px solid #D0D5DD', padding: '12px 16px', borderRadius: PILL }}>Log in</a>
+                <a href="/auth/signup" onClick={() => setMenuOpen(false)} style={{ display: 'block', textAlign: 'center', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#ffffff', background: GRAD, padding: '12px 16px', borderRadius: PILL }}>Sign up</a>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </>
   );
 }

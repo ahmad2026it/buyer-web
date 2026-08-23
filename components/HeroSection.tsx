@@ -44,6 +44,7 @@ export default function HeroSection() {
 
   return (
     <section
+      className="rs-hero"
       style={{
         position: 'relative',
         minHeight: '100vh',
@@ -110,6 +111,7 @@ export default function HeroSection() {
 
       <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         <div
+          className="rs-split"
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
@@ -169,7 +171,7 @@ export default function HeroSection() {
 
             {/* H1 */}
             <h1
-              className="hero-text-2"
+              className="hero-text-2 rs-display"
               style={{
                 fontFamily: 'Poppins, sans-serif',
                 fontWeight: 800,
@@ -215,6 +217,7 @@ export default function HeroSection() {
             {/* Search bar */}
             <div className="hero-text-4" style={{ position: 'relative', maxWidth: '500px', marginBottom: '24px' }}>
               <div
+                className="rs-hero-search"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -370,6 +373,7 @@ export default function HeroSection() {
 
             {/* Stats strip */}
             <div
+              className="rs-stats"
               style={{
                 display: 'flex',
                 gap: '28px',
@@ -412,6 +416,7 @@ export default function HeroSection() {
 
           {/* Right — Hero image */}
           <div
+            className="rs-hero-visual"
             style={{
               position: 'relative',
               display: 'flex',
@@ -464,6 +469,7 @@ export default function HeroSection() {
             ] as const).map(({ label, Icon, iconColor, iconBg, pos, dur, delay }) => (
               <div
                 key={label}
+                className="rs-desktop-only"
                 style={{
                   position: 'absolute',
                   ...pos,

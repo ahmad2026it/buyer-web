@@ -453,7 +453,7 @@ export default function SellersPage() {
       <section style={{ background: '#F9F5FF', borderTop: '1px solid #EDE9FE', borderBottom: '1px solid #EDE9FE', padding: '48px 0' }}>
         <div
           ref={statsAnim.ref}
-          className="container"
+          className="container rs-grid-4"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
@@ -521,6 +521,7 @@ export default function SellersPage() {
             </p>
 
             <div
+              className="rs-grid-3"
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, 1fr)',
@@ -607,7 +608,7 @@ export default function SellersPage() {
             Up and running in three steps
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
+          <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
             {STEPS.map((step, i) => (
               <div
                 key={step.num}
@@ -677,7 +678,7 @@ export default function SellersPage() {
             Real sellers, real results
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+          <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
             {TESTIMONIALS.map((t) => (
               <div
                 key={t.name}

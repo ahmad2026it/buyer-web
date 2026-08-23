@@ -341,12 +341,12 @@ function SellerProfileSkeleton() {
             <div style={{ width: '160px', height: '16px', borderRadius: '8px', background: '#EAECF0' }} />
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px', padding: '36px 0 0' }}>
+        <div className="rs-split" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px', padding: '36px 0 0' }}>
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '28px' }}>
+            <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '28px' }}>
               {[1, 2, 3].map(i => <div key={i} style={{ height: '110px', borderRadius: '18px', background: '#fff', border: '1.5px solid #EAECF0' }} />)}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
+            <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
               {[1, 2, 3].map(i => <div key={i} style={{ height: '320px', borderRadius: '20px', background: '#fff', border: '1.5px solid #EAECF0' }} />)}
             </div>
           </div>
@@ -467,7 +467,7 @@ export default function SellerProfilePage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px', alignItems: 'flex-start', padding: '36px 0 80px' }}>
+              <div className="rs-split" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px', alignItems: 'flex-start', padding: '36px 0 80px' }}>
                 <div>
                   {statCards.length > 0 && (
                     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(statCards.length, 3)},1fr)`, gap: '16px' }}>
@@ -500,7 +500,7 @@ export default function SellerProfilePage() {
                         <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#667085' }}>This seller has no favors yet.</p>
                       </div>
                     ) : (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
+                      <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
                         {visibleFavors.map(favor => (
                           <SellerFavorCard
                             key={favor.favorId}
@@ -562,7 +562,7 @@ export default function SellerProfilePage() {
                       See all
                     </button>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
+                  <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px' }}>
                     {recommendedFavors.map(favor => (
                       <RecommendedFavorCard
                         key={favor.favorId}

@@ -43,6 +43,7 @@ export default function Footer() {
       <div className="container">
         {/* Top row: logo + links */}
         <div
+          className="rs-footer-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: '1.6fr 1fr 1fr 1fr',
@@ -139,6 +140,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div
+          className="rs-footer-bottom"
           style={{
             display: 'flex',
             alignItems: 'center',

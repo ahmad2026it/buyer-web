@@ -64,6 +64,7 @@ export default function BecomeSellerSection() {
 
       <div className="container" style={{ position: 'relative' }}>
         <div
+          className="rs-split"
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
@@ -149,6 +150,7 @@ export default function BecomeSellerSection() {
             <div
               data-animate
               data-delay="2"
+              className="rs-cta-row"
               style={{ display: 'flex', gap: '16px', marginBottom: '40px' }}
             >
               <a

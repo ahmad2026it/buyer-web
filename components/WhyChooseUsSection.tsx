@@ -49,11 +49,12 @@ function LearnMoreRow({ light = false, href }: { light?: boolean; href?: string 
 export default function WhyChooseUsSection() {
   const router = useRouter();
   return (
-    <section style={{ padding: '96px 0', background: '#ffffff' }}>
+    <section className="rs-section" style={{ padding: '96px 0', background: '#ffffff' }}>
       <div className="container">
 
         {/* ── SECTION HEADING ───────────────────────────────────────────── */}
         <div
+          className="rs-split"
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
@@ -63,7 +64,7 @@ export default function WhyChooseUsSection() {
           }}
         >
           <div data-animate>
-            <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '44px', lineHeight: '1.15', color: '#101828', letterSpacing: '-0.02em' }}>
+            <h2 className="rs-h2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '44px', lineHeight: '1.15', color: '#101828', letterSpacing: '-0.02em' }}>
               Find trusted{' '}
               <span
                 style={{
@@ -94,6 +95,7 @@ export default function WhyChooseUsSection() {
 
         {/* ── CARD GRID ─────────────────────────────────────────────────── */}
         <div
+          className="rs-why-cards"
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr 0.62fr',

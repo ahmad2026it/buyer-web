@@ -151,6 +151,7 @@ export default function AppDownloadSection() {
 
         {/* Main content: left features + center phone + right empty or reversed */}
         <div
+          className="rs-app-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr auto 1fr',
@@ -286,7 +287,7 @@ export default function AppDownloadSection() {
               >
                 Get WhoCan on your phone now!
               </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <div className="rs-store-row" style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                 {/* App Store badge */}
                 <a href="#" style={{ textDecoration: 'none', transition: 'transform 0.2s ease', display: 'inline-flex' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}

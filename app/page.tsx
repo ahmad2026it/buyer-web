@@ -200,7 +200,7 @@ export default function Home() {
               <div className="container" style={{ padding: '18px 0 20px' }}>
 
                 {/* Greeting row */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div className="rs-section-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <div>
                     <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#98A2B3', margin: 0, marginBottom: 2 }}>
                       {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}
@@ -215,7 +215,7 @@ export default function Home() {
                 </div>
 
                 {/* Search row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div className="rs-search-row" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
 
                   {/* Search input */}
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#F9FAFB', border: '1.5px solid #EAECF0', borderRadius: PILL, padding: '11px 16px', gap: 8 }}>
@@ -308,7 +308,7 @@ export default function Home() {
                   </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, paddingBottom: 24 }}>
+                <div className="rs-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, paddingBottom: 24 }}>
                   {bookingsLoading ? (
                     Array.from({ length: HOME_BOOKINGS_LIMIT }, (_, i) => <HomeBookingSkeleton key={i} />)
                   ) : bookingsError ? (

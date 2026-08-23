@@ -39,7 +39,7 @@ export default function ExploreHero() {
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(165,74,255,0.12) 1px, transparent 1px)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
 
       {/* Floating favor cards — LEFT */}
-      <div style={{ position: 'absolute', left: '-20px', top: '100px', display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 1 }}>
+      <div className="explore-float" style={{ position: 'absolute', left: '-20px', top: '100px', display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 1 }}>
         {FLOATING_FAVORS.map((f, i) => (
           <div key={f.title} style={{ background: '#ffffff', borderRadius: '16px', border: '1.5px solid #EAECF0', boxShadow: '0 8px 32px rgba(165,74,255,0.1)', overflow: 'hidden', width: '220px', transform: `rotate(${i % 2 === 0 ? '-3deg' : '2deg'}) translateX(${i * 8}px)`, opacity: 0.9 }}>
             <img src={f.image} alt={f.title} style={{ width: '100%', height: '100px', objectFit: 'cover' }} />
@@ -55,7 +55,7 @@ export default function ExploreHero() {
       </div>
 
       {/* Floating seller cards — RIGHT */}
-      <div style={{ position: 'absolute', right: '-10px', top: '80px', display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 1 }}>
+      <div className="explore-float" style={{ position: 'absolute', right: '-10px', top: '80px', display: 'flex', flexDirection: 'column', gap: '12px', zIndex: 1 }}>
         {FLOATING_SELLERS.map((s, i) => (
           <div key={s.name} style={{ background: '#ffffff', borderRadius: '16px', border: '1.5px solid #EAECF0', boxShadow: '0 8px 32px rgba(165,74,255,0.1)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px', width: '200px', transform: `rotate(${i % 2 === 0 ? '2.5deg' : '-2deg'}) translateX(${-i * 6}px)`, opacity: 0.9 }}>
             <img src={s.image} alt={s.name} style={{ width: '40px', height: '40px', borderRadius: '9999px', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }} />
@@ -71,7 +71,7 @@ export default function ExploreHero() {
       {/* Center content */}
       <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '978px', margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
         <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: '#A54AFF', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>Explore WhoCan</p>
-        <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: '52px', lineHeight: '1.15', color: '#101828', letterSpacing: '-0.02em', marginBottom: '16px' }}>
+        <h1 className="rs-display" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: '52px', lineHeight: '1.15', color: '#101828', letterSpacing: '-0.02em', marginBottom: '16px' }}>
           Find the perfect{' '}
           <span style={{ background: 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             handyman
@@ -83,7 +83,7 @@ export default function ExploreHero() {
         </p>
 
         {/* Search bar */}
-        <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', borderRadius: '9999px', boxShadow: '0 4px 32px rgba(165,74,255,0.15)', border: '1.5px solid #EAECF0', padding: '8px 8px 8px 20px', gap: '8px', maxWidth: '700px', margin: '0 auto 28px' }}>
+        <div className="rs-hero-search" style={{ display: 'flex', alignItems: 'center', background: '#ffffff', borderRadius: '9999px', boxShadow: '0 4px 32px rgba(165,74,255,0.15)', border: '1.5px solid #EAECF0', padding: '8px 8px 8px 20px', gap: '8px', maxWidth: '700px', margin: '0 auto 28px' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
             <circle cx="11" cy="11" r="8" stroke="#A54AFF" strokeWidth="2" />
             <path d="M21 21l-4.35-4.35" stroke="#A54AFF" strokeWidth="2" strokeLinecap="round" />

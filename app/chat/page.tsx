@@ -133,6 +133,7 @@ function ChatPageInner() {
   const user = useAppSelector((state) => state.auth.user);
 
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [threadOpen, setThreadOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [input, setInput] = useState('');
   const [authOpen, setAuthOpen] = useState(false);
@@ -254,6 +255,7 @@ function ChatPageInner() {
 
   const selectConv = (id: number) => {
     setActiveId(id);
+    setThreadOpen(true);
     dispatch(
       buyerConversationsAPI.util.updateQueryData(
         'getBuyerConversations',
@@ -304,8 +306,8 @@ function ChatPageInner() {
         />
       )}
 
-      <div style={{ flex: 1, display: 'flex', background: '#F9FAFB', overflow: 'hidden', paddingTop: 88 }}>
-        <div style={{
+      <div className={`chat-layout${threadOpen ? ' chat-open' : ''}`} style={{ flex: 1, display: 'flex', background: '#F9FAFB', overflow: 'hidden', paddingTop: 88 }}>
+        <div className="chat-list" style={{
           width: 360, flexShrink: 0, borderRight: '1px solid #EAECF0', background: '#ffffff',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}>
@@ -414,7 +416,7 @@ function ChatPageInner() {
           </div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+        <div className="chat-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
           {!active ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
               <p style={{ fontFamily: F, fontSize: 14, color: '#98A2B3', textAlign: 'center' }}>
@@ -427,6 +429,15 @@ function ChatPageInner() {
                 flexShrink: 0, background: '#ffffff', borderBottom: '1px solid #EAECF0',
                 padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '14px',
               }}>
+                <button
+                  type="button"
+                  className="chat-back"
+                  aria-label="Back to conversations"
+                  onClick={() => setThreadOpen(false)}
+                  style={{ width: 36, height: 36, borderRadius: '50%', background: '#F2F4F7', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: 4 }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#344054" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
                 <Avatar src={threadImage} name={threadName} size={48} online={threadOnline} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h2 style={{ fontFamily: F, fontWeight: 700, fontSize: '16px', color: '#101828', marginBottom: '2px' }}>{threadName}</h2>

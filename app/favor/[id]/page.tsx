@@ -188,18 +188,18 @@ export default function FavorDetailPage() {
           message="Log in to save this favor to your favorites."
         />
       )}
-      <main style={{ minHeight: '100vh', background: '#FAFAFA', paddingTop: '88px' }}>
+      <main className="favor-page-main" style={{ minHeight: '100vh', background: '#FAFAFA', paddingTop: '88px' }}>
         {showLoading ? (
-          <div style={{ maxWidth: '1376px', margin: '0 auto', padding: '40px 32px 80px' }}>
+          <div className="favor-page" style={{ maxWidth: '1376px', margin: '0 auto', padding: '40px 32px 80px' }}>
             <div style={{ height: '16px', width: '240px', background: '#EAECF0', borderRadius: '8px', marginBottom: '24px' }} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 352px', gap: '16px', marginBottom: '40px' }}>
-              <div style={{ height: '520px', borderRadius: '20px', background: '#F2F4F7' }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ height: '254px', borderRadius: '16px', background: '#F2F4F7' }} />
-                <div style={{ height: '254px', borderRadius: '16px', background: '#F2F4F7' }} />
+            <div className="favor-gallery" style={{ display: 'grid', gridTemplateColumns: '1fr 352px', gap: '16px', marginBottom: '40px' }}>
+              <div className="favor-gallery-main" style={{ height: '520px', borderRadius: '20px', background: '#F2F4F7' }} />
+              <div className="favor-thumbs" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="favor-thumb" style={{ height: '254px', borderRadius: '16px', background: '#F2F4F7' }} />
+                <div className="favor-thumb" style={{ height: '254px', borderRadius: '16px', background: '#F2F4F7' }} />
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '40px' }}>
+            <div className="favor-body" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '40px' }}>
               <div>
                 <div style={{ height: '36px', width: '70%', background: '#EAECF0', borderRadius: '10px', marginBottom: '16px' }} />
                 <div style={{ height: '20px', width: '40%', background: '#F2F4F7', borderRadius: '8px', marginBottom: '24px' }} />
@@ -209,7 +209,7 @@ export default function FavorDetailPage() {
             </div>
           </div>
         ) : showError ? (
-          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '120px 32px', textAlign: 'center' }}>
+          <div className="favor-page" style={{ maxWidth: '720px', margin: '0 auto', padding: '120px 32px', textAlign: 'center' }}>
             <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '24px', color: '#101828', marginBottom: '8px' }}>Unable to load this favor</h1>
             <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#667085', marginBottom: '24px' }}>It may have been removed, or there was a problem fetching the details.</p>
             <button
@@ -220,17 +220,17 @@ export default function FavorDetailPage() {
           </div>
         ) : favor ? (
           <>
-            <div style={{ maxWidth: '1376px', margin: '0 auto', padding: '0 32px' }}>
-              <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '20px 0', fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>
-                <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667085', fontFamily: 'Poppins,sans-serif', fontSize: '13px', padding: 0 }}>Home</button>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <button onClick={() => router.push('/explore')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667085', fontFamily: 'Poppins,sans-serif', fontSize: '13px', padding: 0 }}>Explore</button>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span style={{ color: '#101828', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>{favor.title}</span>
+            <div className="favor-page" style={{ maxWidth: '1376px', margin: '0 auto', padding: '0 32px' }}>
+              <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '20px 0', fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085', minWidth: 0 }}>
+                <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667085', fontFamily: 'Poppins,sans-serif', fontSize: '13px', padding: 0, flexShrink: 0 }}>Home</button>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <button onClick={() => router.push('/explore')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#667085', fontFamily: 'Poppins,sans-serif', fontSize: '13px', padding: 0, flexShrink: 0 }}>Explore</button>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span className="favor-crumb-title" style={{ color: '#101828', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>{favor.title}</span>
               </nav>
 
-              <div style={{ display: 'grid', gridTemplateColumns: galleryImages.length > 1 ? '1fr 352px' : '1fr', gap: '16px', marginBottom: '40px' }}>
-                <div style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', height: '520px', cursor: 'pointer', background: '#F3E8FF' }}>
+              <div className="favor-gallery" style={{ display: 'grid', gridTemplateColumns: galleryImages.length > 1 ? '1fr 352px' : '1fr', gap: '16px', marginBottom: '40px' }}>
+                <div className="favor-gallery-main" style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', height: '520px', cursor: 'pointer', background: '#F3E8FF' }}>
                   <FavorImage src={galleryImages[activeImg]} alt={favor.title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   {galleryImages.length > 0 && (
@@ -240,12 +240,12 @@ export default function FavorDetailPage() {
                   )}
                 </div>
                 {galleryImages.length > 1 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className={`favor-thumbs${galleryImages.slice(1, 3).length === 1 ? ' favor-thumbs-one' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {galleryImages.slice(1, 3).map((img, idx) => {
                       const i = idx + 1;
                       const thumbHeight = galleryImages.length === 2 ? '520px' : '254px';
                       return (
-                        <div key={`${img}-${i}`} onClick={() => setActiveImg(i)}
+                        <div key={`${img}-${i}`} className="favor-thumb" onClick={() => setActiveImg(i)}
                           style={{ height: thumbHeight, flexShrink: 0, borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', border: `2.5px solid ${activeImg === i ? '#A54AFF' : 'transparent'}`, boxShadow: activeImg === i ? '0 0 0 3px rgba(165,74,255,0.2)' : 'none', transition: 'all 0.15s', background: '#F3E8FF' }}>
                           <FavorImage src={img} alt={`View ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: activeImg === i ? 1 : 0.75 }} />
                         </div>
@@ -255,10 +255,10 @@ export default function FavorDetailPage() {
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '40px', alignItems: 'flex-start', paddingBottom: '80px' }}>
+              <div className="favor-body" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '40px', alignItems: 'flex-start', paddingBottom: '80px' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '14px' }}>
-                    <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '32px', color: '#101828', lineHeight: '1.2', letterSpacing: '-0.02em' }}>{favor.title}</h1>
+                  <div className="favor-title-row" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '14px' }}>
+                    <h1 className="favor-title" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '32px', color: '#101828', lineHeight: '1.2', letterSpacing: '-0.02em' }}>{favor.title}</h1>
                     <div style={{ display: 'flex', gap: '8px', flexShrink: 0, paddingTop: '4px' }}>
                       <button
                         onClick={() => { void handleToggleFavorite(); }}
@@ -293,14 +293,14 @@ export default function FavorDetailPage() {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: '16px', cursor: sellerId ? 'pointer' : 'default', transition: 'border-color 0.15s', marginBottom: '0' }}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: '16px', cursor: sellerId ? 'pointer' : 'default', transition: 'border-color 0.15s', marginBottom: '0', minWidth: 0 }}
                     onClick={() => { if (sellerId) router.push(`/seller/${sellerId}`); }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(165,74,255,0.3)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#EAECF0'; }}>
                     <img src={sellerAvatar} alt={sellerName} style={{ width: '52px', height: '52px', borderRadius: '9999px', objectFit: 'cover', border: '2px solid #DFBAFF', flexShrink: 0 }} />
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
-                        <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '15px', color: '#101828' }}>{sellerName}</span>
+                        <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '15px', color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sellerName}</span>
                         {sellerBadge && <Badge b={sellerBadge} />}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
@@ -322,7 +322,7 @@ export default function FavorDetailPage() {
 
                   <Divider />
 
-                  <div style={{ display: 'grid', gridTemplateColumns: locationLabel ? 'repeat(3,1fr)' : 'repeat(2,1fr)', gap: '16px', marginBottom: '0' }}>
+                  <div className="favor-stats" style={{ display: 'grid', gridTemplateColumns: locationLabel ? 'repeat(3,1fr)' : 'repeat(2,1fr)', gap: '16px', marginBottom: '0' }}>
                     {[
                       { label: 'Rating', value: rating != null ? `${rating.toFixed(1)} ★` : '—', icon: <svg width="18" height="18" viewBox="0 0 24 24"><polygon fill="#F79009" stroke="none" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
                       { label: 'Reviews', value: reviewCount.toLocaleString(), icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#A54AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
@@ -330,7 +330,7 @@ export default function FavorDetailPage() {
                     ].map(s => (
                       <div key={s.label} style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: '16px', padding: '16px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>{s.icon}</div>
-                        <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '16px', color: '#101828', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.value}</p>
+                        <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '16px', color: '#101828', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: s.label === 'Location' ? 'normal' : 'nowrap' }}>{s.value}</p>
                         <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '12px', color: '#667085' }}>{s.label}</p>
                       </div>
                     ))}
@@ -348,7 +348,7 @@ export default function FavorDetailPage() {
                   <Divider />
 
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <div className="favor-head-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                       <div>
                         <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828', marginBottom: '6px' }}>Reviews &amp; Ratings</h2>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -367,7 +367,7 @@ export default function FavorDetailPage() {
                     {visibleReviews.length === 0 ? (
                       <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#667085' }}>No reviews yet.</p>
                     ) : (
-                      <div style={{ display: 'grid', gridTemplateColumns: visibleReviews.length === 1 ? '1fr' : '1fr 1fr', gap: '16px' }}>
+                      <div className="favor-reviews" style={{ display: 'grid', gridTemplateColumns: visibleReviews.length === 1 ? '1fr' : '1fr 1fr', gap: '16px' }}>
                         {visibleReviews.map(r => (
                           <div key={r.id} style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: '16px', padding: '20px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
@@ -389,7 +389,7 @@ export default function FavorDetailPage() {
                     <>
                       <Divider />
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                        <div className="favor-head-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                           <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828' }}>More from this pro</h2>
                           {sellerId && moreFromSeller.length > 4 && (
                             <button onClick={() => router.push(`/seller/${sellerId}`)}
@@ -398,7 +398,7 @@ export default function FavorDetailPage() {
                             </button>
                           )}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(moreFromSeller.length, 4)},1fr)`, gap: '20px' }}>
+                        <div className="favor-cards" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(moreFromSeller.length, 4)},1fr)`, gap: '20px' }}>
                           {moreFromSeller.slice(0, 4).map(f => (
                             <div key={f.id} onClick={() => router.push(`/favor/${f.id}`)}
                               style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #EAECF0', cursor: 'pointer', transition: 'border-color 0.2s, box-shadow 0.2s', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -432,7 +432,7 @@ export default function FavorDetailPage() {
                   )}
                 </div>
 
-                <div style={{ position: 'sticky', top: '108px', alignSelf: 'flex-start' }}>
+                <div className="favor-booking-col" style={{ position: 'sticky', top: '108px', alignSelf: 'flex-start' }}>
                   <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 8px 32px rgba(16,24,40,0.08)' }}>
                     <div style={{ padding: '24px 24px 20px', borderBottom: '1px solid #EAECF0' }}>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
@@ -482,9 +482,9 @@ export default function FavorDetailPage() {
             </div>
 
             {similarFavors.length > 0 && (
-              <div style={{ background: '#F9FAFB', borderTop: '1px solid #EAECF0', padding: '64px 0' }}>
-                <div style={{ maxWidth: '1376px', margin: '0 auto', padding: '0 32px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
+              <div className="favor-similar" style={{ background: '#F9FAFB', borderTop: '1px solid #EAECF0', padding: '64px 0' }}>
+                <div className="favor-page" style={{ maxWidth: '1376px', margin: '0 auto', padding: '0 32px' }}>
+                  <div className="favor-head-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
                     <div>
                       <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '12px', fontWeight: 600, color: '#A54AFF', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>You may also like</p>
                       <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '24px', color: '#101828' }}>Explore similar favors</h2>
@@ -496,7 +496,7 @@ export default function FavorDetailPage() {
                       View all
                     </button>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(similarFavors.length, 4)},1fr)`, gap: '20px' }}>
+                  <div className="favor-cards" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(similarFavors.length, 4)},1fr)`, gap: '20px' }}>
                     {similarFavors.slice(0, 4).map(f => (
                       <div key={f.id} onClick={() => router.push(`/favor/${f.id}`)}
                         style={{ background: '#fff', borderRadius: '20px', border: '1.5px solid #EAECF0', cursor: 'pointer', transition: 'all 0.15s', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -527,6 +527,18 @@ export default function FavorDetailPage() {
                 </div>
               </div>
             )}
+
+            <div className="favor-mobile-cta">
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '22px', color: '#8E40FF', lineHeight: 1.1, margin: 0 }}>${formatMoney(total)}</p>
+                <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '12px', color: '#667085', margin: '2px 0 0' }}>starting price</p>
+              </div>
+              <button
+                onClick={() => router.push(`/booking/${favor.id}`)}
+                style={{ flexShrink: 0, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '14px', color: '#fff', background: GRAD, border: 'none', borderRadius: '9999px', padding: '12px 20px', cursor: 'pointer', boxShadow: '0 4px 16px rgba(165,74,255,0.3)' }}>
+                Request Booking
+              </button>
+            </div>
           </>
         ) : null}
       </main>
