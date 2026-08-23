@@ -127,6 +127,9 @@ export default function MuiToastProvider({
           zIndex: 14000,
           top: { xs: '16px', sm: '88px' },
           right: { xs: '16px', sm: '24px' },
+          maxWidth: { xs: 'calc(100vw - 32px)', sm: 440 },
+          overflow: 'visible',
+          '& > *': { whiteSpace: 'normal' },
         }}
       >
         <Box
@@ -145,7 +148,7 @@ export default function MuiToastProvider({
             alignItems: 'flex-start',
             gap: '12px',
             minWidth: 280,
-            maxWidth: 380,
+            maxWidth: 440,
             width: '100%',
             padding: '14px 14px 14px 16px',
             background: '#FFFFFF',
@@ -189,9 +192,9 @@ export default function MuiToastProvider({
                   lineHeight: 1.35,
                   color: '#101828',
                   marginBottom: current?.message ? '2px' : 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  whiteSpace: 'normal',
+                  overflowWrap: 'break-word',
+                  textWrap: 'pretty',
                 }}
               >
                 {current.title}
@@ -204,10 +207,9 @@ export default function MuiToastProvider({
                 fontSize: 13,
                 lineHeight: 1.5,
                 color: '#475467',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
+                whiteSpace: 'normal',
+                overflowWrap: 'break-word',
+                textWrap: 'pretty',
               }}
             >
               {current?.message}

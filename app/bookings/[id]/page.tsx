@@ -1455,7 +1455,7 @@ export default function BookingDetailPage() {
   const canReportSeller =
     booking.status !== 'Pending' &&
     booking.status !== 'DeclinedBySeller' &&
-    booking.status !== 'CancelledBySeller';
+    !isCancelledUiStatus(booking.status);
 
   const handleDoneSuccess = () => { setShowDoneSuccess(false); };
   const handlePreCancelConfirm = () => { setShowPreCancel(false); router.push('/bookings'); };
