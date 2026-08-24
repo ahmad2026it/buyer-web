@@ -10,6 +10,7 @@ import type {
 } from '@/app/buyer/store/buyerNotificationsTypes';
 import type { PushMessage } from '@/lib/fcm';
 import { refreshBuyerBookings, refreshBuyerInbox } from '@/lib/conversationCache';
+import { refreshBuyerDisputeSupport } from '@/app/buyer/store/buyerDisputeSupportAPI';
 import {
   getIncomingEventTargetPath,
   getNotificationTargetPath,
@@ -245,6 +246,23 @@ function enrichBookingBody(data: Record<string, unknown>, fallbackBody: string, 
   return body;
 }
 
+function isDisputeSupportPush(data: Record<string, unknown>): boolean {
+  const key = normalizeKey(data.key);
+  const eventKey = normalizeKey(data.eventKey ?? data.event_key);
+  return key.includes('dispute-support') || eventKey.includes('dispute-support');
+}
+
+function disputeIdFromData(data: Record<string, unknown>): number | null {
+  const nested = asRecord(data.data) ?? asRecord(data.payload) ?? asRecord(data.report) ?? asRecord(data.dispute);
+  return (
+    toPositiveId(data.reportId ?? data.report_id) ??
+    toPositiveId(data.ticketId ?? data.ticket_id) ??
+    toPositiveId(data.disputeId ?? data.dispute_id) ??
+    toPositiveId(nested?.id) ??
+    toPositiveId(data.id)
+  );
+}
+
 function markNotificationShown(id: string): boolean {
   if (shownNotificationIds.has(id)) return false;
   shownNotificationIds.add(id);
@@ -282,6 +300,9 @@ export async function handleIncomingBuyerPush(
       bookings: bookingEvent,
       bookingId: bookingId ?? undefined,
     });
+    if (isDisputeSupportPush(data)) {
+      refreshBuyerDisputeSupport(dispatch, disputeIdFromData(data) ?? undefined);
+    }
   }
 
   const toastId = notificationId ? `notif:${notificationId}` : `push:${message.title}:${message.body}`;
@@ -320,6 +341,10 @@ export async function handleIncomingBuyerInboxItem(
 
   if (bookingEvent) {
     refreshBuyerBookings(dispatch, bookingId ?? undefined);
+  }
+
+  if (isDisputeSupportPush(data)) {
+    refreshBuyerDisputeSupport(dispatch, disputeIdFromData(data) ?? undefined);
   }
 
   const toastId = `notif:${notification.id}`;

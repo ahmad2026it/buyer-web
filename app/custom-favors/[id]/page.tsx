@@ -992,7 +992,7 @@ export default function CustomFavorDetailPage() {
               <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, overflow: 'hidden' }}>
                 {/* Panel header */}
                 <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #F2F4F7' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 16, color: '#101828' }}>
                       Requests
                       {requests.length > 0 && (
@@ -1002,16 +1002,6 @@ export default function CustomFavorDetailPage() {
                       )}
                     </h3>
                   </div>
-                  {/* Invite seller button */}
-                  <button
-                    onClick={() => router.push(`/custom-favors/new`)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: FONT, fontWeight: 700, fontSize: 14, color: BRAND, background: 'transparent', border: `1.5px solid ${BRAND}`, borderRadius: PILL, padding: '10px', cursor: 'pointer', transition: 'background 0.15s' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9F5FF'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M16 11c0 2.21-1.79 4-4 4s-4-1.79-4-4 1.79-4 4-4 4 1.79 4 4zM3 21c0-3.31 3.58-6 8-6s8 2.69 8 6" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20 8v6M23 11h-6" stroke={BRAND} strokeWidth="2" strokeLinecap="round"/></svg>
-                    Invite Seller
-                  </button>
                 </div>
 
                 {/* Scrollable requests list */}

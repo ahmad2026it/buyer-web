@@ -941,7 +941,7 @@ export default function NewCustomFavorPage() {
                 <button onClick={() => setStep(3)} disabled={!canSchedule} style={{ flex: 2, fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#fff', background: !canSchedule ? '#D0D5DD' : GRAD, border: 'none', borderRadius: PILL, padding: 13, cursor: !canSchedule ? 'not-allowed' : 'pointer', boxShadow: !canSchedule ? 'none' : '0 4px 14px rgba(165,74,255,0.28)', transition: 'opacity 0.15s' }}
                   onMouseEnter={e => { if (canSchedule) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                  Next: Invite Sellers
+                  Next
                 </button>
               </div>
             </div>

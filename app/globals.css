@@ -476,6 +476,16 @@ body.animate-ready [data-animate="scale"].in-view {
 
 .chat-back { display: none; }
 
+.support-chat-panel {
+  width: 420px;
+}
+
+@media (max-width: 768px) {
+  .support-chat-panel {
+    width: 100% !important;
+  }
+}
+
 .favor-mobile-cta { display: none; }
 
 @media (max-width: 900px) {

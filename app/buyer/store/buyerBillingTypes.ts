@@ -55,3 +55,42 @@ export type GetBuyerBillingHistoryResponse = {
     pagination: BuyerBillingPagination;
   };
 };
+
+export type BuyerChargePreviewAddOn = {
+  index?: number;
+  name?: string;
+  title?: string;
+  description?: string;
+  label?: string;
+  price?: number | string;
+  amount?: number | string;
+};
+
+export type BuyerChargePreview = {
+  favorId: number;
+  favorType: string;
+  selectedAddOnIndices: number[];
+  selectedAddOns: BuyerChargePreviewAddOn[];
+  orderSubtotal: number;
+  buyerExtraAmount: number;
+  sellerProcessingFeeShare: number;
+  stripeProcessingFeeTotal: number;
+  buyerChargeAmount: number;
+  boostDiscountAmount: number;
+  boostDiscountPercent: number | null;
+  platformFee: number;
+  sellerAmount: number;
+  currency: string;
+};
+
+export type GetBuyerChargePreviewParams = {
+  favorId: number;
+  selectedAddOnIndices?: number[];
+};
+
+export type GetBuyerChargePreviewResponse = {
+  success: boolean;
+  status?: number;
+  message?: string;
+  data: BuyerChargePreview;
+};

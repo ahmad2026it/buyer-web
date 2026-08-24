@@ -15,6 +15,7 @@ import authReducer, { logout } from '@/app/auth/store/authSlice';
 import { buyerBillingAPI } from '@/app/buyer/store/buyerBillingAPI';
 import { buyerBookingsAPI } from '@/app/buyer/store/buyerBookingsAPI';
 import { buyerConversationsAPI } from '@/app/buyer/store/buyerConversationsAPI';
+import { buyerDisputeSupportAPI } from '@/app/buyer/store/buyerDisputeSupportAPI';
 import { buyerCategoriesAPI } from '@/app/buyer/store/buyerCategoriesAPI';
 import { buyerCustomFavorsAPI } from '@/app/buyer/store/buyerCustomFavorsAPI';
 import { buyerFavorsAPI } from '@/app/buyer/store/buyerFavorsAPI';
@@ -56,6 +57,7 @@ const appReducer = combineReducers({
   [buyerBillingAPI.reducerPath]: buyerBillingAPI.reducer,
   [buyerBookingsAPI.reducerPath]: buyerBookingsAPI.reducer,
   [buyerConversationsAPI.reducerPath]: buyerConversationsAPI.reducer,
+  [buyerDisputeSupportAPI.reducerPath]: buyerDisputeSupportAPI.reducer,
   [buyerCategoriesAPI.reducerPath]: buyerCategoriesAPI.reducer,
   [buyerCustomFavorsAPI.reducerPath]: buyerCustomFavorsAPI.reducer,
   [buyerFavorsAPI.reducerPath]: buyerFavorsAPI.reducer,
@@ -80,6 +82,7 @@ const rtkQueryApis = [
   buyerBillingAPI,
   buyerBookingsAPI,
   buyerConversationsAPI,
+  buyerDisputeSupportAPI,
   buyerCategoriesAPI,
   buyerCustomFavorsAPI,
   buyerFavorsAPI,
@@ -122,6 +125,7 @@ export const makeStore = () => {
         buyerBillingAPI.middleware,
         buyerBookingsAPI.middleware,
         buyerConversationsAPI.middleware,
+        buyerDisputeSupportAPI.middleware,
         buyerCategoriesAPI.middleware,
         buyerCustomFavorsAPI.middleware,
         buyerFavorsAPI.middleware,

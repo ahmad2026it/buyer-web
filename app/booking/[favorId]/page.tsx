@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AuthGateModal from '@/components/AuthGateModal';
+import { useGetBuyerChargePreviewQuery } from '@/app/buyer/store/buyerBillingAPI';
 import {
   useConfirmBuyerBookingPaymentMutation,
   useCreateBuyerBookingMutation,
@@ -105,6 +106,47 @@ function toFavorDate(year: number, month: number, day: number): string {
 function formatUsd(value: number): string {
   if (!Number.isFinite(value)) return '$0.00';
   return `$${value.toFixed(2)}`;
+}
+
+function toMoney(value: unknown, fallback = 0): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function addOnLabel(item: { name?: string; title?: string; description?: string; label?: string }, index: number): string {
+  return item.name || item.title || item.description || item.label || `Add-on ${index + 1}`;
+}
+
+function SummaryRow({
+  label,
+  value,
+  emphasize = false,
+}: {
+  label: string;
+  value: string;
+  emphasize?: boolean;
+}) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+      <span style={{
+        fontFamily: 'Poppins,sans-serif',
+        fontSize: emphasize ? 14 : 13,
+        fontWeight: emphasize ? 700 : 400,
+        color: emphasize ? BRAND : '#667085',
+      }}>
+        {label}
+      </span>
+      <span style={{
+        fontFamily: 'Poppins,sans-serif',
+        fontSize: emphasize ? 17 : 13,
+        fontWeight: emphasize ? 800 : 600,
+        color: emphasize ? BRAND : '#344054',
+        flexShrink: 0,
+      }}>
+        {value}
+      </span>
+    </div>
+  );
 }
 
 function toFavorTime(hour: string, period: 'AM' | 'PM'): string {
@@ -283,6 +325,13 @@ export default function BookingPage() {
     isError: isCardsError,
     refetch: refetchCards,
   } = useGetBuyerStripeCardsQuery(undefined, { skip: !token });
+  const {
+    data: chargePreviewResponse,
+    isLoading: isLoadingChargePreview,
+  } = useGetBuyerChargePreviewQuery(
+    { favorId },
+    { skip: skipFavor || !token },
+  );
 
   const cards = cardsResponse?.data?.cards ?? [];
   const holderName = user?.fullName || 'Cardholder';
@@ -355,7 +404,12 @@ export default function BookingPage() {
 
   const days = getCalDays(calYear, calMonth);
   const loc  = bookingLocations.find(l => l.id === locId) ?? bookingLocations[0] ?? LOCS[0];
-  const total = favorCard.price;
+  const chargePreview = chargePreviewResponse?.data;
+  const actualAmount = toMoney(chargePreview?.orderSubtotal, favorCard.price);
+  const processingFee = toMoney(chargePreview?.buyerExtraAmount);
+  const boostDiscount = toMoney(chargePreview?.boostDiscountAmount);
+  const total = toMoney(chargePreview?.buyerChargeAmount, actualAmount + processingFee - boostDiscount);
+  const previewAddOns = chargePreview?.selectedAddOns ?? [];
   const dateStr = selDay ? `${MONTHS_SHORT[calMonth]} ${selDay}, ${calYear}` : '—';
   const timeStr = `${hour}:00 ${period}`;
 
@@ -910,15 +964,33 @@ export default function BookingPage() {
 
                 {/* Fee breakdown */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085' }}>Starting price</span>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatUsd(favorCard.price)}</span>
-                  </div>
-                  <div style={{ height: 1, background: '#EAECF0' }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#101828' }}>Total</span>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 17, color: BRAND }}>{formatUsd(total)}</span>
-                  </div>
+                  {isLoadingChargePreview && !chargePreview ? (
+                    <>
+                      <div style={{ height: 14, width: '70%', borderRadius: 4, background: '#EAECF0' }} />
+                      <div style={{ height: 14, width: '62%', borderRadius: 4, background: '#EAECF0' }} />
+                      <div style={{ height: 1, background: '#EAECF0' }} />
+                      <div style={{ height: 18, width: '55%', borderRadius: 4, background: '#EAECF0' }} />
+                    </>
+                  ) : (
+                    <>
+                      <SummaryRow label="Actual amount" value={formatUsd(actualAmount)} />
+                      {previewAddOns.map((addon, index) => (
+                        <SummaryRow
+                          key={`${addOnLabel(addon, index)}-${index}`}
+                          label={addOnLabel(addon, index)}
+                          value={`+${formatUsd(toMoney(addon.price ?? addon.amount))}`}
+                        />
+                      ))}
+                      {chargePreview && (
+                        <SummaryRow label="Processing fee" value={formatUsd(processingFee)} />
+                      )}
+                      {boostDiscount > 0 && (
+                        <SummaryRow label="Boost discount" value={`-${formatUsd(boostDiscount)}`} />
+                      )}
+                      <div style={{ height: 1, background: '#EAECF0' }} />
+                      <SummaryRow label="Total amount" value={formatUsd(total)} emphasize />
+                    </>
+                  )}
                 </div>
 
                 <button

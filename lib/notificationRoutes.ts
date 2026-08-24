@@ -92,6 +92,10 @@ function isCustomFavorRequest(type: string): boolean {
   return /(custom[_\s-]?favor[_\s-]?request|buyer_new_custom_request)/.test(type);
 }
 
+export function getDisputeSupportChatPath(disputeId: number | string): string {
+  return `/disputes/${disputeId}?chat=1`;
+}
+
 export function getNotificationTargetPath(notification: BuyerNotification): string | null {
   const payload = parsePayload(notification.payload);
   const nestedData = asRecord(payload?.data);
@@ -124,11 +128,13 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
     /(booking|booked|accepted|declined|cancelled|canceled|completed|in-progress|in_progress|inprogress)/.test(
       type,
     );
+  const isDisputeSupport = /dispute[_\s-]?support/.test(type);
   const isChat =
-    /(message|chat|conversation|support)/.test(type) ||
-    (Boolean(notification.actorUserId || notification.actor?.id) &&
-      !looksLikeBooking &&
-      !/(dispute|bid|favor|offer)/.test(type));
+    !isDisputeSupport &&
+    (/(message|chat|conversation)/.test(type) ||
+      (Boolean(notification.actorUserId || notification.actor?.id) &&
+        !looksLikeBooking &&
+        !/(dispute|bid|favor|offer)/.test(type)));
   const customFavorRequest = isCustomFavorRequest(type);
 
   const explicitUrl = payload?.url ?? payload?.path ?? nestedData?.url ?? nestedData?.path;
@@ -139,8 +145,9 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
     pickId(nestedBooking, ['id']) ??
     (/booking/.test(type) && !isChat && !customFavorRequest ? pickId(payload, ['id']) : null);
   const disputeId =
-    firstId(sources, ['disputeId', 'dispute_id']) ??
-    pickId(asRecord(payload?.dispute), ['id']);
+    firstId(sources, ['disputeId', 'dispute_id', 'reportId', 'report_id', 'ticketId', 'ticket_id']) ??
+    pickId(asRecord(payload?.dispute), ['id']) ??
+    pickId(asRecord(payload?.report), ['id']);
   const favorId = firstId(sources, ['favorId', 'favor_id']);
   const customFavorId =
     firstId(sources, ['customFavorId', 'custom_favor_id', 'customFavor_id']) ??
@@ -153,6 +160,11 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
     toPositiveId(notification.actorUserId) ??
     toPositiveId(notification.actor?.id) ??
     firstId(sources, ['sellerId', 'seller_id', 'sellerUserId', 'seller_user_id']);
+
+  if (isDisputeSupport) {
+    const reportId = disputeId ?? firstId(sources, ['id']);
+    return reportId ? getDisputeSupportChatPath(reportId) : '/disputes';
+  }
 
   if (isChat || conversationId) {
     return chatPath({

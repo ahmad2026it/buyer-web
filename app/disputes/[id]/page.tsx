@@ -1,9 +1,10 @@
 'use client';
-import { useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AuthGateModal from '@/components/AuthGateModal';
+import DisputeSupportChat from '@/components/DisputeSupportChat';
 import { useGetBuyerBookingReportsQuery } from '@/app/buyer/store/buyerBookingsAPI';
 import {
   formatBuyerReportDate,
@@ -78,12 +79,21 @@ function DetailSkeleton() {
   );
 }
 
-export default function DisputeDetailPage() {
+function DisputeDetailPageInner() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [authOpen, setAuthOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const token = useAppSelector((state) => state.auth.token);
   const skip = !token;
+
+  useEffect(() => {
+    const chatParam = searchParams.get('chat');
+    if (chatParam && chatParam !== '0' && chatParam !== 'false') {
+      setChatOpen(true);
+    }
+  }, [searchParams]);
 
   const openQuery = useGetBuyerBookingReportsQuery(
     { page: 1, limit: PAGE_SIZE, status: 'open' },
@@ -308,6 +318,8 @@ export default function DisputeDetailPage() {
               <p style={{ fontFamily: FONT, fontSize: '14px', color: '#667085' }}>
                 Have any issue?{' '}
                 <button
+                  type="button"
+                  onClick={() => setChatOpen(true)}
                   style={{ fontFamily: FONT, fontSize: '14px', fontWeight: 600, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'underline'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'none'; }}
@@ -320,6 +332,22 @@ export default function DisputeDetailPage() {
         )}
       </main>
       <Footer />
+      {dispute && (
+        <DisputeSupportChat
+          open={chatOpen}
+          disputeId={dispute.id}
+          ticketNo={dispute.ticketNo}
+          onClose={() => setChatOpen(false)}
+        />
+      )}
     </>
+  );
+}
+
+export default function DisputeDetailPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#FAFAFA' }} />}>
+      <DisputeDetailPageInner />
+    </Suspense>
   );
 }
