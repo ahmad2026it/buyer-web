@@ -86,6 +86,101 @@ function toBillingTransaction(item: BuyerBillingTransaction): Transaction {
   };
 }
 
+const RECEIPT_ASCII_REPLACEMENTS: Record<string, string> = {
+  '\u2013': '-',
+  '\u2014': '-',
+  '\u2018': "'",
+  '\u2019': "'",
+  '\u201C': '"',
+  '\u201D': '"',
+  '\u2022': '-',
+  '\u00A0': ' ',
+};
+
+function toReceiptAscii(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, (char) => RECEIPT_ASCII_REPLACEMENTS[char] ?? '');
+}
+
+function toPdfString(value: string): string {
+  const escaped = toReceiptAscii(value)
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)');
+  return `(${escaped})`;
+}
+
+function downloadPaymentReceipt(tx: Transaction): void {
+  const rows: Array<[string, string]> = [
+    ['Service', tx.invoice],
+    ['Amount', tx.amount],
+    ['Status', tx.status],
+    ['Reference number', tx.refNumber],
+    ['Payment date', tx.date],
+    ['Service provider', tx.seller],
+  ];
+
+  const content = [
+    'BT',
+    '/F2 20 Tf',
+    '0.647 0.29 1 rg',
+    `50 740 Td ${toPdfString('WhoCan')} Tj`,
+    '0 0 0 rg',
+    '/F2 16 Tf',
+    `0 -28 Td ${toPdfString('Payment Receipt')} Tj`,
+    '/F1 11 Tf',
+    '0.4 0.44 0.52 rg',
+    `0 -18 Td ${toPdfString('Thank you for your payment.')} Tj`,
+    '0.06 0.09 0.16 rg',
+  ];
+
+  rows.forEach(([label, value], index) => {
+    content.push('/F1 10 Tf');
+    content.push('0.4 0.44 0.52 rg');
+    content.push(`${index === 0 ? '0 -36' : '0 -22'} Td ${toPdfString(label)} Tj`);
+    content.push('/F2 12 Tf');
+    content.push('0.06 0.09 0.16 rg');
+    content.push(`0 -16 Td ${toPdfString(value)} Tj`);
+  });
+  content.push('ET');
+
+  const stream = content.join('\n');
+  const objects = [
+    '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
+    '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
+    '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >> endobj',
+    `4 0 obj << /Length ${stream.length} >> stream\n${stream}\nendstream endobj`,
+    '5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj',
+    '6 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj',
+  ];
+
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  for (const object of objects) {
+    offsets.push(pdf.length);
+    pdf += `${object}\n`;
+  }
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i < offsets.length; i += 1) {
+    pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  }
+  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+
+  const blob = new Blob([pdf], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const safeRef = toReceiptAscii(tx.refNumber).replace(/[^\w.-]+/g, '-') || 'receipt';
+  link.href = url;
+  link.download = `receipt-${safeRef}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function StatusBadge({ status }: { status: BillingStatus }) {
   const map = {
     Paid:     { bg: '#ECFDF3', border: '#ABEFC6', color: '#067647', icon: <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#067647" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
@@ -103,6 +198,14 @@ function StatusBadge({ status }: { status: BillingStatus }) {
 }
 
 function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+  const handleDownload = () => {
+    try {
+      downloadPaymentReceipt(tx);
+    } catch {
+      showToast('Could not download the receipt. Please try again.', 'error');
+    }
+  };
+
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,0.5)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px', boxShadow: '0 20px 64px rgba(16,24,40,0.18)', width: '100%', maxWidth: '440px', overflow: 'hidden' }}>
@@ -147,7 +250,10 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
           </div>
 
           {/* Download button */}
-          <button style={{ marginTop: '20px', width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '14px', color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(165,74,255,0.25)', transition: 'opacity 0.15s' }}
+          <button
+            type="button"
+            onClick={handleDownload}
+            style={{ marginTop: '20px', width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '14px', color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(165,74,255,0.25)', transition: 'opacity 0.15s' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -498,26 +604,15 @@ export default function BillingPage() {
 
           {/* ── Billing History ── */}
           <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: '16px', boxShadow: '0 1px 2px rgba(16,24,40,0.05)', overflow: 'hidden' }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid #EAECF0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '17px', color: '#101828', marginBottom: '2px' }}>Billing history</h2>
-                <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>
-                  {!token
-                    ? 'Log in to view your transactions'
-                    : isLoadingBilling
-                      ? 'Loading transactions…'
-                      : `${transactionTotal} ${transactionTotal === 1 ? 'transaction' : 'transactions'}`}
-                </p>
-              </div>
-              <button
-                type="button"
-                disabled={!token || transactions.length === 0}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '8px 16px', cursor: !token || transactions.length === 0 ? 'not-allowed' : 'pointer', boxShadow: '0 1px 2px rgba(16,24,40,0.05)', transition: 'all 0.15s', opacity: !token || transactions.length === 0 ? 0.5 : 1 }}
-                onMouseEnter={e => { if (token && transactions.length > 0) { const el = e.currentTarget as HTMLElement; el.style.borderColor = BRAND; el.style.color = BRAND; } }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#D0D5DD'; el.style.color = '#344054'; }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                Download all
-              </button>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #EAECF0' }}>
+              <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '17px', color: '#101828', marginBottom: '2px' }}>Billing history</h2>
+              <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>
+                {!token
+                  ? 'Log in to view your transactions'
+                  : isLoadingBilling
+                    ? 'Loading transactions…'
+                    : `${transactionTotal} ${transactionTotal === 1 ? 'transaction' : 'transactions'}`}
+              </p>
             </div>
 
             {/* Table header */}
