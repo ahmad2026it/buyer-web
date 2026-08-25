@@ -11,8 +11,17 @@ import { useGetBuyerFavorsQuery } from '@/app/buyer/store/buyerFavorsAPI';
 import type { BuyerCategory } from '@/app/buyer/store/buyerCategoriesTypes';
 import type { BuyerFavor } from '@/app/buyer/store/buyerFavorsTypes';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
-import { useGetBuyerSellersQuery } from '@/app/buyer/store/buyerSellersAPI';
-import type { BuyerSeller } from '@/app/buyer/store/buyerSellersTypes';
+import {
+  BUYER_SELLERS_LIST_PARAMS,
+  useSellersListQuery,
+} from '@/app/buyer/store/buyerSellersAPI';
+import {
+  getSellerIsTeam,
+  getSellerJobsCompleted,
+  getSellerLocationLabel,
+  getSellerReviewCount,
+  type BuyerSeller,
+} from '@/app/buyer/store/buyerSellersTypes';
 import {
   DEFAULT_FAVOR_FILTERS,
   isFavorFiltersActive,
@@ -30,7 +39,9 @@ type SellerCard = {
   rating: string;
   ratingValue: number;
   reviews: string;
-  jobs: number;
+  jobs: number | null;
+  location: string;
+  isOnline: boolean;
 };
 
 const COLS_FAVORS = 3;
@@ -78,11 +89,13 @@ function toSellerCard(seller: BuyerSeller): SellerCard | null {
     id,
     image: pickFavorImage(seller.profileImageUrl, seller.profileImage),
     name: seller.name?.trim() || seller.fullName?.trim() || 'Seller',
-    badge: seller.isPro ? 'Pro' : seller.isTeam ? 'Team' : '',
+    badge: seller.isPro ? 'Pro' : getSellerIsTeam(seller) ? 'Team' : '',
     rating: Number.isFinite(ratingValue) ? ratingValue.toFixed(1) : '—',
     ratingValue: Number.isFinite(ratingValue) ? ratingValue : 0,
-    reviews: Number(seller.totalReviews ?? seller.reviewCount ?? 0).toLocaleString(),
-    jobs: Number(seller.favorsCompleted ?? 0),
+    reviews: getSellerReviewCount(seller).toLocaleString(),
+    jobs: getSellerJobsCompleted(seller),
+    location: getSellerLocationLabel(seller),
+    isOnline: Boolean(seller.isOnline),
   };
 }
 
@@ -150,7 +163,7 @@ function SearchContent() {
     data: sellersData,
     isLoading: sellersLoading,
     isError: sellersError,
-  } = useGetBuyerSellersQuery(undefined, { skip: skipSellers });
+  } = useSellersListQuery(BUYER_SELLERS_LIST_PARAMS, { skip: skipSellers });
 
   const apiFavors = favorsData?.data?.favors ?? [];
   const pagination = favorsData?.data?.pagination;
@@ -232,7 +245,7 @@ function SearchContent() {
     ? sellerCards.filter(s => s.name.toLowerCase().includes(q))
     : sellerCards;
   const sortedSellers = [...filteredSellers].sort((a, b) =>
-    sortBy === 'price' ? a.jobs - b.jobs : b.ratingValue - a.ratingValue,
+    sortBy === 'price' ? (a.jobs ?? 0) - (b.jobs ?? 0) : b.ratingValue - a.ratingValue,
   );
 
   const visibleItems = searchType === 'sellers' ? sortedSellers.slice(0, visibleCount) : favorCards;
@@ -511,6 +524,11 @@ function SearchContent() {
                           <div style={{ height: '220px', borderRadius: '14px', overflow: 'hidden', background: '#F8F0FF' }}>
                             <FavorImage src={seller.image} alt={seller.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
                           </div>
+                          {seller.isOnline ? (
+                            <div style={{ position: 'absolute', top: '20px', right: '20px', background: '#12B76A', borderRadius: '9999px', padding: '4px 10px', fontFamily: 'Poppins,sans-serif', fontSize: '11px', fontWeight: 700, color: '#fff', letterSpacing: '0.03em' }}>
+                              Online
+                            </div>
+                          ) : null}
                           {seller.badge ? <div style={BADGE(seller.badge)}>{seller.badge}</div> : null}
                         </div>
 
@@ -521,9 +539,18 @@ function SearchContent() {
                             <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828' }}>{seller.rating}</span>
                             <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#D0D5DD' }}>|</span>
                             <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>{seller.reviews} reviews</span>
-                            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#D0D5DD' }}>/</span>
-                            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>{seller.jobs.toLocaleString()} jobs</span>
+                            {seller.jobs != null ? (
+                              <>
+                                <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#D0D5DD' }}>/</span>
+                                <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>{seller.jobs.toLocaleString()} jobs</span>
+                              </>
+                            ) : null}
                           </div>
+                          {seller.location ? (
+                            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085', margin: '8px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {seller.location}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                     ))

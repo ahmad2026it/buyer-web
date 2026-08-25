@@ -1,9 +1,53 @@
 'use client';
 
-import { SearchIcon, ShieldCheckIcon, SmartphoneIcon, CheckIcon, SparklesIcon } from './Icons';
+import type { MouseEvent } from 'react';
+import {
+  SearchIcon,
+  ShieldCheckIcon,
+  SmartphoneIcon,
+  CheckIcon,
+  SparklesIcon,
+  WrenchIcon,
+} from './Icons';
 
 const PHONE_IMAGE =
   'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=340&h=560&fit=crop&auto=format&q=75';
+
+const APP_PITCH =
+  'Struggling to find reliable professionals for your everyday tasks, or looking to grow your service business? WhoCan connects you with trusted local experts for everything from home cleaning and moving to repairs and tutoring. Whether you need a job done quickly or want to reach more customers in your area, our platform makes it fast, safe, and hassle-free. Download WhoCan today and get things done wherever you are!';
+
+type StoreKind = 'apple' | 'google';
+
+interface AppDownload {
+  audience: string;
+  description: string;
+  icon: typeof SearchIcon;
+  iconColor: string;
+  iconBg: string;
+  appleHref: string;
+  playHref: string;
+}
+
+const APP_DOWNLOADS: AppDownload[] = [
+  {
+    audience: 'Buyers',
+    description: 'Hire trusted local experts for everyday tasks.',
+    icon: SearchIcon,
+    iconColor: '#1570EF',
+    iconBg: '#EFF6FF',
+    appleHref: 'https://apps.apple.com/app/whocan/id6759322069',
+    playHref: 'https://play.google.com/store/apps/details?id=com.whocanapp.buyer',
+  },
+  {
+    audience: 'Sellers',
+    description: 'Grow your service business and reach more customers.',
+    icon: WrenchIcon,
+    iconColor: '#A54AFF',
+    iconBg: '#F8F0FF',
+    appleHref: 'https://apps.apple.com/app/whocan-provider/id6759322439',
+    playHref: 'https://play.google.com/store/apps/details?id=com.whocanapp.provider',
+  },
+];
 
 const FEATURES = [
   {
@@ -28,6 +72,80 @@ const FEATURES = [
     desc: 'Book a service in under 60 seconds with our streamlined mobile app.',
   },
 ];
+
+function liftBadge(e: MouseEvent<HTMLAnchorElement>) {
+  e.currentTarget.style.transform = 'translateY(-2px)';
+}
+
+function resetBadge(e: MouseEvent<HTMLAnchorElement>) {
+  e.currentTarget.style.transform = 'translateY(0)';
+}
+
+function StoreBadge({ store, href, label }: { store: StoreKind; href: string; label: string }) {
+  const isApple = store === 'apple';
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      style={{ textDecoration: 'none', transition: 'transform 0.2s ease', display: 'inline-flex' }}
+      onMouseEnter={liftBadge}
+      onMouseLeave={resetBadge}
+    >
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: '#000',
+          borderRadius: '10px',
+          padding: '9px 16px',
+          height: '44px',
+          boxSizing: 'border-box',
+        }}
+      >
+        {isApple ? (
+          <svg width="18" height="22" viewBox="0 0 814 1000" fill="#fff" aria-hidden="true">
+            <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.4 8 719.2 8 653.2c0-114.1 75.8-174.4 151.4-174.4 79.4 0 129.2 52.7 173.4 52.7 42.8 0 98.7-54.9 182.1-54.9 26.4 0 108.7 2.3 166.6 90.8zm-89.2-305.3c34.8-41.3 60.1-98.8 60.1-155.5 0-8.7-.6-17.4-1.9-25.4C693.4 3.3 631.3 38 591 80.5c-36.1 39.6-71.3 99.8-71.3 159.3 0 9.6 1.3 19.2 2.6 22.2 3.9.6 10.3 1.3 16.6 1.3 52.3 0 109.7-33.8 149.9-67.2z" />
+          </svg>
+        ) : (
+          <svg width="18" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 1.5L14.25 12 3 22.5" stroke="#34A853" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M3 1.5l18 10.5L14.25 12" stroke="#FBBC04" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M3 22.5l18-10.5L14.25 12" stroke="#EA4335" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M3 1.5L14.25 12 3 22.5" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        )}
+        <div>
+          <div
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontSize: '9px',
+              color: 'rgba(255,255,255,0.8)',
+              lineHeight: 1,
+              marginBottom: '2px',
+            }}
+          >
+            {isApple ? 'Download on the' : 'Get it on'}
+          </div>
+          <div
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontSize: '15px',
+              fontWeight: 700,
+              color: '#fff',
+              lineHeight: 1.1,
+            }}
+          >
+            {isApple ? 'App Store' : 'Google Play'}
+          </div>
+        </div>
+      </div>
+    </a>
+  );
+}
 
 function CheckBadge() {
   return (
@@ -140,12 +258,11 @@ export default function AppDownloadSection() {
               fontSize: '16px',
               lineHeight: '1.7',
               color: '#475467',
-              maxWidth: '500px',
+              maxWidth: '720px',
               margin: '0 auto',
             }}
           >
-            Join a growing community of neighbors willing to help each other —
-            hire instantly or earn on your schedule.
+            {APP_PITCH}
           </p>
         </div>
 
@@ -238,7 +355,6 @@ export default function AppDownloadSection() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '32px',
             }}
           >
             <div
@@ -270,50 +386,6 @@ export default function AppDownloadSection() {
               />
             </div>
 
-            {/* CTA text */}
-            <div
-              data-animate="fade"
-              data-delay="2"
-              style={{ textAlign: 'center' }}
-            >
-              <p
-                style={{
-                  fontFamily: 'Poppins, sans-serif',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  color: '#101828',
-                  marginBottom: '16px',
-                }}
-              >
-                Get WhoCan on your phone now!
-              </p>
-              <div className="rs-store-row" style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                {/* App Store badge */}
-                <a href="#" style={{ textDecoration: 'none', transition: 'transform 0.2s ease', display: 'inline-flex' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#000', borderRadius: '10px', padding: '9px 16px', height: '44px', boxSizing: 'border-box' }}>
-                    <svg width="18" height="22" viewBox="0 0 814 1000" fill="#fff"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.4 8 719.2 8 653.2c0-114.1 75.8-174.4 151.4-174.4 79.4 0 129.2 52.7 173.4 52.7 42.8 0 98.7-54.9 182.1-54.9 26.4 0 108.7 2.3 166.6 90.8zm-89.2-305.3c34.8-41.3 60.1-98.8 60.1-155.5 0-8.7-.6-17.4-1.9-25.4C693.4 3.3 631.3 38 591 80.5c-36.1 39.6-71.3 99.8-71.3 159.3 0 9.6 1.3 19.2 2.6 22.2 3.9.6 10.3 1.3 16.6 1.3 52.3 0 109.7-33.8 149.9-67.2z"/></svg>
-                    <div>
-                      <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '9px', color: 'rgba(255,255,255,0.8)', lineHeight: 1, marginBottom: '2px' }}>Download on the</div>
-                      <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '15px', fontWeight: 700, color: '#fff', lineHeight: 1.1 }}>App Store</div>
-                    </div>
-                  </div>
-                </a>
-                {/* Google Play badge */}
-                <a href="#" style={{ textDecoration: 'none', transition: 'transform 0.2s ease', display: 'inline-flex' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#000', borderRadius: '10px', padding: '9px 16px', height: '44px', boxSizing: 'border-box' }}>
-                    <svg width="18" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 1.5L14.25 12 3 22.5" stroke="#34A853" strokeWidth="1.5" strokeLinecap="round" /><path d="M3 1.5l18 10.5L14.25 12" stroke="#FBBC04" strokeWidth="1.5" strokeLinecap="round" /><path d="M3 22.5l18-10.5L14.25 12" stroke="#EA4335" strokeWidth="1.5" strokeLinecap="round" /><path d="M3 1.5L14.25 12 3 22.5" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                    <div>
-                      <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '9px', color: 'rgba(255,255,255,0.8)', lineHeight: 1, marginBottom: '2px' }}>Get it on</div>
-                      <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '15px', fontWeight: 700, color: '#fff', lineHeight: 1.1 }}>Google Play</div>
-                    </div>
-                  </div>
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* Right: benefits list */}
@@ -361,6 +433,107 @@ export default function AppDownloadSection() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div
+          data-animate="fade"
+          data-delay="2"
+          style={{ marginTop: '56px', textAlign: 'center' }}
+        >
+          <p
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 600,
+              fontSize: '18px',
+              color: '#101828',
+              marginBottom: '24px',
+            }}
+          >
+            Get WhoCan on your phone now!
+          </p>
+          <div className="rs-app-downloads">
+            {APP_DOWNLOADS.map((app) => (
+              <div
+                key={app.audience}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: '16px',
+                  padding: '24px',
+                  background: '#ffffff',
+                  borderRadius: '16px',
+                  border: '1.5px solid #EAECF0',
+                  boxShadow: '0 2px 8px rgba(16, 24, 40, 0.04)',
+                  textAlign: 'left',
+                  transition: 'all 0.25s ease',
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget;
+                  el.style.borderColor = 'rgba(165, 74, 255, 0.3)';
+                  el.style.boxShadow = '0 4px 16px rgba(165, 74, 255, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget;
+                  el.style.borderColor = '#EAECF0';
+                  el.style.boxShadow = '0 2px 8px rgba(16, 24, 40, 0.04)';
+                }}
+              >
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <div
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '12px',
+                      background: app.iconBg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <app.icon size={22} color={app.iconColor} />
+                  </div>
+                  <div>
+                    <h3
+                      style={{
+                        fontFamily: 'Poppins, sans-serif',
+                        fontWeight: 700,
+                        fontSize: '18px',
+                        color: '#101828',
+                        marginBottom: '4px',
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      For {app.audience}
+                    </h3>
+                    <p
+                      style={{
+                        fontFamily: 'Poppins, sans-serif',
+                        fontSize: '14px',
+                        color: '#667085',
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {app.description}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <StoreBadge
+                    store="apple"
+                    href={app.appleHref}
+                    label={`Download WhoCan for ${app.audience} on the App Store`}
+                  />
+                  <StoreBadge
+                    store="google"
+                    href={app.playHref}
+                    label={`Get WhoCan for ${app.audience} on Google Play`}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

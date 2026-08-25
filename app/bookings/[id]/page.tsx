@@ -364,39 +364,6 @@ function ThreeDotMenu({ onReport }: { onReport: () => void }) {
   );
 }
 
-/* ─── UpcomingActionsMenu ────────────────────────────────── */
-function UpcomingActionsMenu({ onCancel }: { onCancel: () => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div style={{ position: 'relative' }}>
-      <button
-        type="button"
-        aria-label="Booking actions"
-        aria-expanded={open}
-        onClick={() => setOpen(o => !o)}
-        style={{ width: 36, height: 36, borderRadius: '50%', background: '#fff', border: '1.5px solid #EAECF0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.15s' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor='#D0D5DD'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor='#EAECF0'; }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.5" fill="#667085"/><circle cx="12" cy="12" r="1.5" fill="#667085"/><circle cx="12" cy="19" r="1.5" fill="#667085"/></svg>
-      </button>
-      {open && (
-        <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 9 }} onClick={() => setOpen(false)}/>
-          <div style={{ position: 'absolute', top: 42, right: 0, background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 12, padding: 6, minWidth: 190, boxShadow: '0 8px 28px rgba(16,24,40,0.14)', zIndex: 10 }}>
-            <button type="button" onClick={() => { onCancel(); setOpen(false); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20', background: 'none', border: 'none', cursor: 'pointer', padding: '9px 12px', borderRadius: 8 }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='#FEF3F2'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='none'; }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#D92D20" strokeWidth="2" strokeLinecap="round"/></svg>
-              Cancel Booking
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 type ReviewMediaItem = { file: File; url: string };
 
 type CompleteReviewPayload = {
@@ -1022,116 +989,6 @@ function WithdrawModal({
   );
 }
 
-/* ─── CancelModal (upcoming — 80% refund) ────────────────── */
-function CancelModal({
-  onConfirm,
-  onClose,
-  onDone,
-  isSubmitting,
-}: {
-  booking: DetailedBooking;
-  onConfirm: (reason: string) => Promise<boolean>;
-  onClose: () => void;
-  onDone: () => void;
-  isSubmitting: boolean;
-}) {
-  const [reason, setReason] = useState('');
-  const [note, setNote] = useState('');
-  const [done, setDone] = useState(false);
-  const cancelReason = reason === 'Other' ? (note.trim() || 'Other') : reason;
-  const canSubmit = Boolean(reason) && (reason !== 'Other' || Boolean(note.trim())) && !isSubmitting;
-
-  if (done) {
-    return (
-      <div style={MODAL_OVERLAY}>
-        <div style={{ background: '#fff', borderRadius: 16, maxWidth: 380, width: '100%', padding: '40px 28px 32px', textAlign: 'center', boxShadow: MODAL_SHADOW }}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F4EBFF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 20, color: '#101828', marginBottom: 8 }}>Booking cancelled</h2>
-          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 28 }}>
-            This booking has been cancelled. You can find it in History.
-          </p>
-          <button
-            type="button"
-            onClick={onDone}
-            style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '13px', cursor: 'pointer' }}
-          >
-            Back to bookings
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div onClick={e => { if (e.target === e.currentTarget && !isSubmitting) onClose(); }} style={MODAL_OVERLAY}>
-      <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: MODAL_SHADOW }}>
-
-        {/* Header */}
-        <div style={{ padding: '20px 24px 0', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 18, color: '#101828', margin: 0 }}>Cancel Booking?</h2>
-            <ModalCloseBtn onClose={isSubmitting ? () => undefined : onClose} />
-          </div>
-          <div style={{ height: 1, background: '#EAECF0', margin: '0 -24px' }}/>
-        </div>
-
-        {/* Body */}
-        <div style={{ padding: 24 }}>
-          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 20 }}>
-            Please tell us why you&apos;re cancelling this booking. Your reason helps us process the request smoothly.
-          </p>
-
-          <div style={{ marginBottom: reason === 'Other' ? 18 : 16 }}>
-            <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 8 }}>Select reason</p>
-            <ModalSelect value={reason} onChange={setReason} options={WITHDRAW_REASONS} placeholder="Select one" />
-          </div>
-          {reason === 'Other' && (
-            <textarea
-              value={note}
-              disabled={isSubmitting}
-              onChange={e => setNote(e.target.value)}
-              placeholder="Tell us why you're cancelling"
-              style={{ width: '100%', minHeight: 90, fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#101828', border: '1px solid #D0D5DD', borderRadius: 12, padding: '12px 14px', outline: 'none', resize: 'none', boxSizing: 'border-box', display: 'block', marginBottom: 16 }}
-            />
-          )}
-
-          <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#D92D20', lineHeight: 1.55, margin: 0 }}>
-            Note: Only 80% of the money you can refund from your payment according to our policy.
-          </p>
-        </div>
-
-        {/* Footer */}
-        <div style={{ flexShrink: 0, borderTop: '1px solid #EAECF0', padding: '16px 24px 24px', display: 'flex', gap: 12 }}>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '12px 16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
-          >
-            Don&apos;t Cancel
-          </button>
-          <button
-            type="button"
-            onClick={async () => {
-              if (!canSubmit) return;
-              const ok = await onConfirm(cancelReason);
-              if (ok) setDone(true);
-            }}
-            disabled={!canSubmit}
-            style={{ flex: 1, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: canSubmit ? '#344054' : '#98A2B3', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '12px 16px', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.6, transition: 'opacity 0.15s' }}
-          >
-            {isSubmitting ? 'Cancelling...' : 'Cancel Booking'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ─── MessageDrawer ──────────────────────────────────────── */
 function MessageDrawer({
   name,
@@ -1235,7 +1092,6 @@ export default function BookingDetailPage() {
   }, [buyerApproved, data]);
 
   const [authOpen, setAuthOpen]       = useState(false);
-  const [showPreCancel,   setShowPreCancel]   = useState(false);
   const [showLiveCancel,  setShowLiveCancel]  = useState(false);
   const [showMarkDone,    setShowMarkDone]    = useState(false);
   const [showRate,        setShowRate]        = useState(false);
@@ -1340,7 +1196,6 @@ export default function BookingDetailPage() {
     !isCancelledUiStatus(booking.status);
 
   const handleDoneSuccess = () => { setShowDoneSuccess(false); };
-  const handlePreCancelConfirm = () => { setShowPreCancel(false); router.push('/bookings'); };
   const handleLiveCancelConfirm = () => { setShowLiveCancel(false); router.push('/bookings'); };
   const handleCancelBooking = async (cancelReason: string) => {
     try {
@@ -1598,17 +1453,12 @@ export default function BookingDetailPage() {
                 </div>
               )}
 
-              {/* ── Upcoming: days pill + three-dot ── */}
-              {!isLive && booking.status==='Upcoming' && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
-                  {days > 0 && (
-                    <div style={{ background:'#F4EBFF', border:'1px solid rgba(165,74,255,0.22)', borderRadius:PILL, padding:'10px 20px' }}>
-                      <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:14, color:BRAND }}>
-                        Favor will start in {days} {days===1?'day':'days'}
-                      </span>
-                    </div>
-                  )}
-                  <UpcomingActionsMenu onCancel={() => setShowPreCancel(true)} />
+              {/* ── Upcoming: days pill ── */}
+              {!isLive && booking.status==='Upcoming' && days > 0 && (
+                <div style={{ background:'#F4EBFF', border:'1px solid rgba(165,74,255,0.22)', borderRadius:PILL, padding:'10px 20px', flexShrink:0 }}>
+                  <span style={{ fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:14, color:BRAND }}>
+                    Favor will start in {days} {days===1?'day':'days'}
+                  </span>
                 </div>
               )}
             </div>
@@ -2119,15 +1969,6 @@ export default function BookingDetailPage() {
       </main>
 
       {/* ─── Modals ──────────────────────────────────────────── */}
-      {showPreCancel  && (
-        <CancelModal
-          booking={booking}
-          isSubmitting={isCancelling}
-          onConfirm={handleCancelBooking}
-          onClose={() => { if (!isCancelling) setShowPreCancel(false); }}
-          onDone={handlePreCancelConfirm}
-        />
-      )}
       {showWithdraw   && (
         <WithdrawModal
           onConfirm={handleWithdraw}
@@ -2171,7 +2012,7 @@ export default function BookingDetailPage() {
           onCancelBooking={() => { setShowReport(false); setShowLiveCancel(true); }}
           onSubmit={handleReport}
           isSubmitting={isReporting}
-          canCancelBooking={booking.status === 'InProgress' || booking.status === 'Complete' || booking.status === 'Upcoming'}
+          canCancelBooking={booking.status === 'InProgress' || booking.status === 'Complete'}
         />
       )}
       {showMessage    && (

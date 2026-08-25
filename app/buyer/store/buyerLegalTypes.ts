@@ -11,6 +11,13 @@ export type GetBuyerPrivacyPolicyResponse = {
   data: BuyerLegalDocument;
 };
 
+export type GetBuyerTermsAndConditionsResponse = {
+  success: boolean;
+  status?: number;
+  message?: string;
+  data: BuyerLegalDocument;
+};
+
 export type BuyerBookingTerms = {
   title: string;
   intro: string;

@@ -1,12 +1,18 @@
 'use client';
 import Link from 'next/link';
 import SellerListingCard, { SellerCardSkeleton } from '@/components/SellerListingCard';
-import { useGetBuyerSellersQuery } from '@/app/buyer/store/buyerSellersAPI';
+import {
+  BUYER_SELLERS_LIST_PARAMS,
+  useSellersListQuery,
+} from '@/app/buyer/store/buyerSellersAPI';
 
 const MAX_SELLERS = 6;
 
 export default function TopSellersSection() {
-  const { data, isLoading, isError, refetch } = useGetBuyerSellersQuery();
+  const { data, isLoading, isError, refetch } = useSellersListQuery({
+    page: BUYER_SELLERS_LIST_PARAMS.page,
+    limit: MAX_SELLERS,
+  });
   const sellers = (data?.data?.sellers ?? []).slice(0, MAX_SELLERS);
 
   return (

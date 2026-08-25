@@ -174,7 +174,7 @@ function KebabMenu({ status, isCustom, onWithdraw, onCancel, onViewDetails }: { 
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 9 }} onClick={() => setOpen(false)} />
           <div style={{ position: 'absolute', top: 36, right: 0, background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 12, padding: 6, minWidth: 180, boxShadow: '0 8px 24px rgba(16,24,40,0.12)', zIndex: 10 }}>
-            {(status === 'Upcoming' || status === 'InProgress') && (
+            {status === 'InProgress' && (
               <button onClick={() => { onCancel(); setOpen(false); }}
                 style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#D92D20', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 12px', borderRadius: 8 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FEF3F2'; }}

@@ -1,11 +1,17 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import FavorImage, { isUsableImageUrl } from '@/components/FavorImage';
-import type { BuyerSeller } from '@/app/buyer/store/buyerSellersTypes';
+import {
+  getSellerIsTeam,
+  getSellerJobsCompleted,
+  getSellerLocationLabel,
+  getSellerReviewCount,
+  type BuyerSeller,
+} from '@/app/buyer/store/buyerSellersTypes';
 
-function sellerBadge(isPro?: boolean, isTeam?: boolean): string {
-  if (isPro) return 'Pro';
-  if (isTeam) return 'Team';
+function sellerBadge(seller: BuyerSeller): string {
+  if (seller.isPro) return 'Pro';
+  if (getSellerIsTeam(seller)) return 'Team';
   return '';
 }
 
@@ -36,7 +42,8 @@ export function SellerCardSkeleton() {
       </div>
       <div style={{ padding: '14px 16px 18px' }}>
         <div style={{ width: '58%', height: 16, borderRadius: 4, background: '#F2F4F7', marginBottom: 10 }} />
-        <div style={{ width: '78%', height: 12, borderRadius: 4, background: '#F2F4F7' }} />
+        <div style={{ width: '78%', height: 12, borderRadius: 4, background: '#F2F4F7', marginBottom: 8 }} />
+        <div style={{ width: '64%', height: 12, borderRadius: 4, background: '#F2F4F7' }} />
       </div>
     </div>
   );
@@ -52,10 +59,11 @@ export default function SellerListingCard({
   const router = useRouter();
   const id = sellerId(seller);
   const name = sellerName(seller);
-  const badge = sellerBadge(seller.isPro, seller.isTeam);
+  const badge = sellerBadge(seller);
   const rating = formatRating(seller.averageRating);
-  const reviews = Number(seller.totalReviews ?? seller.reviewCount ?? 0).toLocaleString();
-  const jobs = Number(seller.favorsCompleted ?? 0).toLocaleString();
+  const reviews = getSellerReviewCount(seller).toLocaleString();
+  const jobs = getSellerJobsCompleted(seller);
+  const location = getSellerLocationLabel(seller);
 
   return (
     <div
@@ -70,6 +78,11 @@ export default function SellerListingCard({
         <div style={{ height: '220px', borderRadius: '14px', overflow: 'hidden', background: '#F8F0FF' }}>
           <FavorImage src={sellerImage(seller)} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
         </div>
+        {seller.isOnline ? (
+          <div style={{ position: 'absolute', top: '20px', left: '20px', background: '#12B76A', borderRadius: '9999px', padding: '4px 10px', fontFamily: 'Poppins, sans-serif', fontSize: '11px', fontWeight: 700, color: '#ffffff', letterSpacing: '0.03em' }}>
+            Online
+          </div>
+        ) : null}
         {badge ? (
           <div style={{ position: 'absolute', top: '20px', right: '20px', background: badge === 'Pro' ? '#A54AFF' : '#344054', borderRadius: '9999px', padding: '4px 12px', fontFamily: 'Poppins, sans-serif', fontSize: '11px', fontWeight: 700, color: '#ffffff', letterSpacing: '0.03em' }}>
             {badge}
@@ -84,9 +97,18 @@ export default function SellerListingCard({
           <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828' }}>{rating}</span>
           <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#D0D5DD' }}>|</span>
           <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>{reviews} reviews</span>
-          <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#D0D5DD' }}>/</span>
-          <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>{jobs} jobs</span>
+          {jobs != null ? (
+            <>
+              <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#D0D5DD' }}>/</span>
+              <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>{jobs.toLocaleString()} jobs</span>
+            </>
+          ) : null}
         </div>
+        {location ? (
+          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085', margin: '8px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {location}
+          </p>
+        ) : null}
       </div>
     </div>
   );

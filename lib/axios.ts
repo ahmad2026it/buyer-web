@@ -121,7 +121,11 @@ const isPublicAuthRequest = (url?: string): boolean => {
 };
 
 const isPublicLegalRequest = (url?: string): boolean => {
-  return Boolean(url && /\/api\/buyer\/legal\//.test(url));
+  return Boolean(
+    url &&
+      (/\/api\/buyer\/legal\//.test(url) ||
+        /\/api\/public\/(privacy-policy|terms-and-conditions)/.test(url)),
+  );
 };
 
 const isChangePasswordCredentialError = (url?: string, body?: unknown): boolean => {

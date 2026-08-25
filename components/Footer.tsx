@@ -23,12 +23,16 @@ const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
   },
   {
     group: 'Legal',
-    links: [{ label: 'Privacy Policy', href: '/privacy-policy' }],
+    links: [
+      { label: 'Privacy Policy', href: '/privacy-policy' },
+      { label: 'Terms and Conditions', href: '/terms-and-conditions' },
+    ],
   },
 ];
 
 const BOTTOM_LINKS: FooterLink[] = [
   { label: 'Privacy', href: '/privacy-policy' },
+  { label: 'Terms', href: '/terms-and-conditions' },
 ];
 
 export default function Footer() {

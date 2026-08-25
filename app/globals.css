@@ -248,6 +248,12 @@ body.animate-ready [data-animate="scale"].in-view {
   padding: 0 24px;
 }
 
+.rs-app-downloads {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
 .nav-hamburger { display: none; }
 
 .nav-drawer-backdrop {
@@ -422,6 +428,10 @@ body.animate-ready [data-animate="scale"].in-view {
   .rs-store-row {
     flex-wrap: wrap !important;
     justify-content: center !important;
+  }
+
+  .rs-app-downloads {
+    grid-template-columns: 1fr !important;
   }
 
   .rs-footer-bottom {

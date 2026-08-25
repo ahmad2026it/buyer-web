@@ -7,7 +7,7 @@ import ListingSearchBar from '@/components/ListingSearchBar';
 import SellerListingCard, { SellerCardSkeleton, sellerId } from '@/components/SellerListingCard';
 import {
   BUYER_SELLERS_LIST_PARAMS,
-  useGetBuyerSellersQuery,
+  useSellersListQuery,
 } from '@/app/buyer/store/buyerSellersAPI';
 
 const BRAND = '#A54AFF';
@@ -38,7 +38,7 @@ export default function AllSellersPage() {
     setPage(1);
   }, [appliedSearch]);
 
-  const { data, isLoading, isFetching, isError, refetch } = useGetBuyerSellersQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useSellersListQuery({
     page,
     limit: BUYER_SELLERS_LIST_PARAMS.limit,
     search: appliedSearch || undefined,
