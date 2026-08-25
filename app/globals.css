@@ -254,6 +254,31 @@ body.animate-ready [data-animate="scale"].in-view {
   gap: 24px;
 }
 
+.rs-footer-social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  text-decoration: none;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.rs-footer-social:hover {
+  color: #ffffff;
+  border-color: #A54AFF;
+  background: rgba(165, 74, 255, 0.18);
+}
+
+.rs-footer-social:focus-visible {
+  outline: 2px solid #CA90FF;
+  outline-offset: 2px;
+}
+
 .nav-hamburger { display: none; }
 
 .nav-drawer-backdrop {
