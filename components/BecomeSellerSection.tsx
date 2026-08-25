@@ -1,6 +1,7 @@
 'use client';
 
 import { DollarSignIcon, CalendarIcon, ZapIcon, GlobeIcon } from './Icons';
+import { SellerStoreLinks } from './StoreBadge';
 
 const BENEFITS = [
   { icon: DollarSignIcon, label: 'Minimal commission fees' },
@@ -151,35 +152,9 @@ export default function BecomeSellerSection() {
               data-animate
               data-delay="2"
               className="rs-cta-row"
-              style={{ display: 'flex', gap: '16px', marginBottom: '40px' }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '16px', marginBottom: '40px' }}
             >
-              <a
-                href="#"
-                style={{
-                  fontFamily: 'Poppins, sans-serif',
-                  fontWeight: 700,
-                  fontSize: '15px',
-                  color: '#ffffff',
-                  background:
-                    'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)',
-                  padding: '14px 32px',
-                  borderRadius: '9999px',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 20px rgba(165, 74, 255, 0.4)',
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.transform = 'translateY(-2px)';
-                  el.style.boxShadow = '0 8px 28px rgba(165, 74, 255, 0.55)';
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.transform = 'translateY(0)';
-                  el.style.boxShadow = '0 4px 20px rgba(165, 74, 255, 0.4)';
-                }}
-              >
-                Register as a Seller
-              </a>
+              <SellerStoreLinks onDark />
               <a
                 href="/sellers"
                 target="_blank"
@@ -196,12 +171,12 @@ export default function BecomeSellerSection() {
                   transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLElement;
+                  const el = e.currentTarget;
                   el.style.background = 'rgba(255,255,255,0.12)';
                   el.style.color = '#ffffff';
                 }}
                 onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLElement;
+                  const el = e.currentTarget;
                   el.style.background = 'rgba(255,255,255,0.07)';
                   el.style.color = 'rgba(255,255,255,0.8)';
                 }}

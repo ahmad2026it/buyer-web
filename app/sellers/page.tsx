@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import Footer from '@/components/Footer';
+import { SellerStoreLinks } from '@/components/StoreBadge';
 
 const BRAND = '#A54AFF';
 const BRAND_GRAD = 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)';
@@ -123,9 +123,125 @@ const CATEGORIES = [
   'HVAC', 'Roofing', 'Flooring', 'Handyman',
 ];
 
+function ChevronDown({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      aria-hidden="true"
+      style={{ transition: 'transform 0.2s ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}
+    >
+      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SellerStoreMenu({
+  open,
+  onOpen,
+  onClose,
+  label,
+  ariaLabel,
+  buttonStyle,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  label: ReactNode;
+  ariaLabel: string;
+  buttonStyle: CSSProperties;
+  onMouseEnter?: (e: MouseEvent<HTMLButtonElement>) => void;
+  onMouseLeave?: (e: MouseEvent<HTMLButtonElement>) => void;
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onDoc = (event: Event) => {
+      if (wrapRef.current && !wrapRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open, onClose]);
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => (open ? onClose() : onOpen())}
+        style={buttonStyle}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        {label}
+        <ChevronDown open={open} />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 10px)',
+            right: 0,
+            zIndex: 110,
+            width: 'min(240px, calc(100vw - 32px))',
+            background: '#ffffff',
+            borderRadius: '16px',
+            border: '1px solid #EAECF0',
+            boxShadow: '0 12px 32px rgba(16,24,40,0.18)',
+            padding: '14px',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 700,
+              fontSize: '13px',
+              color: '#101828',
+              marginBottom: '4px',
+            }}
+          >
+            WhoCan Seller app
+          </p>
+          <p
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontSize: '12px',
+              color: '#667085',
+              marginBottom: '12px',
+              lineHeight: 1.45,
+            }}
+          >
+            Register and manage jobs on iOS or Android.
+          </p>
+          <SellerStoreLinks stacked />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SellerNav() {
-  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -135,13 +251,13 @@ function SellerNav() {
 
   return (
     <header
+      className="seller-nav"
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         zIndex: 100,
-        height: '68px',
         display: 'flex',
         alignItems: 'center',
         background: scrolled ? 'rgba(13,1,32,0.92)' : '#0D0120',
@@ -170,69 +286,22 @@ function SellerNav() {
         </a>
 
         {/* Right actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Get App */}
-          <button
-            onClick={() => {}}
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 600,
-              fontSize: '14px',
-              color: '#ffffff',
-              background: '#F79009',
-              border: 'none',
-              padding: '10px 18px',
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              transition: 'background 0.18s ease, transform 0.18s ease',
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = '#DC6803';
-              el.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = '#F79009';
-              el.style.transform = 'translateY(0)';
-            }}
-          >
-            Get App
-          </button>
-
-          {/* Login */}
-          <button
-            onClick={() => router.push('/login')}
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 600,
-              fontSize: '14px',
-              color: 'rgba(255,255,255,0.75)',
-              background: 'transparent',
-              border: '1.5px solid rgba(255,255,255,0.18)',
-              padding: '10px 18px',
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              transition: 'all 0.18s ease',
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.borderColor = 'rgba(255,255,255,0.4)';
-              el.style.color = '#ffffff';
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.borderColor = 'rgba(255,255,255,0.18)';
-              el.style.color = 'rgba(255,255,255,0.75)';
-            }}
-          >
-            Log in
-          </button>
-
-          {/* Register as Seller */}
-          <button
-            onClick={() => router.push('/register?role=seller')}
-            style={{
+        <div className="seller-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <SellerStoreMenu
+            open={registerOpen}
+            onOpen={() => setRegisterOpen(true)}
+            onClose={() => setRegisterOpen(false)}
+            ariaLabel="Register as a Seller"
+            label={
+              <>
+                <span className="seller-nav-label-full">Register as a Seller</span>
+                <span className="seller-nav-label-short">Register</span>
+              </>
+            }
+            buttonStyle={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
               fontFamily: 'Poppins, sans-serif',
               fontWeight: 600,
               fontSize: '14px',
@@ -246,18 +315,16 @@ function SellerNav() {
               boxShadow: '0 1px 2px rgba(16,24,40,0.05)',
             }}
             onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
+              const el = e.currentTarget;
               el.style.transform = 'translateY(-1px)';
               el.style.boxShadow = '0 4px 16px rgba(165,74,255,0.4)';
             }}
             onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
+              const el = e.currentTarget;
               el.style.transform = 'translateY(0)';
               el.style.boxShadow = '0 1px 2px rgba(16,24,40,0.05)';
             }}
-          >
-            Register as a Seller
-          </button>
+          />
         </div>
       </div>
     </header>
@@ -295,7 +362,6 @@ function useAnimateOnScroll() {
 }
 
 export default function SellersPage() {
-  const router = useRouter();
   const heroAnim = useAnimateOnScroll();
   const statsAnim = useAnimateOnScroll();
   const benefitsAnim = useAnimateOnScroll();
@@ -305,14 +371,14 @@ export default function SellersPage() {
   const ctaAnim = useAnimateOnScroll();
 
   return (
-    <div style={{ fontFamily: 'Poppins, sans-serif', background: '#ffffff', minHeight: '100vh' }}>
+    <div className="seller-page" style={{ fontFamily: 'Poppins, sans-serif', background: '#ffffff', minHeight: '100dvh' }}>
       <SellerNav />
 
       {/* ── Hero ──────────────────────────────────────────── */}
       <section
+        className="seller-hero"
         style={{
           background: '#0D0120',
-          padding: '148px 0 96px',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -334,6 +400,7 @@ export default function SellersPage() {
           }}
         >
           <div
+            className="seller-hero-badge"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -343,6 +410,7 @@ export default function SellersPage() {
               borderRadius: '9999px',
               padding: '6px 16px',
               marginBottom: '28px',
+              maxWidth: '100%',
             }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -354,14 +422,16 @@ export default function SellersPage() {
           </div>
 
           <h1
+            className="seller-hero-title"
             style={{
               fontFamily: 'Poppins, sans-serif',
               fontWeight: 800,
-              fontSize: 'clamp(36px, 5vw, 58px)',
+              fontSize: 'clamp(28px, 8.5vw, 58px)',
               lineHeight: '1.15',
               color: '#ffffff',
               letterSpacing: '-0.02em',
               marginBottom: '20px',
+              textWrap: 'balance',
             }}
           >
             Turn your skills into{' '}
@@ -378,6 +448,7 @@ export default function SellersPage() {
           </h1>
 
           <p
+            className="seller-hero-copy"
             style={{
               fontFamily: 'Poppins, sans-serif',
               fontSize: '18px',
@@ -387,77 +458,37 @@ export default function SellersPage() {
               maxWidth: '580px',
               marginLeft: 'auto',
               marginRight: 'auto',
+              textWrap: 'pretty',
             }}
           >
             WhoCan connects skilled professionals with verified buyers in their neighbourhood.
             Set your own rates, work your own hours, and get paid fast.
           </p>
 
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => router.push('/register?role=seller')}
+          <div className="seller-hero-cta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <p
               style={{
                 fontFamily: 'Poppins, sans-serif',
                 fontWeight: 700,
                 fontSize: '16px',
                 color: '#ffffff',
-                background: BRAND_GRAD,
-                border: 'none',
-                padding: '16px 36px',
-                borderRadius: '9999px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 4px 24px rgba(165,74,255,0.45)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(165,74,255,0.6)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(165,74,255,0.45)';
+                margin: 0,
+                textAlign: 'center',
               }}
             >
-              Register as a Seller — it's free
-            </button>
-            <button
-              onClick={() => router.push('/explore')}
-              style={{
-                fontFamily: 'Poppins, sans-serif',
-                fontWeight: 600,
-                fontSize: '16px',
-                color: 'rgba(255,255,255,0.75)',
-                background: 'rgba(255,255,255,0.07)',
-                border: '1.5px solid rgba(255,255,255,0.15)',
-                padding: '16px 32px',
-                borderRadius: '9999px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)';
-                (e.currentTarget as HTMLElement).style.color = '#ffffff';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
-                (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)';
-              }}
-            >
-              Browse the marketplace
-            </button>
+              Register as a Seller — it&apos;s free
+            </p>
+            <SellerStoreLinks onDark justify="center" className="seller-store-row" />
           </div>
         </div>
       </section>
 
       {/* ── Stats bar ─────────────────────────────────────── */}
-      <section style={{ background: '#F9F5FF', borderTop: '1px solid #EDE9FE', borderBottom: '1px solid #EDE9FE', padding: '48px 0' }}>
+      <section className="seller-stats" style={{ background: '#F9F5FF', borderTop: '1px solid #EDE9FE', borderBottom: '1px solid #EDE9FE', padding: '48px 0' }}>
         <div
           ref={statsAnim.ref}
-          className="container rs-grid-4"
+          className="container seller-stats-grid"
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '32px',
             textAlign: 'center',
             opacity: statsAnim.visible ? 1 : 0,
             transform: statsAnim.visible ? 'translateY(0)' : 'translateY(20px)',
@@ -470,7 +501,7 @@ export default function SellersPage() {
                 style={{
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 800,
-                  fontSize: '32px',
+                  fontSize: 'clamp(24px, 6vw, 32px)',
                   color: '#101828',
                   letterSpacing: '-0.02em',
                   background: BRAND_GRAD,
@@ -490,7 +521,7 @@ export default function SellersPage() {
       </section>
 
       {/* ── Benefits grid ─────────────────────────────────── */}
-      <section style={{ padding: '96px 0', background: '#ffffff' }}>
+      <section className="seller-section" style={{ padding: '96px 0', background: '#ffffff' }}>
         <div className="container">
           <div
             ref={benefitsAnim.ref}
@@ -504,19 +535,21 @@ export default function SellersPage() {
               Why sell on WhoCan
             </p>
             <h2
+              className="seller-section-title"
               style={{
                 fontFamily: 'Poppins, sans-serif',
                 fontWeight: 700,
-                fontSize: 'clamp(28px, 4vw, 40px)',
+                fontSize: 'clamp(26px, 6vw, 40px)',
                 color: '#101828',
                 letterSpacing: '-0.01em',
                 textAlign: 'center',
                 marginBottom: '12px',
+                textWrap: 'balance',
               }}
             >
               Everything you need to grow
             </h2>
-            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', textAlign: 'center', marginBottom: '56px', maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
+            <p className="seller-section-lead" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', textAlign: 'center', marginBottom: '56px', maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
               We handle discovery, payments, and reviews — so you can focus on doing great work.
             </p>
 
@@ -580,7 +613,7 @@ export default function SellersPage() {
       </section>
 
       {/* ── How it works ──────────────────────────────────── */}
-      <section style={{ padding: '96px 0', background: '#0D0120', position: 'relative', overflow: 'hidden' }}>
+      <section className="seller-section" style={{ padding: '96px 0', background: '#0D0120', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '800px', height: '400px', background: 'radial-gradient(ellipse, rgba(165,74,255,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div
           ref={stepsAnim.ref}
@@ -595,21 +628,23 @@ export default function SellersPage() {
             Getting started
           </p>
           <h2
+            className="seller-section-title"
             style={{
               fontFamily: 'Poppins, sans-serif',
               fontWeight: 700,
-              fontSize: 'clamp(28px, 4vw, 40px)',
+              fontSize: 'clamp(26px, 6vw, 40px)',
               color: '#ffffff',
               letterSpacing: '-0.01em',
               textAlign: 'center',
               marginBottom: '56px',
+              textWrap: 'balance',
             }}
           >
             Up and running in three steps
           </h2>
 
           <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
-            {STEPS.map((step, i) => (
+            {STEPS.map((step) => (
               <div
                 key={step.num}
                 style={{
@@ -651,7 +686,7 @@ export default function SellersPage() {
       </section>
 
       {/* ── Testimonials ──────────────────────────────────── */}
-      <section style={{ padding: '96px 0', background: '#F9F5FF' }}>
+      <section className="seller-section" style={{ padding: '96px 0', background: '#F9F5FF' }}>
         <div
           ref={testimonialsAnim.ref}
           className="container"
@@ -665,14 +700,16 @@ export default function SellersPage() {
             Seller stories
           </p>
           <h2
+            className="seller-section-title"
             style={{
               fontFamily: 'Poppins, sans-serif',
               fontWeight: 700,
-              fontSize: 'clamp(28px, 4vw, 40px)',
+              fontSize: 'clamp(26px, 6vw, 40px)',
               color: '#101828',
               letterSpacing: '-0.01em',
               textAlign: 'center',
               marginBottom: '56px',
+              textWrap: 'balance',
             }}
           >
             Real sellers, real results
@@ -718,7 +755,7 @@ export default function SellersPage() {
       </section>
 
       {/* ── Categories ────────────────────────────────────── */}
-      <section style={{ padding: '80px 0', background: '#ffffff' }}>
+      <section className="seller-categories" style={{ padding: '80px 0', background: '#ffffff' }}>
         <div
           ref={categoriesAnim.ref}
           className="container"
@@ -755,6 +792,7 @@ export default function SellersPage() {
 
       {/* ── Bottom CTA ────────────────────────────────────── */}
       <section
+        className="seller-cta"
         style={{
           padding: '96px 0',
           background: '#0D0120',
@@ -776,14 +814,16 @@ export default function SellersPage() {
           }}
         >
           <h2
+            className="seller-section-title"
             style={{
               fontFamily: 'Poppins, sans-serif',
               fontWeight: 800,
-              fontSize: 'clamp(28px, 4vw, 44px)',
+              fontSize: 'clamp(26px, 7vw, 44px)',
               color: '#ffffff',
               letterSpacing: '-0.02em',
               lineHeight: '1.2',
               marginBottom: '16px',
+              textWrap: 'balance',
             }}
           >
             Ready to start earning?
@@ -792,32 +832,7 @@ export default function SellersPage() {
             Join thousands of skilled professionals already growing their business on WhoCan.
             Registration is free — no subscription, no upfront cost.
           </p>
-          <button
-            onClick={() => router.push('/register?role=seller')}
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 700,
-              fontSize: '17px',
-              color: '#ffffff',
-              background: BRAND_GRAD,
-              border: 'none',
-              padding: '18px 48px',
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 4px 28px rgba(165,74,255,0.5)',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-              (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 36px rgba(165,74,255,0.65)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-              (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 28px rgba(165,74,255,0.5)';
-            }}
-          >
-            Get started for free
-          </button>
+          <SellerStoreLinks onDark justify="center" className="seller-store-row" />
           <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.35)', marginTop: '16px' }}>
             No credit card required · Set up in 15 minutes
           </p>
