@@ -290,6 +290,7 @@ function CountryCodeSelect({
           {countryFlag(selected.iso)}
         </span>
         <span
+          className="auth-signup-cc-text"
           style={{
             fontFamily: "Poppins,sans-serif",
             fontSize: "14px",
@@ -297,7 +298,8 @@ function CountryCodeSelect({
             whiteSpace: "nowrap",
           }}
         >
-          {selected.iso} {selected.dial}
+          <span className="auth-signup-cc-iso">{selected.iso} </span>
+          {selected.dial}
         </span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
           <path
@@ -312,12 +314,12 @@ function CountryCodeSelect({
 
       {open && (
         <div
+          className="auth-dropdown"
           style={{
             position: "absolute",
             top: "calc(100% + 6px)",
             left: 0,
             zIndex: 40,
-            width: "280px",
             background: "#ffffff",
             border: "1px solid #EAECF0",
             borderRadius: "16px",
@@ -541,12 +543,12 @@ function BirthDatePicker({
 
       {open && (
         <div
+          className="auth-dropdown"
           style={{
             position: "absolute",
             top: "calc(100% + 6px)",
             left: 0,
             zIndex: 40,
-            width: "280px",
             background: "#ffffff",
             border: "1px solid #EAECF0",
             borderRadius: "16px",
@@ -749,21 +751,7 @@ function BirthDatePicker({
 /* ── Left illustration panel ───────────────────────────── */
 function LeftPanel() {
   return (
-    <div
-      style={{
-        width: "46%",
-        minHeight: "100vh",
-        background: "linear-gradient(160deg,#F8F0FF 0%,#EDD9FF 100%)",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 40px",
-        flexShrink: 0,
-        overflow: "hidden",
-      }}
-    >
+    <div className="auth-signup-left">
       {/* Dot pattern */}
       <div
         style={{
@@ -928,10 +916,9 @@ function StepBackButton({
       onClick={onClick}
       disabled={disabled}
       aria-label="Back"
+      className="auth-signup-back"
       style={{
         position: "absolute",
-        top: "24px",
-        left: "32px",
         zIndex: 2,
         width: "44px",
         height: "44px",
@@ -1035,27 +1022,13 @@ function Step1({
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "400px" }}>
+    <div className="auth-signup-form">
       {/* Logo above form */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: "28px",
-        }}
-      >
+      <div className="auth-signup-logo">
         <WhoCanLogo size={110} />
       </div>
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
-        <h1
-          style={{
-            fontFamily: "Poppins,sans-serif",
-            fontWeight: 700,
-            fontSize: "28px",
-            color: "#101828",
-            marginBottom: "6px",
-          }}
-        >
+        <h1 className="auth-signup-title">
           Sign Up
         </h1>
         <p
@@ -1105,7 +1078,7 @@ function Step1({
           >
             Phone number
           </label>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="auth-signup-phone">
             <CountryCodeSelect value={countryIso} onChange={setCountryIso} />
             <input
               type="tel"
@@ -1114,6 +1087,7 @@ function Step1({
               onChange={(e) => setPhone(e.target.value)}
               style={{
                 flex: 1,
+                minWidth: 0,
                 fontFamily: "Poppins,sans-serif",
                 fontSize: "15px",
                 color: "#101828",
@@ -1139,7 +1113,7 @@ function Step1({
         </div>
 
         {/* Date of Birth + Gender */}
-        <div style={{ display: "flex", gap: "12px" }}>
+        <div className="auth-signup-pair">
           <div style={{ flex: 1 }}>
             <label
               style={{
@@ -1327,7 +1301,7 @@ function Step2({
   error?: string;
 }) {
   return (
-    <div style={{ width: "100%", maxWidth: "420px" }}>
+    <div className="auth-signup-form auth-signup-form-wide">
       <h2
         style={{
           fontFamily: "Poppins,sans-serif",
@@ -1728,7 +1702,7 @@ function Step3({
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "420px" }}>
+    <div className="auth-signup-form auth-signup-form-wide">
       <h2
         style={{
           fontFamily: "Poppins,sans-serif",
@@ -2128,7 +2102,7 @@ function Step3({
             >
               Add a label
             </label>
-            <div style={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
+            <div className="auth-signup-labels">
               {STEP3_LABELS.map((l) => {
                 const active = label === l.key;
                 return (
@@ -2244,7 +2218,7 @@ function Step3({
       )}
 
       {/* Footer buttons */}
-      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+      <div className="auth-signup-actions">
         <button
           onClick={onSkip}
           disabled={isLoading}
@@ -2387,24 +2361,17 @@ function SignupFlow() {
 
   return (
     <div
-      style={{
-        minHeight: "100vh",
-        background: "#ffffff",
-        display: "flex",
-        overflow: "hidden",
-      }}
+      className="auth-signup"
+      style={{ background: "#ffffff" }}
     >
       <LeftPanel />
 
       <div
+        className={`auth-signup-right${step > 1 ? " auth-signup-right--paged" : ""}`}
         style={{
-          flex: 1,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          padding: "40px 40px",
-          overflowY: "auto",
           position: "relative",
         }}
       >
@@ -2426,10 +2393,9 @@ function SignupFlow() {
         {/* Step indicator — steps 2 and 3 */}
         {step > 1 && (
           <div
+            className="auth-signup-steps"
             style={{
               position: "absolute",
-              top: "24px",
-              right: "32px",
               display: "flex",
               gap: "8px",
               zIndex: 1,
@@ -2511,7 +2477,7 @@ export default function SignupPage() {
       fallback={
         <div
           style={{
-            minHeight: "100vh",
+          minHeight: "100dvh",
             background: "#ffffff",
           }}
         />

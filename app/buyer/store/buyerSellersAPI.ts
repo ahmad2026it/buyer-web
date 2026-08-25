@@ -159,6 +159,14 @@ export const buyerSellersAPI = createApi({
       }),
       providesTags: (_result, _error, id) => [{ type: "BuyerSellers", id }],
     }),
+    getPublicSellerById: builder.query<GetBuyerSellerByIdResponse, number>({
+      query: (id) => ({
+        url: `/api/public/sellers/${id}`,
+        method: "GET",
+        skipErrorToast: true,
+      }),
+      providesTags: (_result, _error, id) => [{ type: "BuyerSellers", id }],
+    }),
   }),
 });
 
@@ -166,6 +174,7 @@ export const {
   useGetBuyerSellersQuery,
   useGetPublicSellersQuery,
   useGetBuyerSellerByIdQuery,
+  useGetPublicSellerByIdQuery,
 } = buyerSellersAPI;
 
 export function useSellersListQuery(
@@ -182,4 +191,20 @@ export function useSellersListQuery(
   });
 
   return token ? authenticated : publicList;
+}
+
+export function useSellerDetailQuery(
+  id: number,
+  options?: { skip?: boolean },
+) {
+  const token = useSelector((state: AuthTokenState) => state.auth?.token);
+  const skip = options?.skip ?? false;
+  const authenticated = useGetBuyerSellerByIdQuery(id, {
+    skip: skip || !token,
+  });
+  const publicDetail = useGetPublicSellerByIdQuery(id, {
+    skip: skip || Boolean(token),
+  });
+
+  return token ? authenticated : publicDetail;
 }

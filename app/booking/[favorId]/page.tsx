@@ -11,7 +11,7 @@ import {
   useCreateBuyerBookingMutation,
 } from '@/app/buyer/store/buyerBookingsAPI';
 import { extractBookingId } from '@/app/buyer/store/buyerBookingsTypes';
-import { useGetBuyerFavorByIdQuery } from '@/app/buyer/store/buyerFavorsAPI';
+import { useFavorDetailQuery } from '@/app/buyer/store/buyerFavorsAPI';
 import { useGetBuyerLocationsQuery } from '@/app/buyer/store/buyerLocationsAPI';
 import { useGetBuyerBookingTermsQuery } from '@/app/buyer/store/buyerLegalAPI';
 import {
@@ -310,7 +310,7 @@ export default function BookingPage() {
   const [createSetupIntent, { isLoading: isCreatingIntent }] = useCreateStripeSetupIntentMutation();
   const [createBooking] = useCreateBuyerBookingMutation();
   const [confirmPayment] = useConfirmBuyerBookingPaymentMutation();
-  const { data: favorResponse } = useGetBuyerFavorByIdQuery(favorId, { skip: skipFavor });
+  const { data: favorResponse } = useFavorDetailQuery(favorId, { skip: skipFavor });
   const { data: locationsResponse } = useGetBuyerLocationsQuery(undefined, { skip: !token });
   const {
     data: termsResponse,

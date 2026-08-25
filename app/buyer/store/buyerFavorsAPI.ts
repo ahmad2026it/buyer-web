@@ -1,4 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
+import { useSelector } from "react-redux";
 import type {
   GetBuyerFavorByIdResponse,
   GetBuyerFavoritesParams,
@@ -8,6 +9,12 @@ import type {
   MarkBuyerFavoriteResponse,
 } from "./buyerFavorsTypes";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
+
+type AuthTokenState = {
+  auth?: {
+    token?: string | null;
+  };
+};
 
 export const BUYER_FAVORITES_LIST_PARAMS: Required<GetBuyerFavoritesParams> = {
   page: 1,
@@ -71,6 +78,14 @@ export const buyerFavorsAPI = createApi({
     getBuyerFavorById: builder.query<GetBuyerFavorByIdResponse, number>({
       query: (id) => ({
         url: `/api/buyer/favors/${id}`,
+        method: "GET",
+        skipErrorToast: true,
+      }),
+      providesTags: (_result, _error, id) => [{ type: "BuyerFavors", id }],
+    }),
+    getPublicFavorById: builder.query<GetBuyerFavorByIdResponse, number>({
+      query: (id) => ({
+        url: `/api/public/favors/${id}`,
         method: "GET",
         skipErrorToast: true,
       }),
@@ -199,7 +214,24 @@ export const buyerFavorsAPI = createApi({
 export const {
   useGetBuyerFavorsQuery,
   useGetBuyerFavorByIdQuery,
+  useGetPublicFavorByIdQuery,
   useGetBuyerFavoritesQuery,
   useMarkBuyerFavoriteMutation,
   useUnmarkBuyerFavoriteMutation,
 } = buyerFavorsAPI;
+
+export function useFavorDetailQuery(
+  id: number,
+  options?: { skip?: boolean },
+) {
+  const token = useSelector((state: AuthTokenState) => state.auth?.token);
+  const skip = options?.skip ?? false;
+  const authenticated = useGetBuyerFavorByIdQuery(id, {
+    skip: skip || !token,
+  });
+  const publicDetail = useGetPublicFavorByIdQuery(id, {
+    skip: skip || Boolean(token),
+  });
+
+  return token ? authenticated : publicDetail;
+}

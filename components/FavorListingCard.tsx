@@ -26,9 +26,9 @@ function sellerBadge(favor: BuyerFavor): string {
 
 export function FavorCardSkeleton() {
   return (
-    <div style={{ background: '#ffffff', borderRadius: '20px', border: '1.5px solid #EAECF0', overflow: 'hidden' }}>
+    <div style={{ background: '#ffffff', borderRadius: '20px', border: '1.5px solid #EAECF0', overflow: 'hidden', minWidth: 0 }}>
       <div style={{ padding: '10px 10px 0' }}>
-        <div style={{ height: '200px', borderRadius: '14px', background: '#F2F4F7' }} />
+        <div className="listing-card-media" style={{ height: '200px', borderRadius: '14px', background: '#F2F4F7' }} />
       </div>
       <div style={{ padding: '14px 16px 16px' }}>
         <div style={{ width: '78%', height: 16, borderRadius: 4, background: '#F2F4F7', marginBottom: 12 }} />
@@ -75,12 +75,12 @@ export default function FavorListingCard({
       data-animate
       data-delay={delay != null ? String(delay) : undefined}
       onClick={() => router.push(`/favor/${favor.id}`)}
-      style={{ background: '#ffffff', borderRadius: '20px', border: '1.5px solid #EAECF0', cursor: 'pointer', transition: 'border-color 0.2s ease, box-shadow 0.2s ease', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+      style={{ background: '#ffffff', borderRadius: '20px', border: '1.5px solid #EAECF0', cursor: 'pointer', transition: 'border-color 0.2s ease, box-shadow 0.2s ease', display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, width: '100%' }}
       onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'rgba(165,74,255,0.3)'; el.style.boxShadow = '0 8px 24px rgba(165,74,255,0.1)'; }}
       onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#EAECF0'; el.style.boxShadow = 'none'; }}
     >
       <div style={{ position: 'relative', padding: '10px 10px 0', flexShrink: 0 }}>
-        <div style={{ height: '200px', borderRadius: '14px', overflow: 'hidden' }}>
+        <div className="listing-card-media" style={{ height: '200px', borderRadius: '14px', overflow: 'hidden' }}>
           <FavorImage
             src={pickFavorImage(favor.images, favor.favorImage)}
             alt={favor.title}
@@ -120,7 +120,7 @@ export default function FavorListingCard({
           {favor.title}
         </h3>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', minWidth: 0, flexWrap: 'wrap' }}>
           <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: BRAND }}>
             {formatPrice(favor.budget)}
           </span>
@@ -129,6 +129,7 @@ export default function FavorListingCard({
             color: '#6941C6', background: '#F9F5FF',
             border: '1px solid #E9D7FE', borderRadius: '9999px',
             padding: '3px 10px', letterSpacing: '0.01em',
+            maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {displayCategory(favor.type)}
           </span>

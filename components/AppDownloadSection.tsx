@@ -10,8 +10,7 @@ import {
   WrenchIcon,
 } from './Icons';
 
-const PHONE_IMAGE =
-  'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=340&h=560&fit=crop&auto=format&q=75';
+const PHONE_IMAGE = '/image.png';
 
 const APP_PITCH =
   'Struggling to find reliable professionals for your everyday tasks, or looking to grow your service business? WhoCan connects you with trusted local experts for everything from home cleaning and moving to repairs and tutoring. Whether you need a job done quickly or want to reach more customers in your area, our platform makes it fast, safe, and hassle-free. Download WhoCan today and get things done wherever you are!';
@@ -374,13 +373,14 @@ export default function AppDownloadSection() {
               />
               <img
                 src={PHONE_IMAGE}
-                alt="WhoCan mobile app"
+                alt="WhoCan mobile app dashboard"
                 className="animate-float"
                 style={{
-                  width: '240px',
+                  width: '260px',
                   height: 'auto',
                   objectFit: 'contain',
                   position: 'relative',
+                  borderRadius: '28px',
                   filter: 'drop-shadow(0 24px 40px rgba(165, 74, 255, 0.2))',
                 }}
               />

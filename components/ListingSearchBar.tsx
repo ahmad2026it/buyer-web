@@ -22,15 +22,16 @@ export default function ListingSearchBar({
 
   return (
     <form
+      className="listing-search-row"
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit();
       }}
-      style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px' }}
     >
       <div
         style={{
-          flex: 1,
+          flex: '1 1 auto',
+          minWidth: 0,
           display: 'flex',
           alignItems: 'center',
           background: '#F9FAFB',
@@ -54,6 +55,8 @@ export default function ListingSearchBar({
           onBlur={() => setFocused(false)}
           style={{
             flex: 1,
+            minWidth: 0,
+            width: '100%',
             border: 'none',
             outline: 'none',
             fontFamily: FONT,

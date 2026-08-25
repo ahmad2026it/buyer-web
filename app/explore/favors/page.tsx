@@ -92,16 +92,9 @@ export default function AllFavorsPage() {
           message="Log in to save this favor to your favorites."
         />
       )}
-      <main style={{ minHeight: '100vh', background: '#FAFAFA' }}>
-        <div
-          style={{
-            background: '#ffffff',
-            borderBottom: '1px solid #EAECF0',
-            paddingTop: '104px',
-            paddingBottom: '32px',
-          }}
-        >
-          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+      <main style={{ minHeight: '100dvh', background: '#FAFAFA' }}>
+        <div className="listing-page-hero">
+          <div className="listing-page-inner">
             <Link
               href="/"
               style={{
@@ -113,7 +106,7 @@ export default function AllFavorsPage() {
                 fontWeight: 500,
                 color: '#667085',
                 textDecoration: 'none',
-                marginBottom: '16px',
+                marginBottom: '12px',
                 transition: 'color 0.15s',
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = BRAND; }}
@@ -125,29 +118,12 @@ export default function AllFavorsPage() {
               Back to home
             </Link>
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '12px',
-              }}
-            >
+            <div className="listing-page-head">
               <div>
                 <p style={{ fontFamily: FONT, fontWeight: 600, fontSize: '13px', color: BRAND, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
                   Most Requested
                 </p>
-                <h1
-                  style={{
-                    fontFamily: FONT,
-                    fontWeight: 800,
-                    fontSize: '30px',
-                    color: '#101828',
-                    lineHeight: '1.2',
-                    marginBottom: '6px',
-                  }}
-                >
+                <h1 className="listing-page-title">
                   All Favors
                 </h1>
                 <p style={{ fontFamily: FONT, fontSize: '15px', color: '#667085' }}>
@@ -184,9 +160,9 @@ export default function AllFavorsPage() {
           </div>
         </div>
 
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px 80px' }}>
+        <div className="listing-page-body">
           {showListLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '24px' }}>
+            <div className="listing-grid">
               {Array.from({ length: 6 }, (_, i) => <FavorCardSkeleton key={i} />)}
             </div>
           ) : isError ? (
@@ -222,7 +198,7 @@ export default function AllFavorsPage() {
             </div>
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '24px' }}>
+              <div className="listing-grid">
                 {favors.map((favor) => (
                   <FavorListingCard
                     key={favor.id}
