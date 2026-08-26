@@ -127,12 +127,14 @@ function SummaryRow({
   emphasize?: boolean;
 }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, minWidth: 0 }}>
       <span style={{
         fontFamily: 'Poppins,sans-serif',
         fontSize: emphasize ? 14 : 13,
         fontWeight: emphasize ? 700 : 400,
         color: emphasize ? BRAND : '#667085',
+        minWidth: 0,
+        overflowWrap: 'anywhere',
       }}>
         {label}
       </span>
@@ -233,13 +235,13 @@ function FavorMiniCard({
   price: number;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 16, marginBottom: 24 }}>
-      <FavorImage src={image} alt={title} style={{ width: 80, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+    <div className="booking-mini-card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 16, marginBottom: 24, minWidth: 0 }}>
+      <FavorImage src={image} alt={title} style={{ width: 72, height: 54, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{title}</p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+        <p className="booking-mini-title" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', lineHeight: 1.35, marginBottom: 4 }}>{title}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, minWidth: 0 }}>
           <img src={sellerAvatar} alt={seller} style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #DFBAFF', flexShrink: 0 }} />
-          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#344054', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{seller}</span>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#344054', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{seller}</span>
           <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 10, fontWeight: 700, background: badge === 'Pro' ? '#A54AFF' : '#344054', color: '#fff', borderRadius: PILL, padding: '1px 7px', flexShrink: 0 }}>{badge}</span>
         </div>
         <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 13, color: BRAND }}>starts from {formatUsd(price)}</p>
@@ -544,9 +546,9 @@ export default function BookingPage() {
   if (step === 0) return (
     <>
       <Navbar />
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}>
-        <div style={{ background: '#fff', borderRadius: 24, padding: '36px 32px', maxWidth: 480, width: '100%', maxHeight: 'calc(100vh - 48px)', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
-          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 22, color: '#101828', marginBottom: 10, lineHeight: 1.3 }}>
+      <div className="booking-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1050, padding: 16 }}>
+        <div className="booking-dialog" style={{ background: '#fff', borderRadius: 24, padding: '28px 20px', width: '100%', maxWidth: 480, minWidth: 0, maxHeight: 'calc(100dvh - 32px)', overflow: 'auto', boxSizing: 'border-box', boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
+          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 22, color: '#101828', marginBottom: 10, lineHeight: 1.3, overflowWrap: 'anywhere' }}>
             {bookingTerms?.title || 'Before You Confirm Your Booking'}
           </h2>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#475467', lineHeight: 1.7, marginBottom: 18 }}>
@@ -611,7 +613,7 @@ export default function BookingPage() {
   if (step === 1) return (
     <>
       <Navbar />
-      <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+      <main className="app-page app-page-flow booking-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
         <div className="app-page-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
           {/* Progress */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
@@ -620,14 +622,14 @@ export default function BookingPage() {
             <StepDot n={2} active={false} done={false} />
           </div>
 
-          <div className="app-split" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
+          <div className="app-split booking-split" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,380px)', gap: 28, alignItems: 'flex-start' }}>
 
             {/* ── Left: Requirements ── */}
             <div>
               <FavorMiniCard {...favorCard} />
 
               {/* Describe requirements */}
-              <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px', marginBottom: 20 }}>
+              <div className="booking-card" style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px', marginBottom: 20 }}>
                 <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 16, color: '#101828', marginBottom: 20 }}>Describe your requirements</h3>
 
                 {requirementItems.length > 0 && (
@@ -676,7 +678,7 @@ export default function BookingPage() {
               </div>
 
               {/* Attach media */}
-              <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px' }}>
+              <div className="booking-card" style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px' }}>
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', marginBottom: 6 }}>Attach photos/videos</p>
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', marginBottom: 14, lineHeight: 1.6 }}>Add photos/videos to help the seller know more about the service requirements.</p>
                 <button onClick={() => fileRef.current?.click()}
@@ -707,7 +709,7 @@ export default function BookingPage() {
 
             {/* ── Right: Timeline ── */}
             <div>
-              <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px', marginBottom: 20 }}>
+              <div className="booking-card" style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px', marginBottom: 20 }}>
                 <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 16, color: '#101828', marginBottom: 18 }}>Add timeline</h3>
 
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 12 }}>Select booking date</p>
@@ -763,7 +765,7 @@ export default function BookingPage() {
               </div>
 
               {/* Time */}
-              <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '20px 24px', marginBottom: 20 }}>
+              <div className="booking-card" style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '20px 24px', marginBottom: 20 }}>
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 12 }}>Add start time</p>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <div style={{ position: 'relative', flex: 1 }}>
@@ -783,21 +785,21 @@ export default function BookingPage() {
               </div>
 
               {/* Location */}
-              <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '20px 24px', marginBottom: 24 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div className="booking-card" style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '20px 24px', marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12 }}>
                   <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054' }}>Confirm your location</p>
-                  <button onClick={() => setShowLocModal(true)} style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: BRAND, background: 'none', border: 'none', cursor: 'pointer' }}>Change</button>
+                  <button onClick={() => setShowLocModal(true)} style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>Change</button>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: '#F9FAFB', borderRadius: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: '#F9FAFB', borderRadius: 12, minWidth: 0 }}>
                   <div style={{ flexShrink: 0, marginTop: 1 }}><LocIconComponent id={loc.id} label={loc.label} /></div>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#101828', marginBottom: 2 }}>{loc.label}</p>
-                    <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#667085', lineHeight: 1.5 }}>{loc.address}</p>
+                    <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#667085', lineHeight: 1.5, overflowWrap: 'anywhere' }}>{loc.address}</p>
                   </div>
                 </div>
               </div>
 
-              <button onClick={() => setStep(2)} disabled={!selDay}
+              <button className="booking-desktop-cta" onClick={() => setStep(2)} disabled={!selDay}
                 style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: selDay ? GRAD : '#E4E7EC', border: 'none', borderRadius: PILL, padding: 14, cursor: selDay ? 'pointer' : 'not-allowed', boxShadow: selDay ? '0 4px 16px rgba(165,74,255,0.3)' : 'none', transition: 'all 0.2s' }}>
                 Continue to Payment
               </button>
@@ -808,9 +810,9 @@ export default function BookingPage() {
 
       {/* Location modal */}
       {showLocModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}
+        <div className="booking-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1050, padding: 16 }}
           onClick={() => setShowLocModal(false)}>
-          <div style={{ background: '#fff', borderRadius: 24, padding: '28px 24px', maxWidth: 400, width: '100%' }}
+          <div className="booking-dialog" style={{ background: '#fff', borderRadius: 24, padding: '24px 20px', width: '100%', maxWidth: 400, minWidth: 0, maxHeight: 'calc(100dvh - 32px)', overflow: 'auto', boxSizing: 'border-box' }}
             onClick={e => e.stopPropagation()}>
             <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 17, color: '#101828', marginBottom: 16 }}>Select location</h3>
             {bookingLocations.map(l => (
@@ -827,7 +829,21 @@ export default function BookingPage() {
           </div>
         </div>
       )}
-      <Footer />
+      <div className="booking-footer">
+        <Footer />
+      </div>
+      {!(showLocModal) && (
+      <div className="booking-mobile-cta">
+        <button
+          type="button"
+          onClick={() => setStep(2)}
+          disabled={!selDay}
+          style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: selDay ? GRAD : '#E4E7EC', border: 'none', borderRadius: PILL, padding: 14, cursor: selDay ? 'pointer' : 'not-allowed', boxShadow: selDay ? '0 4px 16px rgba(165,74,255,0.3)' : 'none' }}
+        >
+          Continue to Payment
+        </button>
+      </div>
+      )}
     </>
   );
 
@@ -851,7 +867,7 @@ export default function BookingPage() {
           onSuccess={handleCardSaved}
         />
       )}
-      <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+      <main className="app-page app-page-flow booking-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
         <div className="app-page-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
           {/* Progress */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
@@ -860,13 +876,13 @@ export default function BookingPage() {
             <StepDot n={2} active done={false} />
           </div>
 
-          <div className="app-split" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
+          <div className="app-split booking-split" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,380px)', gap: 28, alignItems: 'flex-start' }}>
 
             {/* ── Left: Payment methods ── */}
             <div>
-              <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px' }}>
+              <div className="booking-card" style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px' }}>
                 <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 16, color: '#101828', marginBottom: 8 }}>Confirm payment method</h3>
-                <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', lineHeight: 1.7, marginBottom: 20 }}>
+                <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', lineHeight: 1.7, marginBottom: 20, overflowWrap: 'anywhere' }}>
                   Please select a payment method to pay for this favor. This amount will remain in your escrow and will be transferred to service provider once the favor is completed.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
@@ -911,15 +927,16 @@ export default function BookingPage() {
                           tabIndex={0}
                           onClick={() => setCardId(card.id)}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setCardId(card.id); }}
-                          style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: selected ? '#F9F5FF' : '#F9FAFB', border: `1.5px solid ${selected ? BRAND : '#EAECF0'}`, borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s' }}
+                          className="booking-pay-row"
+                          style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: selected ? '#F9F5FF' : '#F9FAFB', border: `1.5px solid ${selected ? BRAND : '#EAECF0'}`, borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s', minWidth: 0 }}
                         >
                           <CardIcon brand={card.brand} />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#101828', marginBottom: 2 }}>
+                            <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#101828', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {holderName}
                             </p>
-                            <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#667085', letterSpacing: '0.05em' }}>
-                              {'•'.repeat(12)}{card.last4}
+                            <p className="booking-card-number" style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#667085' }}>
+                              •••• {card.last4}
                             </p>
                           </div>
                           <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${selected ? BRAND : '#D0D5DD'}`, background: selected ? BRAND : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
@@ -943,8 +960,8 @@ export default function BookingPage() {
             </div>
 
             {/* ── Right: Summary ── */}
-            <div style={{ position: 'sticky', top: 108 }}>
-              <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px' }}>
+            <div className="app-split-sticky booking-summary" style={{ position: 'sticky', top: 108, minWidth: 0 }}>
+              <div className="booking-card" style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px' }}>
                 <FavorMiniCard {...favorCard} />
 
                 {/* Date/time/location summary */}
@@ -955,9 +972,9 @@ export default function BookingPage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <div style={{ flexShrink: 0, marginTop: 1 }}><LocIconComponent id={loc.id} label={loc.label} /></div>
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#344054', marginBottom: 2 }}>{loc.label}</p>
-                      <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#667085' }}>{loc.address}</p>
+                      <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#667085', overflowWrap: 'anywhere', lineHeight: 1.5 }}>{loc.address}</p>
                     </div>
                   </div>
                 </div>
@@ -995,6 +1012,7 @@ export default function BookingPage() {
 
                 <button
                   type="button"
+                  className="booking-desktop-cta"
                   disabled={!canPlaceBooking}
                   onClick={() => { void handlePlaceBooking(); }}
                   style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: canPlaceBooking ? GRAD : '#E4E7EC', border: 'none', borderRadius: PILL, padding: 14, cursor: canPlaceBooking ? 'pointer' : 'not-allowed', boxShadow: canPlaceBooking ? '0 4px 16px rgba(165,74,255,0.3)' : 'none', marginBottom: 10, transition: 'opacity 0.15s' }}
@@ -1004,7 +1022,7 @@ export default function BookingPage() {
                 </button>
                 <button onClick={() => { if (!isPlacing) setStep(1); }}
                   disabled={isPlacing}
-                  style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#667085', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0' }}>
+                  style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#667085', background: 'none', border: 'none', cursor: isPlacing ? 'not-allowed' : 'pointer', padding: '6px 0' }}>
                   Back
                 </button>
               </div>
@@ -1012,7 +1030,27 @@ export default function BookingPage() {
           </div>
         </div>
       </main>
-      <Footer />
+      <div className="booking-footer">
+        <Footer />
+      </div>
+      {!(authOpen || setupSession) && (
+      <div className="booking-mobile-cta">
+        <div style={{ minWidth: 0, flexShrink: 0 }}>
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 11, color: '#667085', margin: 0, lineHeight: 1.2 }}>Total</p>
+          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 16, fontWeight: 800, color: BRAND, margin: 0, whiteSpace: 'nowrap' }}>
+            {isLoadingChargePreview && !chargePreview ? '—' : formatUsd(total)}
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={!canPlaceBooking}
+          onClick={() => { void handlePlaceBooking(); }}
+          style={{ flex: 1, minWidth: 0, fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', background: canPlaceBooking ? GRAD : '#E4E7EC', border: 'none', borderRadius: PILL, padding: '13px 12px', cursor: canPlaceBooking ? 'pointer' : 'not-allowed', boxShadow: canPlaceBooking ? '0 4px 16px rgba(165,74,255,0.3)' : 'none', whiteSpace: 'nowrap' }}
+        >
+          {isPlacing ? 'Placing…' : 'Place request'}
+        </button>
+      </div>
+      )}
     </>
   );
 
@@ -1020,12 +1058,12 @@ export default function BookingPage() {
   return (
     <>
       <Navbar />
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}>
-        <div style={{ background: '#fff', borderRadius: 24, padding: '40px 32px', maxWidth: 460, width: '100%', textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
+      <div className="booking-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1050, padding: 16 }}>
+        <div className="booking-dialog" style={{ background: '#fff', borderRadius: 24, padding: '32px 20px', width: '100%', maxWidth: 460, minWidth: 0, textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.18)', maxHeight: 'calc(100dvh - 32px)', overflow: 'auto', boxSizing: 'border-box' }}>
           <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#ECFDF3,#D1FAE5)', border: '2px solid #A9EFC5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <svg width="38" height="38" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#079455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 22, color: '#101828', marginBottom: 10 }}>Booking Request Sent!</h2>
+          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 22, color: '#101828', marginBottom: 10, overflowWrap: 'anywhere' }}>Booking Request Sent!</h2>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#475467', lineHeight: 1.75, marginBottom: 28 }}>
             Your booking request has been sent to <strong>{favorCard.seller}</strong>. You will be notified once the seller responds. Check the status in the <strong>Bookings</strong> tab under Requests.
           </p>

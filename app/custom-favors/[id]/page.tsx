@@ -22,6 +22,8 @@ import {
   type BuyerCustomFavor,
   type BuyerCustomFavorRequest,
 } from '@/app/buyer/store/buyerCustomFavorsTypes';
+import { useGetBuyerChargePreviewQuery } from '@/app/buyer/store/buyerBillingAPI';
+import type { BuyerChargePreviewAddOn } from '@/app/buyer/store/buyerBillingTypes';
 import {
   useCreateStripeSetupIntentMutation,
   useGetBuyerStripeCardsQuery,
@@ -73,6 +75,7 @@ type RequestItem = {
   totalPrice: number;
   boostDiscount: number;
   addOns: RequestAddOn[];
+  selectedAddOnIndices: number[];
 };
 
 const readMoney = (...values: unknown[]): number => {
@@ -102,6 +105,31 @@ const parseRequestAddOns = (items: unknown[] | undefined): RequestAddOn[] => {
     return { label: `Add-on ${index + 1}`, price: 0 };
   });
 };
+
+const parseSelectedAddOnIndices = (items: unknown[] | undefined): number[] => {
+  if (!Array.isArray(items) || items.length === 0) return [];
+  const indices: number[] = [];
+  for (const item of items) {
+    if (typeof item === 'number' && Number.isInteger(item) && item >= 0) {
+      indices.push(item);
+      continue;
+    }
+    if (item && typeof item === 'object') {
+      const rec = item as Record<string, unknown>;
+      const raw = rec.index ?? rec.addOnIndex ?? rec.add_on_index;
+      const parsed = typeof raw === 'number' ? raw : Number(raw);
+      if (Number.isInteger(parsed) && parsed >= 0) {
+        indices.push(parsed);
+        continue;
+      }
+    }
+    return [];
+  }
+  return indices;
+};
+
+const previewAddOnLabel = (item: BuyerChargePreviewAddOn, index: number): string =>
+  item.name || item.title || item.description || item.label || `Add-on ${index + 1}`;
 
 function toFavorView(favor: BuyerCustomFavor): FavorView {
   const photos = (favor.images ?? []).filter(Boolean);
@@ -138,6 +166,7 @@ function toRequestItem(item: BuyerCustomFavorRequest): RequestItem {
     totalPrice,
     boostDiscount: readMoney(rec.boostDiscountAmount, rec.boost_discount_amount),
     addOns: parseRequestAddOns(item.selectedAddOns),
+    selectedAddOnIndices: parseSelectedAddOnIndices(item.selectedAddOns),
   };
 }
 
@@ -467,14 +496,30 @@ function PaymentModal({
   onClose: () => void;
   onSuccess: (sellerName: string) => void;
 }) {
-  const sellerOffer = req.sellerAmount;
-  const serviceFee = req.platformFee;
-  const boostDiscount = req.boostDiscount;
-  const total = req.totalPrice;
-
   const token = useAppSelector((state) => state.auth.token);
   const user = useAppSelector((state) => state.auth.user);
   const holderName = user?.fullName || 'Cardholder';
+
+  const {
+    data: chargePreviewResponse,
+    isLoading: isLoadingChargePreview,
+  } = useGetBuyerChargePreviewQuery(
+    { favorId, selectedAddOnIndices: req.selectedAddOnIndices },
+    { skip: !token || !Number.isFinite(favorId) || favorId <= 0 },
+  );
+
+  const chargePreview = chargePreviewResponse?.data;
+  const sellerOffer = readMoney(chargePreview?.orderSubtotal, req.sellerAmount);
+  const serviceFee = readMoney(chargePreview?.buyerExtraAmount, req.platformFee);
+  const boostDiscount = readMoney(chargePreview?.boostDiscountAmount, req.boostDiscount);
+  const total = readMoney(chargePreview?.buyerChargeAmount, req.totalPrice);
+  const previewAddOns = chargePreview?.selectedAddOns ?? [];
+  const addOns = previewAddOns.length
+    ? previewAddOns.map((addon, index) => ({
+        label: previewAddOnLabel(addon, index),
+        price: readMoney(addon.price, addon.amount),
+      }))
+    : req.addOns;
 
   const [cardId, setCardId] = useState('');
   const [setupSession, setSetupSession] = useState<{ clientSecret: string; publishableKey?: string } | null>(null);
@@ -526,8 +571,11 @@ function PaymentModal({
     await showSuccess('Card added', 'Your payment method has been saved.');
   };
 
+  const isPreviewPending = isLoadingChargePreview && !chargePreview;
+  const confirmDisabled = isHiring || isLoadingCards || isPreviewPending;
+
   const handleConfirm = async () => {
-    if (isHiring) return;
+    if (confirmDisabled) return;
     if (!cardId) {
       showToast('Please select a payment method.', 'error');
       return;
@@ -605,33 +653,44 @@ function PaymentModal({
 
             <div style={{ padding: '14px 16px' }}>
               <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 13, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>Price summary</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Seller's offer</span>
-                <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatMoney(sellerOffer)}</span>
-              </div>
-              {req.addOns.map((addon, index) => (
-                <div key={`${addon.label}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                  <span style={{ fontFamily: FONT, fontSize: 13, color: '#98A2B3', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 12 }}>
-                    Add-on: {addon.label}
-                  </span>
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054', flexShrink: 0 }}>+{formatMoney(addon.price)}</span>
-                </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Service fee</span>
-                <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatMoney(serviceFee)}</span>
-              </div>
-              {boostDiscount > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                  <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Boost discount</span>
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#079455' }}>-{formatMoney(boostDiscount)}</span>
-                </div>
+              {isLoadingChargePreview && !chargePreview ? (
+                <>
+                  <div style={{ height: 14, width: '70%', borderRadius: 4, background: '#EAECF0', marginBottom: 10 }} />
+                  <div style={{ height: 14, width: '62%', borderRadius: 4, background: '#EAECF0', marginBottom: 10 }} />
+                  <div style={{ height: 1, background: '#EAECF0', margin: '12px 0' }} />
+                  <div style={{ height: 18, width: '55%', borderRadius: 4, background: '#EAECF0' }} />
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                    <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Seller's offer</span>
+                    <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatMoney(sellerOffer)}</span>
+                  </div>
+                  {addOns.map((addon, index) => (
+                    <div key={`${addon.label}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                      <span style={{ fontFamily: FONT, fontSize: 13, color: '#98A2B3', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 12 }}>
+                        Add-on: {addon.label}
+                      </span>
+                      <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054', flexShrink: 0 }}>+{formatMoney(addon.price)}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                    <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Service fee</span>
+                    <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatMoney(serviceFee)}</span>
+                  </div>
+                  {boostDiscount > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                      <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Boost discount</span>
+                      <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#079455' }}>-{formatMoney(boostDiscount)}</span>
+                    </div>
+                  )}
+                  <div style={{ height: 1, background: '#EAECF0', margin: '12px 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                    <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 700, color: '#101828' }}>Total</span>
+                    <span style={{ fontFamily: FONT, fontSize: 20, fontWeight: 800, color: BRAND }}>{formatMoney(total)}</span>
+                  </div>
+                </>
               )}
-              <div style={{ height: 1, background: '#EAECF0', margin: '12px 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 700, color: '#101828' }}>Total</span>
-                <span style={{ fontFamily: FONT, fontSize: 20, fontWeight: 800, color: BRAND }}>{formatMoney(total)}</span>
-              </div>
             </div>
           </div>
 
@@ -707,12 +766,12 @@ function PaymentModal({
 
           <button
             onClick={() => { void handleConfirm(); }}
-            disabled={isHiring || isLoadingCards}
-            style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 16, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: 16, cursor: isHiring || isLoadingCards ? 'not-allowed' : 'pointer', boxShadow: '0 4px 16px rgba(165,74,255,0.3)', transition: 'opacity 0.15s', marginBottom: 10, opacity: isHiring || isLoadingCards ? 0.75 : 1 }}
-            onMouseEnter={e => { if (!isHiring && !isLoadingCards) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = isHiring || isLoadingCards ? '0.75' : '1'; }}
+            disabled={confirmDisabled}
+            style={{ width: '100%', fontFamily: FONT, fontWeight: 700, fontSize: 16, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: 16, cursor: confirmDisabled ? 'not-allowed' : 'pointer', boxShadow: '0 4px 16px rgba(165,74,255,0.3)', transition: 'opacity 0.15s', marginBottom: 10, opacity: confirmDisabled ? 0.75 : 1 }}
+            onMouseEnter={e => { if (!confirmDisabled) (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = confirmDisabled ? '0.75' : '1'; }}
           >
-            {isHiring ? 'Hiring…' : `Confirm & Pay ${formatMoney(total)}`}
+            {isHiring ? 'Hiring…' : isPreviewPending ? 'Loading total…' : `Confirm & Pay ${formatMoney(total)}`}
           </button>
           <p style={{ fontFamily: FONT, fontSize: 12, color: '#98A2B3', textAlign: 'center', lineHeight: 1.5 }}>
             By confirming you agree to our Terms of Service. Payment is held in escrow until the favor is completed.

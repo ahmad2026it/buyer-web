@@ -468,17 +468,6 @@ function ChatPageInner() {
                   >
                     View Profile
                   </button>
-                  <button
-                    style={{ width: 36, height: 36, borderRadius: '50%', background: 'transparent', border: '1.5px solid #EAECF0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                  >
-                    <svg width="16" height="4" viewBox="0 0 16 4" fill="none">
-                      <circle cx="2" cy="2" r="1.5" fill="#667085" />
-                      <circle cx="8" cy="2" r="1.5" fill="#667085" />
-                      <circle cx="14" cy="2" r="1.5" fill="#667085" />
-                    </svg>
-                  </button>
                 </div>
               </div>
 
@@ -567,16 +556,6 @@ function ChatPageInner() {
                   </p>
                 )}
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                  <button
-                    title="Attach file"
-                    disabled={!canSend || sending}
-                    style={{ width: 40, height: 40, borderRadius: '50%', background: '#F9FAFB', border: '1.5px solid #EAECF0', cursor: canSend ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s', opacity: canSend ? 1 : 0.5 }}
-                    onMouseEnter={e => { if (canSend) { (e.currentTarget as HTMLElement).style.background = '#F4EBFF'; (e.currentTarget as HTMLElement).style.borderColor = BRAND; } }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; (e.currentTarget as HTMLElement).style.borderColor = '#EAECF0'; }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </button>
-
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#F9FAFB', border: '1.5px solid #EAECF0', borderRadius: '9999px', padding: '10px 16px', gap: '8px', transition: 'border-color 0.15s, box-shadow 0.15s' }}
                     onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = BRAND; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 3px rgba(165,74,255,0.1)'; (e.currentTarget as HTMLElement).style.background = '#fff'; }}
                     onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = '#EAECF0'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
