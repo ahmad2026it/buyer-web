@@ -611,8 +611,8 @@ export default function BookingPage() {
   if (step === 1) return (
     <>
       <Navbar />
-      <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+      <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+        <div className="app-page-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
           {/* Progress */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
             <StepDot n={1} active done={false} />
@@ -620,7 +620,7 @@ export default function BookingPage() {
             <StepDot n={2} active={false} done={false} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
+          <div className="app-split" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
 
             {/* ── Left: Requirements ── */}
             <div>
@@ -851,8 +851,8 @@ export default function BookingPage() {
           onSuccess={handleCardSaved}
         />
       )}
-      <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+      <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+        <div className="app-page-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
           {/* Progress */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
             <StepDot n={1} active={false} done />
@@ -860,7 +860,7 @@ export default function BookingPage() {
             <StepDot n={2} active done={false} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
+          <div className="app-split" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
 
             {/* ── Left: Payment methods ── */}
             <div>

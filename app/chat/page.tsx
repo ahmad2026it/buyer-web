@@ -297,7 +297,7 @@ function ChatPageInner() {
   const canSend = Boolean(active?.canSend);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: '#F9FAFB' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden', background: '#F9FAFB' }} className="chat-page">
       <Navbar solid />
       {authOpen && (
         <AuthGateModal
@@ -306,7 +306,7 @@ function ChatPageInner() {
         />
       )}
 
-      <div className={`chat-layout${threadOpen ? ' chat-open' : ''}`} style={{ flex: 1, display: 'flex', background: '#F9FAFB', overflow: 'hidden', paddingTop: 88 }}>
+      <div className={`chat-layout${threadOpen ? ' chat-open' : ''}`} style={{ flex: 1, display: 'flex', background: '#F9FAFB', overflow: 'hidden', paddingTop: 88, minHeight: 0 }}>
         <div className="chat-list" style={{
           width: 360, flexShrink: 0, borderRight: '1px solid #EAECF0', background: '#ffffff',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -425,7 +425,7 @@ function ChatPageInner() {
             </div>
           ) : (
             <>
-              <div style={{
+              <div className="chat-thread-head" style={{
                 flexShrink: 0, background: '#ffffff', borderBottom: '1px solid #EAECF0',
                 padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '14px',
               }}>
@@ -458,8 +458,9 @@ function ChatPageInner() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                <div className="chat-thread-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                   <button
+                    className="chat-profile-btn"
                     onClick={() => router.push(`/seller/${active.sellerUserId}`)}
                     style={{ fontFamily: F, fontWeight: 600, fontSize: '13px', color: '#ffffff', background: GRAD, border: 'none', borderRadius: '9999px', padding: '8px 16px', cursor: 'pointer', transition: 'opacity 0.15s' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
@@ -556,7 +557,7 @@ function ChatPageInner() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div style={{
+              <div className="chat-composer" style={{
                 flexShrink: 0, background: '#ffffff', borderTop: '1px solid #EAECF0',
                 padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 8,
               }}>

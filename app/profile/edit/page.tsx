@@ -253,26 +253,26 @@ export default function EditProfilePage() {
   return (
     <>
       <Navbar />
-      <main style={{ minHeight: '100vh', background: '#F9FAFB' }}>
+      <main className="app-page" style={{ minHeight: '100dvh', background: '#F9FAFB' }}>
 
         {/* Header band */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '32px' }}>
-          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px' }}>
+        <div className="app-page-band" style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '32px' }}>
+          <div className="app-page-inner" style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px' }}>
             <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: 'Poppins,sans-serif', fontSize: '13px', fontWeight: 500, color: '#667085', textDecoration: 'none', marginBottom: '16px', transition: 'color 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = BRAND; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#667085'; }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Back
             </a>
-            <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '28px', color: '#101828' }}>Edit Profile</h1>
+            <h1 className="app-page-title" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '28px', color: '#101828' }}>Edit Profile</h1>
           </div>
         </div>
 
-        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '40px 24px 80px' }}>
+        <div className="app-page-body" style={{ maxWidth: '720px', margin: '0 auto', padding: '40px 24px 80px' }}>
           <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(16,24,40,0.05)' }}>
 
             {/* ── Photo section ── */}
-            <div style={{ padding: '28px 32px', borderBottom: '1px solid #F2F4F7', display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+            <div className="app-panel-pad" style={{ padding: '28px 32px', borderBottom: '1px solid #F2F4F7', display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 {avatar
                   ? <img src={avatar} alt="Profile" style={{ width: '96px', height: '96px', borderRadius: PILL, objectFit: 'cover', border: '3px solid #F4EBFF', boxShadow: '0 4px 16px rgba(165,74,255,0.18)', display: 'block' }} />
@@ -304,7 +304,7 @@ export default function EditProfilePage() {
             </div>
 
             {/* ── Form fields ── */}
-            <div style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
+            <div className="app-panel-pad" style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
 
               {/* Full name */}
               <div>

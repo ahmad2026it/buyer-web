@@ -311,9 +311,9 @@ export default function SecurityPage() {
   return (
     <>
       <Navbar />
-      <main style={{ minHeight: '100vh', background: '#F9FAFB' }}>
-        <div style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '32px' }}>
-          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px' }}>
+      <main className="app-page" style={{ minHeight: '100dvh', background: '#F9FAFB' }}>
+        <div className="app-page-band" style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '32px' }}>
+          <div className="app-page-inner" style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px' }}>
             <a
               href="/"
               style={{
@@ -340,7 +340,7 @@ export default function SecurityPage() {
               </svg>
               Back
             </a>
-            <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '28px', color: '#101828' }}>
+            <h1 className="app-page-title" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '28px', color: '#101828' }}>
               Security
             </h1>
             <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#667085', marginTop: '8px' }}>
@@ -349,7 +349,7 @@ export default function SecurityPage() {
           </div>
         </div>
 
-        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '40px 24px 80px' }}>
+        <div className="app-page-body" style={{ maxWidth: '720px', margin: '0 auto', padding: '40px 24px 80px' }}>
           <form
             onSubmit={(e) => {
               void handleSubmit(e);
@@ -362,7 +362,7 @@ export default function SecurityPage() {
               boxShadow: '0 1px 4px rgba(16,24,40,0.05)',
             }}
           >
-            <div style={{ padding: '28px 32px', borderBottom: '1px solid #F2F4F7' }}>
+            <div className="app-panel-pad" style={{ padding: '28px 32px', borderBottom: '1px solid #F2F4F7' }}>
               <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '15px', color: '#101828', marginBottom: '4px' }}>
                 Change password
               </p>
@@ -371,7 +371,7 @@ export default function SecurityPage() {
               </p>
             </div>
 
-            <div style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
+            <div className="app-panel-pad" style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
               <div>
                 <PasswordField
                   label="Current password"

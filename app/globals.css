@@ -1054,6 +1054,164 @@ body.animate-ready [data-animate="scale"].in-view {
   .support-chat-panel {
     width: 100% !important;
   }
+
+  .app-page {
+    overflow-x: clip;
+  }
+
+  .app-page-band {
+    padding-top: 84px !important;
+    padding-bottom: 20px !important;
+  }
+
+  .app-page-inner,
+  .app-page-body {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .app-page-body {
+    padding-top: 24px !important;
+    padding-bottom: 64px !important;
+  }
+
+  .app-page-title {
+    font-size: 24px !important;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .app-page-head {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .app-page-head > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .app-split {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .app-split-sticky {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .app-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .app-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-panel-pad {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .billing-table-head {
+    display: none !important;
+  }
+
+  .billing-row {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-areas:
+      "invoice action"
+      "amount action"
+      "date status";
+    column-gap: 8px !important;
+    row-gap: 4px !important;
+    padding: 14px 16px !important;
+    align-items: start !important;
+  }
+
+  .billing-invoice {
+    grid-area: invoice;
+    padding: 0 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .billing-amount {
+    grid-area: amount;
+    padding: 0 !important;
+  }
+
+  .billing-date {
+    grid-area: date;
+    padding: 0 !important;
+    font-size: 12px !important;
+  }
+
+  .billing-status {
+    grid-area: status;
+    padding: 0 !important;
+    justify-self: end;
+  }
+
+  .billing-action {
+    grid-area: action;
+    padding: 0 !important;
+    align-self: center;
+  }
+
+  .chat-page {
+    height: 100dvh !important;
+  }
+
+  .chat-layout {
+    padding-top: 72px !important;
+  }
+
+  .app-page-flow {
+    padding-top: 80px !important;
+  }
+
+  .app-page-actions {
+    flex-wrap: wrap !important;
+    width: 100%;
+  }
+
+  .app-page-actions > button {
+    justify-content: center;
+  }
+
+  .chat-thread-head {
+    padding: 12px 12px !important;
+    gap: 10px !important;
+  }
+
+  .chat-thread-actions {
+    gap: 6px !important;
+  }
+
+  .chat-profile-btn {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
+
+  .chat-composer {
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .billing-invoice,
+  .billing-amount,
+  .billing-date {
+    min-width: 0;
+  }
 }
 
 .favor-mobile-cta { display: none; }

@@ -362,20 +362,20 @@ function SavedCardSkeleton() {
 
 function BillingRowSkeleton() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px 140px 100px 52px', padding: '0 24px', borderBottom: '1px solid #F2F4F7' }}>
-      <div style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}>
+    <div className="billing-row" style={{ display: 'grid', gridTemplateColumns: '1fr 110px 140px 100px 52px', padding: '0 24px', borderBottom: '1px solid #F2F4F7' }}>
+      <div className="billing-invoice" style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}>
         <div style={{ width: '220px', height: '14px', borderRadius: '4px', background: '#F2F4F7' }} />
       </div>
-      <div style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}>
+      <div className="billing-amount" style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}>
         <div style={{ width: '56px', height: '14px', borderRadius: '4px', background: '#F2F4F7' }} />
       </div>
-      <div style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}>
+      <div className="billing-date" style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}>
         <div style={{ width: '88px', height: '14px', borderRadius: '4px', background: '#F2F4F7' }} />
       </div>
-      <div style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}>
+      <div className="billing-status" style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}>
         <div style={{ width: '58px', height: '22px', borderRadius: PILL, background: '#F2F4F7' }} />
       </div>
-      <div style={{ padding: '18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="billing-action" style={{ padding: '18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: '#F2F4F7' }} />
       </div>
     </div>
@@ -506,20 +506,20 @@ export default function BillingPage() {
       )}
       {receiptTx && <ReceiptModal tx={receiptTx} onClose={() => setReceiptTx(null)} />}
 
-      <main style={{ minHeight: '100vh', background: '#F9FAFB' }}>
+      <main className="app-page" style={{ minHeight: '100dvh', background: '#F9FAFB' }}>
 
         {/* Header band */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '32px' }}>
-          <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px' }}>
+        <div className="app-page-band" style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '32px' }}>
+          <div className="app-page-inner" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px' }}>
             <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: 'Poppins,sans-serif', fontSize: '13px', fontWeight: 500, color: '#667085', textDecoration: 'none', marginBottom: '16px', transition: 'color 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = BRAND; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#667085'; }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Back
             </a>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div className="app-page-head" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
               <div>
-                <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '28px', color: '#101828', marginBottom: '4px' }}>Billing & Payments</h1>
+                <h1 className="app-page-title" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: '28px', color: '#101828', marginBottom: '4px' }}>Billing & Payments</h1>
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '15px', color: '#667085' }}>Manage your billing and payment details.</p>
               </div>
               <button
@@ -536,11 +536,11 @@ export default function BillingPage() {
           </div>
         </div>
 
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px 80px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        <div className="app-page-body" style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px 80px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
           {/* ── Payment Methods ── */}
           <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: '16px', boxShadow: '0 1px 2px rgba(16,24,40,0.05)', overflow: 'hidden' }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid #EAECF0' }}>
+            <div className="app-panel-pad" style={{ padding: '20px 24px', borderBottom: '1px solid #EAECF0' }}>
               <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '17px', color: '#101828', marginBottom: '2px' }}>Payment methods</h2>
               <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>Cards saved to your account.</p>
             </div>
@@ -604,7 +604,7 @@ export default function BillingPage() {
 
           {/* ── Billing History ── */}
           <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: '16px', boxShadow: '0 1px 2px rgba(16,24,40,0.05)', overflow: 'hidden' }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid #EAECF0' }}>
+            <div className="app-panel-pad" style={{ padding: '20px 24px', borderBottom: '1px solid #EAECF0' }}>
               <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '17px', color: '#101828', marginBottom: '2px' }}>Billing history</h2>
               <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>
                 {!token
@@ -616,7 +616,7 @@ export default function BillingPage() {
             </div>
 
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px 140px 100px 52px', background: '#F9FAFB', borderBottom: '1px solid #EAECF0', padding: '0 24px' }}>
+            <div className="billing-table-head" style={{ display: 'grid', gridTemplateColumns: '1fr 110px 140px 100px 52px', background: '#F9FAFB', borderBottom: '1px solid #EAECF0', padding: '0 24px' }}>
               {['Invoice', 'Amount', 'Date', 'Status', ''].map(h => (
                 <div key={h} style={{ padding: '11px 0', fontFamily: 'Poppins,sans-serif', fontSize: '12px', fontWeight: 500, color: '#475467' }}>{h}</div>
               ))}
@@ -657,15 +657,16 @@ export default function BillingPage() {
             ) : (
               transactions.map(tx => (
               <div key={tx.id}
+                className="billing-row"
                 onClick={() => setReceiptTx(tx)}
                 style={{ display: 'grid', gridTemplateColumns: '1fr 110px 140px 100px 52px', padding: '0 24px', borderBottom: '1px solid #F2F4F7', cursor: 'pointer', transition: 'background 0.1s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FAFAFA'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                <div style={{ padding: '18px 0', fontFamily: 'Poppins,sans-serif', fontWeight: 500, fontSize: '14px', color: '#101828', display: 'flex', alignItems: 'center' }}>{tx.invoice}</div>
-                <div style={{ padding: '18px 0', fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#475467', display: 'flex', alignItems: 'center' }}>{tx.amount}</div>
-                <div style={{ padding: '18px 0', fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#475467', display: 'flex', alignItems: 'center' }}>{tx.date}</div>
-                <div style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}><StatusBadge status={tx.status} /></div>
-                <div style={{ padding: '18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="billing-invoice" style={{ padding: '18px 0', fontFamily: 'Poppins,sans-serif', fontWeight: 500, fontSize: '14px', color: '#101828', display: 'flex', alignItems: 'center' }}>{tx.invoice}</div>
+                <div className="billing-amount" style={{ padding: '18px 0', fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#475467', display: 'flex', alignItems: 'center' }}>{tx.amount}</div>
+                <div className="billing-date" style={{ padding: '18px 0', fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#475467', display: 'flex', alignItems: 'center' }}>{tx.date}</div>
+                <div className="billing-status" style={{ padding: '18px 0', display: 'flex', alignItems: 'center' }}><StatusBadge status={tx.status} /></div>
+                <div className="billing-action" style={{ padding: '18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <button onClick={e => { e.stopPropagation(); setReceiptTx(tx); }}
                     style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F4EBFF'; }}

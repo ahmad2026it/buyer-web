@@ -635,8 +635,8 @@ export default function NewCustomFavorPage() {
     return (
       <>
         <Navbar />
-        <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+        <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+          <div className="app-page-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
             <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: 24 }}>
               <div style={{ width: '40%', height: 22, borderRadius: 6, background: '#F2F4F7', marginBottom: 16 }} />
               <div style={{ width: '70%', height: 14, borderRadius: 6, background: '#F2F4F7', marginBottom: 10 }} />
@@ -653,8 +653,8 @@ export default function NewCustomFavorPage() {
     return (
       <>
         <Navbar />
-        <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+        <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+          <div className="app-page-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
             <div style={{ textAlign: 'center', padding: '80px 24px', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20 }}>
               <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>Couldn’t load this custom favor. Please try again.</p>
               <button
@@ -675,10 +675,10 @@ export default function NewCustomFavorPage() {
   if (step === 1) return (
     <>
       <Navbar />
-      <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+      <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+        <div className="app-page-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
           <Progress />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
+          <div className="app-split" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
 
             {/* Left: task details */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -863,10 +863,10 @@ export default function NewCustomFavorPage() {
   if (step === 2) return (
     <>
       <Navbar />
-      <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+      <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+        <div className="app-page-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
           <Progress />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
+          <div className="app-split" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 28, alignItems: 'flex-start' }}>
 
             {/* Left: location */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -1034,14 +1034,15 @@ export default function NewCustomFavorPage() {
   return (
     <>
       <Navbar />
-      <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+      <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+        <div className="app-page-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
           <Progress />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ position: 'relative' }}>
           <div
             aria-hidden
             inert
+            className="app-split"
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, alignItems: 'flex-start', opacity: 0.45, pointerEvents: 'none', userSelect: 'none' }}
           >
 

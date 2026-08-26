@@ -247,10 +247,10 @@ export default function DisputeCenterPage() {
           message="Log in to view and manage your dispute tickets."
         />
       )}
-      <main style={{ minHeight: '100vh', background: '#FAFAFA' }}>
+      <main className="app-page" style={{ minHeight: '100dvh', background: '#FAFAFA' }}>
 
-        <div style={{ background: '#ffffff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '32px' }}>
-          <div style={{ maxWidth: '780px', margin: '0 auto', padding: '0 24px' }}>
+        <div className="app-page-band" style={{ background: '#ffffff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '32px' }}>
+          <div className="app-page-inner" style={{ maxWidth: '780px', margin: '0 auto', padding: '0 24px' }}>
             <button
               onClick={() => router.back()}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontSize: '13px', fontWeight: 500, color: '#667085', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 16, transition: 'color 0.15s' }}
@@ -263,7 +263,7 @@ export default function DisputeCenterPage() {
               Back
             </button>
 
-            <h1 style={{ fontFamily: FONT, fontWeight: 800, fontSize: '30px', color: '#101828', lineHeight: '1.2', marginBottom: 6 }}>
+            <h1 className="app-page-title" style={{ fontFamily: FONT, fontWeight: 800, fontSize: '30px', color: '#101828', lineHeight: '1.2', marginBottom: 6 }}>
               Dispute Center
             </h1>
             <p style={{ fontFamily: FONT, fontSize: '15px', color: '#667085' }}>
@@ -272,7 +272,7 @@ export default function DisputeCenterPage() {
           </div>
         </div>
 
-        <div style={{ maxWidth: '780px', margin: '0 auto', padding: '40px 24px 80px' }}>
+        <div className="app-page-body" style={{ maxWidth: '780px', margin: '0 auto', padding: '40px 24px 80px' }}>
           {skip ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '64px 24px', textAlign: 'center' }}>
               <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>Log in to view disputes</h3>

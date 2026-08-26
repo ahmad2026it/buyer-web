@@ -353,12 +353,12 @@ export default function CustomFavorsPage() {
           message="Sign in to view and manage your custom favors."
         />
       )}
-      <main style={{ minHeight: '100vh', background: '#FAFAFA' }}>
-        <div style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: 104, paddingBottom: 28 }}>
-          <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+      <main className="app-page" style={{ minHeight: '100dvh', background: '#FAFAFA' }}>
+        <div className="app-page-band" style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: 104, paddingBottom: 28 }}>
+          <div className="app-page-inner" style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px' }}>
+            <div className="app-page-head" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
               <div>
-                <h1 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 28, color: '#101828', lineHeight: 1.2, marginBottom: 6 }}>
+                <h1 className="app-page-title" style={{ fontFamily: FONT, fontWeight: 800, fontSize: 28, color: '#101828', lineHeight: 1.2, marginBottom: 6 }}>
                   My Custom Favors
                 </h1>
                 <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085' }}>
@@ -378,7 +378,7 @@ export default function CustomFavorsPage() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: 4, marginTop: 24, borderBottom: '2px solid #EAECF0', paddingBottom: 0 }}>
+            <div className="app-tabs" style={{ display: 'flex', gap: 4, marginTop: 24, borderBottom: '2px solid #EAECF0', paddingBottom: 0 }}>
               {(['active', 'history'] as const).map(t => (
                 <button
                   key={t}
@@ -406,7 +406,7 @@ export default function CustomFavorsPage() {
           </div>
         </div>
 
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '36px 24px 80px' }}>
+        <div className="app-page-body" style={{ maxWidth: 860, margin: '0 auto', padding: '36px 24px 80px' }}>
           {skip ? (
             <div style={{ textAlign: 'center', padding: '80px 24px' }}>
               <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>

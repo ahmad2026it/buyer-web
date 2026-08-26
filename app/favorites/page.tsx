@@ -542,9 +542,10 @@ export default function FavoritesPage() {
           message="Log in to view and manage your favorites."
         />
       )}
-      <main style={{ minHeight: "100vh", background: "#FAFAFA" }}>
+      <main className="app-page" style={{ minHeight: "100dvh", background: "#FAFAFA" }}>
         {/* Header band */}
         <div
+          className="app-page-band"
           style={{
             background: "#ffffff",
             borderBottom: "1px solid #EAECF0",
@@ -553,6 +554,7 @@ export default function FavoritesPage() {
           }}
         >
           <div
+            className="app-page-inner"
             style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}
           >
             {/* Back link */}
@@ -693,6 +695,7 @@ export default function FavoritesPage() {
 
         {/* Content */}
         <div
+          className="app-page-body"
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
@@ -752,7 +755,8 @@ export default function FavoritesPage() {
             </div>
           ) : showListLoading ? (
             <div
-              style={{
+                className="app-cards-grid"
+                style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))",
                 gap: "24px",
@@ -818,6 +822,7 @@ export default function FavoritesPage() {
           ) : (
             <>
               <div
+                className="app-cards-grid"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))",

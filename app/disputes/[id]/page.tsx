@@ -124,10 +124,10 @@ function DisputeDetailPageInner() {
           message="Log in to view this dispute ticket."
         />
       )}
-      <main style={{ minHeight: '100vh', background: '#FAFAFA' }}>
+      <main className="app-page" style={{ minHeight: '100dvh', background: '#FAFAFA' }}>
 
-        <div style={{ background: '#ffffff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '28px' }}>
-          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px' }}>
+        <div className="app-page-band" style={{ background: '#ffffff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '28px' }}>
+          <div className="app-page-inner" style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px' }}>
             <button
               onClick={() => router.push('/disputes')}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontSize: '13px', fontWeight: 500, color: '#667085', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 16, transition: 'color 0.15s' }}
@@ -140,9 +140,9 @@ function DisputeDetailPageInner() {
               Dispute Center
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div className="app-page-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <div>
-                <h1 style={{ fontFamily: FONT, fontWeight: 800, fontSize: '26px', color: '#101828', lineHeight: '1.2', marginBottom: 4 }}>
+                <h1 className="app-page-title" style={{ fontFamily: FONT, fontWeight: 800, fontSize: '26px', color: '#101828', lineHeight: '1.2', marginBottom: 4 }}>
                   {dispute ? `Ticket #${dispute.ticketNo}` : isLoading ? 'Loading ticket' : 'Ticket'}
                 </h1>
                 {dispute && (
@@ -208,7 +208,7 @@ function DisputeDetailPageInner() {
             </button>
           </div>
         ) : (
-          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px 80px' }}>
+          <div className="app-page-body" style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px 80px' }}>
 
             {!isClosed ? (
               <div style={{
@@ -289,7 +289,7 @@ function DisputeDetailPageInner() {
                       No photos or videos were attached.
                     </p>
                   ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
+                    <div className="app-cards-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
                       {dispute.images.map((src, i) => (
                         <div key={`image-${i}`} style={{ borderRadius: 12, overflow: 'hidden', aspectRatio: '4/3' }}>
                           <img

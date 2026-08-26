@@ -811,8 +811,8 @@ export default function CustomFavorDetailPage() {
           message="Sign in to view this custom favor."
         />
       )}
-      <main style={{ minHeight: '100vh', background: '#F9FAFB', paddingTop: 96 }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px 80px' }}>
+      <main className="app-page app-page-flow" style={{ minHeight: '100dvh', background: '#F9FAFB', paddingTop: 96 }}>
+        <div className="app-page-body" style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px 80px' }}>
 
           {/* Back + three-dot menu row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -934,7 +934,7 @@ export default function CustomFavorDetailPage() {
               </button>
             </div>
           ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 28, alignItems: 'flex-start' }}>
+          <div className="app-split" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 28, alignItems: 'flex-start' }}>
 
             {/* ── Left: favor info ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -988,7 +988,7 @@ export default function CustomFavorDetailPage() {
             </div>
 
             {/* ── Right: sticky requests panel ── */}
-            <div style={{ position: 'sticky', top: 104 }}>
+            <div className="app-split-sticky" style={{ position: 'sticky', top: 104 }}>
               <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, overflow: 'hidden' }}>
                 {/* Panel header */}
                 <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #F2F4F7' }}>

@@ -681,25 +681,25 @@ export default function BookingsPage() {
           message="Log in to view and manage your bookings."
         />
       )}
-      <main style={{ minHeight: '100vh', background: '#F9FAFB' }}>
+      <main className="app-page" style={{ minHeight: '100dvh', background: '#F9FAFB' }}>
 
         {/* Header */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: 104, paddingBottom: 32 }}>
-          <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 24px' }}>
+        <div className="app-page-band" style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: 104, paddingBottom: 32 }}>
+          <div className="app-page-inner" style={{ maxWidth: 960, margin: '0 auto', padding: '0 24px' }}>
             <a href="/explore/search" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 500, color: '#667085', textDecoration: 'none', marginBottom: 16, transition: 'color 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = BRAND; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#667085'; }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Back to explore
             </a>
-            <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 28, color: '#101828', marginBottom: 4 }}>My Bookings</h1>
+            <h1 className="app-page-title" style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 28, color: '#101828', marginBottom: 4 }}>My Bookings</h1>
             <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085' }}>Track and manage your service bookings.</p>
           </div>
         </div>
 
         {/* Tabs */}
         <div style={{ background: '#fff', borderBottom: '1px solid #EAECF0' }}>
-          <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 24px', display: 'flex' }}>
+          <div className="app-page-inner app-tabs" style={{ maxWidth: 960, margin: '0 auto', padding: '0 24px', display: 'flex' }}>
             {TABS.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
                 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: tab === t.key ? BRAND : '#667085', background: 'none', border: 'none', borderBottom: `2.5px solid ${tab === t.key ? BRAND : 'transparent'}`, padding: '14px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, transition: 'color 0.15s', flexShrink: 0 }}>
@@ -713,7 +713,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Content */}
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 24px 80px' }}>
+        <div className="app-page-body" style={{ maxWidth: 960, margin: '0 auto', padding: '32px 24px 80px' }}>
           {skip ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px', textAlign: 'center' }}>
               <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>Log in to view your bookings</h3>
@@ -729,7 +729,7 @@ export default function BookingsPage() {
               </button>
             </div>
           ) : activeQuery.isLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(400px,1fr))', gap: 20 }}>
+            <div className="app-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(400px,1fr))', gap: 20 }}>
               <BookingCardSkeleton />
               <BookingCardSkeleton />
               <BookingCardSkeleton />
@@ -753,7 +753,7 @@ export default function BookingsPage() {
             <EmptyState {...emptyProps[tab]} />
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(400px,1fr))', gap: 20 }}>
+              <div className="app-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(400px,1fr))', gap: 20 }}>
                 {current.map(b => (
                   <BookingCard
                     key={b.id}

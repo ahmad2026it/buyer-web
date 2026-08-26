@@ -1132,15 +1132,15 @@ export default function BookingDetailPage() {
   if (isLoading) return (
     <>
       <Navbar />
-      <main style={{ minHeight:'100vh', background:'#F9FAFB' }}>
-        <div style={{ background:'#fff', borderBottom:'1px solid #EAECF0', paddingTop:104, paddingBottom:24 }}>
-          <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 24px' }}>
+      <main className="app-page" style={{ minHeight:'100dvh', background:'#F9FAFB' }}>
+        <div className="app-page-band" style={{ background:'#fff', borderBottom:'1px solid #EAECF0', paddingTop:104, paddingBottom:24 }}>
+          <div className="app-page-inner" style={{ maxWidth:1100, margin:'0 auto', padding:'0 24px' }}>
             <div style={{ width:140, height:14, borderRadius:4, background:'#F2F4F7', marginBottom:16 }} />
             <div style={{ width:260, height:28, borderRadius:6, background:'#F2F4F7' }} />
           </div>
         </div>
-        <div style={{ maxWidth:1100, margin:'0 auto', padding:'32px 24px' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24 }}>
+        <div className="app-page-body" style={{ maxWidth:1100, margin:'0 auto', padding:'32px 24px' }}>
+          <div className="app-split" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24 }}>
             <div style={{ background:'#fff', border:'1.5px solid #EAECF0', borderRadius:20, height:180 }} />
             <div style={{ background:'#fff', border:'1.5px solid #EAECF0', borderRadius:20, height:180 }} />
             <div style={{ background:'#fff', border:'1.5px solid #EAECF0', borderRadius:20, height:220 }} />
@@ -1370,11 +1370,11 @@ export default function BookingDetailPage() {
         @keyframes mapRing { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(2.4);opacity:0} }
       `}</style>
       <Navbar />
-      <main style={{ minHeight: '100vh', background: '#F9FAFB' }}>
+      <main className="app-page" style={{ minHeight: '100dvh', background: '#F9FAFB' }}>
 
         {/* Header */}
-        <div style={{ background:'#fff', borderBottom:'1px solid #EAECF0', paddingTop:104, paddingBottom:24 }}>
-          <div style={{ maxWidth: isLive ? 1200 : 1100, margin:'0 auto', padding:'0 24px' }}>
+        <div className="app-page-band" style={{ background:'#fff', borderBottom:'1px solid #EAECF0', paddingTop:104, paddingBottom:24 }}>
+          <div className="app-page-inner" style={{ maxWidth: isLive ? 1200 : 1100, margin:'0 auto', padding:'0 24px' }}>
             <button onClick={() => router.push('/bookings')}
               style={{ display:'inline-flex', alignItems:'center', gap:6, fontFamily:'Poppins,sans-serif', fontSize:13, fontWeight:500, color:'#667085', background:'none', border:'none', cursor:'pointer', marginBottom:14, padding:0, transition:'color 0.15s' }}
               onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color=BRAND;}}
@@ -1382,14 +1382,14 @@ export default function BookingDetailPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Back to bookings
             </button>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
-              <h1 style={{ fontFamily:'Poppins,sans-serif', fontWeight:800, fontSize:22, color:'#101828', margin:0 }}>
+            <div className="app-page-head" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+              <h1 className="app-page-title" style={{ fontFamily:'Poppins,sans-serif', fontWeight:800, fontSize:22, color:'#101828', margin:0 }}>
                 {isLive ? 'In Progress Booking' : isAwaitingComplete ? 'Complete Booking' : booking.status==='Upcoming' ? 'Upcoming Booking' : booking.status==='Pending' ? 'Booking Request' : booking.status==='Completed' ? 'Completed Booking' : booking.title}
               </h1>
 
               {/* ── InProgress: Cancel + three-dot ── */}
               {isLive && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+                <div className="app-page-actions" style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
                   <StatusPill />
                   <button onClick={() => setShowLiveCancel(true)}
                     style={{ display:'inline-flex', alignItems:'center', gap:7, fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:14, color:'#D92D20', background:'#fff', border:'1.5px solid #D92D20', borderRadius:PILL, padding:'10px 18px', cursor:'pointer', whiteSpace:'nowrap', transition:'background 0.15s' }}
@@ -1404,7 +1404,7 @@ export default function BookingDetailPage() {
 
               {/* ── Complete: Mark complete + Reject Complete ── */}
               {isAwaitingComplete && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+                <div className="app-page-actions" style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
                   <StatusPill />
                   <button
                     type="button"
@@ -1433,7 +1433,7 @@ export default function BookingDetailPage() {
 
               {/* ── Pending / history: status pill ── */}
               {!isLive && !isAwaitingComplete && booking.status !== 'Upcoming' && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+                <div className="app-page-actions" style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
                   <StatusPill />
                   {canRate && (
                     <button
@@ -1467,11 +1467,11 @@ export default function BookingDetailPage() {
 
         {/* Body ── InProgress ───────────────────────────────── */}
         {isLive && (
-          <div style={{ maxWidth:1200, margin:'0 auto', padding:'32px 24px 48px' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:24, alignItems:'flex-start' }}>
+          <div className="app-page-body" style={{ maxWidth:1200, margin:'0 auto', padding:'32px 24px 48px' }}>
+            <div className="app-split" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:24, alignItems:'flex-start' }}>
 
               {/* Left sticky details */}
-              <div style={{ position:'sticky', top:104, display:'flex', flexDirection:'column', gap:20 }}>
+              <div className="app-split-sticky" style={{ position:'sticky', top:104, display:'flex', flexDirection:'column', gap:20 }}>
                 <Section title="Favor">
                   <div style={{ display:'flex', gap:16, alignItems:'center' }}>
                     <FavorImage src={booking.image} alt={booking.title} style={{ width:100, height:72, borderRadius:12, objectFit:'cover', flexShrink:0 }}/>
@@ -1627,7 +1627,7 @@ export default function BookingDetailPage() {
 
         {/* Body ── Upcoming / Pending ───────────────────────── */}
         {!isLive && (booking.status === 'Upcoming' || booking.status === 'Pending' || isAwaitingComplete) && (
-          <div style={{ maxWidth:1100, margin:'0 auto', padding:'32px 24px 48px' }}>
+          <div className="app-page-body" style={{ maxWidth:1100, margin:'0 auto', padding:'32px 24px 48px' }}>
             {isAwaitingComplete && (
               <div style={{ background:'#F9F5FF', border:'1.5px solid #E9D7FE', borderRadius:14, padding:'14px 18px', display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#6941C6" strokeWidth="2"/><path d="M8 12l3 3 5-5" stroke="#6941C6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -1636,10 +1636,10 @@ export default function BookingDetailPage() {
                 </p>
               </div>
             )}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, alignItems:'flex-start' }}>
+            <div className="app-split" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, alignItems:'flex-start' }}>
 
               {/* Left sticky */}
-              <div style={{ position:'sticky', top:104, display:'flex', flexDirection:'column', gap:20 }}>
+              <div className="app-split-sticky" style={{ position:'sticky', top:104, display:'flex', flexDirection:'column', gap:20 }}>
                 <Section title="Favor">
                   <div style={{ display:'flex', gap:16, alignItems:'center' }}>
                     <FavorImage src={booking.image} alt={booking.title} style={{ width:100, height:72, borderRadius:12, objectFit:'cover', flexShrink:0 }}/>
@@ -1792,11 +1792,11 @@ export default function BookingDetailPage() {
 
         {/* Body ── Completed / Cancelled / Declined ─────────── */}
         {!isLive && booking.status !== 'Upcoming' && booking.status !== 'Pending' && !isAwaitingComplete && (
-          <div style={{ maxWidth:1100, margin:'0 auto', padding:'32px 24px 48px' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, alignItems:'flex-start' }}>
+          <div className="app-page-body" style={{ maxWidth:1100, margin:'0 auto', padding:'32px 24px 48px' }}>
+            <div className="app-split" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, alignItems:'flex-start' }}>
 
               {/* Left: core details */}
-              <div style={{ position:'sticky', top:104, display:'flex', flexDirection:'column', gap:20 }}>
+              <div className="app-split-sticky" style={{ position:'sticky', top:104, display:'flex', flexDirection:'column', gap:20 }}>
                 <Section title="Favor">
                   <div style={{ display:'flex', gap:16, alignItems:'center' }}>
                     <FavorImage src={booking.image} alt={booking.title} style={{ width:100, height:72, borderRadius:12, objectFit:'cover', flexShrink:0 }}/>
