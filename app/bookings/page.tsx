@@ -458,21 +458,24 @@ function BookingCard({ booking, onCancel, onWithdraw }: { booking: Booking; onCa
         borderRadius: 20, padding: 18, display: 'flex', flexDirection: 'column', gap: 12,
         transition: 'box-shadow 0.2s, border-color 0.2s', cursor: 'pointer',
         boxShadow: isActive ? '0 4px 20px rgba(165,74,255,0.12)' : 'none',
+        minWidth: 0, maxWidth: '100%', boxSizing: 'border-box',
       }}
       onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 4px 16px rgba(16,24,40,0.08)'; if (!isActive) el.style.borderColor = 'rgba(165,74,255,0.25)'; }}
       onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = isActive ? '0 4px 20px rgba(165,74,255,0.12)' : 'none'; if (!isActive) el.style.borderColor = '#EAECF0'; }}>
 
       {/* Top: image + info + kebab */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <FavorImage src={booking.image} alt={booking.title}
-          style={{ width: 82, height: 68, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', minWidth: 0 }}>
+        <div style={{ width: 82, height: 68, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+          <FavorImage src={booking.image} alt={booking.title}
+            style={{ width: '100%', height: '100%', borderRadius: 12, objectFit: 'cover' }} />
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 5 }}>
             {booking.title}
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5, minWidth: 0 }}>
             <img src={booking.sellerAvatar} alt={booking.seller} style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #DFBAFF', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#344054', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{booking.seller}</span>
+            <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#344054', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{booking.seller}</span>
             {booking.badge && (
               <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 10, fontWeight: 700, background: booking.badge === 'Pro' ? '#A54AFF' : '#344054', color: '#fff', borderRadius: PILL, padding: '1px 7px', flexShrink: 0 }}>{booking.badge}</span>
             )}
@@ -493,20 +496,20 @@ function BookingCard({ booking, onCancel, onWithdraw }: { booking: Booking; onCa
       </div>
 
       {/* Date / location */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingTop: 12, borderTop: '1px solid #EAECF0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#98A2B3" strokeWidth="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="#98A2B3" strokeWidth="1.8" strokeLinecap="round"/></svg>
-          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#344054' }}>{booking.date} – {booking.time}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingTop: 12, borderTop: '1px solid #EAECF0', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><rect x="3" y="4" width="18" height="18" rx="2" stroke="#98A2B3" strokeWidth="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="#98A2B3" strokeWidth="1.8" strokeLinecap="round"/></svg>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#344054', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{booking.date} – {booking.time}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
           {booking.location === 'Work' ? <BriefcaseIcon /> : <HomeIconSmall />}
-          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#344054', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{booking.address}</span>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#344054', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{booking.address}</span>
         </div>
       </div>
 
       {/* Status row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
           {isActive && <PulsingDot />}
           <StatusBadge status={booking.status} />
           {booking.status === 'Completed' && booking.rating && <StarRating rating={booking.rating} />}
@@ -518,10 +521,10 @@ function BookingCard({ booking, onCancel, onWithdraw }: { booking: Booking; onCa
 
 function BookingCardSkeleton() {
   return (
-    <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+    <div style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: 18, display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', minWidth: 0 }}>
         <div style={{ width: 82, height: 68, borderRadius: 12, background: '#F2F4F7', flexShrink: 0 }} />
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ width: '70%', height: 14, borderRadius: 4, background: '#F2F4F7', marginBottom: 10 }} />
           <div style={{ width: '45%', height: 12, borderRadius: 4, background: '#F2F4F7', marginBottom: 10 }} />
           <div style={{ width: 52, height: 14, borderRadius: 4, background: '#F2F4F7' }} />
@@ -729,7 +732,7 @@ export default function BookingsPage() {
               </button>
             </div>
           ) : activeQuery.isLoading ? (
-            <div className="app-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(400px,1fr))', gap: 20 }}>
+            <div className="app-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(400px,100%),1fr))', gap: 20 }}>
               <BookingCardSkeleton />
               <BookingCardSkeleton />
               <BookingCardSkeleton />
@@ -753,7 +756,7 @@ export default function BookingsPage() {
             <EmptyState {...emptyProps[tab]} />
           ) : (
             <>
-              <div className="app-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(400px,1fr))', gap: 20 }}>
+              <div className="app-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(400px,100%),1fr))', gap: 20 }}>
                 {current.map(b => (
                   <BookingCard
                     key={b.id}

@@ -1167,7 +1167,12 @@ body.animate-ready [data-animate="scale"].in-view {
   }
 
   .app-cards-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .app-cards-grid > * {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .app-tabs {

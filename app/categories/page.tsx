@@ -170,7 +170,7 @@ export default function CategoriesPage() {
 
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px 24px 80px' }}>
           {isLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px,100%), 1fr))', gap: '20px' }}>
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} style={{ height: 260, borderRadius: 20, background: '#fff', border: '1.5px solid #EAECF0' }} />
               ))}
@@ -195,7 +195,7 @@ export default function CategoriesPage() {
                   Showing {filtered.length} result{filtered.length !== 1 ? 's' : ''} for "<strong style={{ color: '#101828' }}>{search}</strong>"
                 </p>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px,100%), 1fr))', gap: '20px' }}>
                 {filtered.map((cat, i) => (
                   <CategoryCard
                     key={cat.id}
