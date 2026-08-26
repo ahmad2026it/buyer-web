@@ -22,6 +22,7 @@ type LocationMapPickerProps = {
   value: PickedLocation | null;
   onChange: (location: PickedLocation | null) => void;
   height?: number;
+  autoLocate?: boolean;
 };
 
 const DEFAULT_CENTER = { lat: 37.7749, lng: -122.4194 };
@@ -56,6 +57,7 @@ export default function LocationMapPicker({
   value,
   onChange,
   height = 190,
+  autoLocate = false,
 }: LocationMapPickerProps) {
   const apiKey = getGoogleMapsApiKey();
   const { isLoaded, loadError } = useJsApiLoader({
@@ -73,6 +75,7 @@ export default function LocationMapPicker({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const autoLocateDone = useRef(false);
 
   useEffect(() => {
     if (!value) return;
@@ -147,9 +150,14 @@ export default function LocationMapPicker({
     onChange(next);
   };
 
-  const useCurrentLocation = () => {
-    if (!navigator.geolocation) {
+  const locateMe = useCallback(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setPickerError('Geolocation is not supported in this browser.');
+      return;
+    }
+
+    if (!window.isSecureContext) {
+      setPickerError('Location needs a secure (https) connection.');
       return;
     }
 
@@ -166,13 +174,25 @@ export default function LocationMapPicker({
           setGeoLoading(false);
         }
       },
-      () => {
+      (error) => {
         setGeoLoading(false);
-        setPickerError('Location permission denied. Enable location access and try again.');
+        if (error.code === error.PERMISSION_DENIED) {
+          setPickerError('Location permission denied. Enable location access for this site and try again.');
+        } else if (error.code === error.TIMEOUT) {
+          setPickerError('Getting your location timed out. Try again or search the address.');
+        } else {
+          setPickerError('Could not get your location. Try again or search the address.');
+        }
       },
-      { enableHighAccuracy: true, timeout: 12000 },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 },
     );
-  };
+  }, [applyCoords]);
+
+  useEffect(() => {
+    if (!autoLocate || !isLoaded || autoLocateDone.current) return;
+    autoLocateDone.current = true;
+    locateMe();
+  }, [autoLocate, isLoaded, locateMe]);
 
   if (!apiKey) {
     return (
@@ -336,20 +356,29 @@ export default function LocationMapPicker({
         </Autocomplete>
         <button
           type="button"
-          onClick={useCurrentLocation}
+          onClick={locateMe}
           title="Use current location"
+          aria-label="Use current location"
           disabled={geoLoading}
           style={{
             position: 'absolute',
-            right: '13px',
+            right: '4px',
             top: '50%',
             transform: 'translateY(-50%)',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             background: 'none',
             border: 'none',
+            borderRadius: '9999px',
             cursor: geoLoading ? 'wait' : 'pointer',
-            padding: '2px',
+            padding: 0,
             lineHeight: 0,
             opacity: geoLoading ? 0.6 : 1,
+            touchAction: 'manipulation',
+            zIndex: 2,
           }}
         >
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none">

@@ -298,10 +298,12 @@ function AddLocationModal({
   onClose,
   onAdded,
   isFirstLocation,
+  autoLocate = false,
 }: {
   onClose: () => void;
   onAdded: (location: BuyerLocation) => void;
   isFirstLocation: boolean;
+  autoLocate?: boolean;
 }) {
   const [picked, setPicked] = useState<PickedLocation | null>(null);
   const [name, setName] = useState('');
@@ -358,7 +360,7 @@ function AddLocationModal({
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
-          <LocationMapPicker brandColor={BRAND} value={picked} onChange={setPicked} />
+          <LocationMapPicker brandColor={BRAND} value={picked} onChange={setPicked} autoLocate={autoLocate} />
 
           {picked ? (
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '13px 16px', border: `1.5px solid ${BRAND}`, borderRadius: '14px', background: 'rgba(165,74,255,0.03)', marginBottom: '20px' }}>
@@ -662,6 +664,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
   const [locations, setLocations]       = useState<LocationEntry[]>([]);
   const [rawLocations, setRawLocations] = useState<BuyerLocation[]>([]);
   const [addLocOpen, setAddLocOpen]     = useState(false);
+  const [autoLocate, setAutoLocate]     = useState(false);
   const [editLoc, setEditLoc]           = useState<LocationEntry | null>(null);
   const [defaultingId, setDefaultingId] = useState<number | null>(null);
   const [defaultError, setDefaultError] = useState('');
@@ -913,7 +916,8 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
       {authOpen    && <AuthGateModal onClose={() => setAuthOpen(false)} />}
       {addLocOpen  && (
         <AddLocationModal
-          onClose={() => setAddLocOpen(false)}
+          autoLocate={autoLocate}
+          onClose={() => { setAddLocOpen(false); setAutoLocate(false); }}
           onAdded={(location) => {
             upsertRawLocation(location);
             setLocations((prev) => {
@@ -1067,7 +1071,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
 
                 {notifOpen && (
                   <div className="nav-popover" style={{ position: 'absolute', top: 'calc(100% + 14px)', right: '-8px', width: '360px', background: '#ffffff', borderRadius: '20px', boxShadow: '0 20px 48px rgba(16,24,40,0.16)', border: '1px solid #EAECF0', overflow: 'hidden', zIndex: 500 }}>
-                    <div style={{ position: 'absolute', top: '-6px', right: '18px', width: '12px', height: '12px', background: '#ffffff', border: '1px solid #EAECF0', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }}/>
+                    <div className="nav-popover-arrow" style={{ position: 'absolute', top: '-6px', right: '18px', width: '12px', height: '12px', background: '#ffffff', border: '1px solid #EAECF0', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }}/>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px' }}>
                       <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '16px', color: '#101828' }}>Notifications</h3>
                       <button onClick={markAllRead} disabled={unreadCount < 1 || markingAllRead} style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: BRAND, background: 'none', border: 'none', cursor: unreadCount < 1 || markingAllRead ? 'default' : 'pointer', padding: 0, opacity: unreadCount < 1 || markingAllRead ? 0.45 : 1 }}>
@@ -1134,8 +1138,8 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
               </div>
 
               {/* Location pin */}
-              <div ref={locationRef} className="nav-hide-sm" style={{ position: 'relative' }}>
-                <button onClick={() => { setLocOpen(o => !o); setNotifOpen(false); setProfileOpen(false); }}
+              <div ref={locationRef} style={{ position: 'relative' }}>
+                <button className="nav-hide-sm" onClick={() => { setLocOpen(o => !o); setNotifOpen(false); setProfileOpen(false); }}
                   style={{ width: '36px', height: '36px', borderRadius: PILL, background: locationOpen ? '#ffffff' : 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
                   onMouseEnter={e => { if (!locationOpen) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.28)'; }}
                   onMouseLeave={e => { if (!locationOpen) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.15)'; }}>
@@ -1148,7 +1152,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
                 {/* Location dropdown */}
                 {locationOpen && (
                   <div className="nav-popover" style={{ position: 'absolute', top: 'calc(100% + 14px)', right: '-8px', width: '360px', background: '#ffffff', borderRadius: '20px', boxShadow: '0 20px 48px rgba(16,24,40,0.16)', border: '1px solid #EAECF0', overflow: 'hidden', zIndex: 500 }}>
-                    <div style={{ position: 'absolute', top: '-6px', right: '18px', width: '12px', height: '12px', background: '#ffffff', border: '1px solid #EAECF0', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }}/>
+                    <div className="nav-popover-arrow" style={{ position: 'absolute', top: '-6px', right: '18px', width: '12px', height: '12px', background: '#ffffff', border: '1px solid #EAECF0', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }}/>
 
                     {/* Header */}
                     <div style={{ padding: '20px 20px 0' }}>
@@ -1218,7 +1222,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
 
                     {/* Add another */}
                     <div style={{ padding: '4px 20px 16px' }}>
-                      <button onClick={() => { setAddLocOpen(true); setLocOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'Poppins,sans-serif', fontSize: '13px', fontWeight: 600, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>
+                      <button onClick={() => { setAutoLocate(false); setAddLocOpen(true); setLocOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'Poppins,sans-serif', fontSize: '13px', fontWeight: 600, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={BRAND} strokeWidth="2.5" strokeLinecap="round"/></svg>
                         Add another
                       </button>
@@ -1226,7 +1230,10 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
 
                     {/* Use Current Location */}
                     <div style={{ padding: '0 16px 20px' }}>
-                      <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '14px', color: BRAND, background: '#F4EBFF', border: 'none', borderRadius: PILL, padding: '13px', cursor: 'pointer', transition: 'background 0.15s' }}
+                      <button
+                        type="button"
+                        onClick={() => { setLocOpen(false); setAutoLocate(true); setAddLocOpen(true); }}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '14px', color: BRAND, background: '#F4EBFF', border: 'none', borderRadius: PILL, padding: '13px', cursor: 'pointer', transition: 'background 0.15s' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#EDD9FF'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#F4EBFF'; }}>
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={BRAND} strokeWidth="2"/><circle cx="12" cy="12" r="3" fill={BRAND}/><line x1="12" y1="2" x2="12" y2="5" stroke={BRAND} strokeWidth="2" strokeLinecap="round"/><line x1="12" y1="19" x2="12" y2="22" stroke={BRAND} strokeWidth="2" strokeLinecap="round"/><line x1="2" y1="12" x2="5" y2="12" stroke={BRAND} strokeWidth="2" strokeLinecap="round"/><line x1="19" y1="12" x2="22" y2="12" stroke={BRAND} strokeWidth="2" strokeLinecap="round"/></svg>
@@ -1249,7 +1256,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
                 {/* Profile dropdown — matches reference */}
                 {profileOpen && (
                   <div className="nav-popover" style={{ position: 'absolute', top: 'calc(100% + 14px)', right: '-8px', width: '240px', background: '#ffffff', borderRadius: '20px', boxShadow: '0 20px 48px rgba(16,24,40,0.14)', border: '1px solid #EAECF0', overflow: 'hidden', zIndex: 500 }}>
-                    <div style={{ position: 'absolute', top: '-6px', right: '18px', width: '12px', height: '12px', background: '#ffffff', border: '1px solid #EAECF0', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }}/>
+                    <div className="nav-popover-arrow" style={{ position: 'absolute', top: '-6px', right: '18px', width: '12px', height: '12px', background: '#ffffff', border: '1px solid #EAECF0', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }}/>
 
                     {/* User info */}
                     <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>

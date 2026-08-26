@@ -192,16 +192,16 @@ export default function Home() {
         {isLoggedIn ? (
           <>
             {/* ── Search bar strip ─────────────────────────────── */}
-            <div style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: 88 }}>
-              <div className="container" style={{ padding: '18px 0 20px' }}>
+            <div className="home-search-strip" style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: 88 }}>
+              <div className="container" style={{ paddingTop: 18, paddingBottom: 20 }}>
 
                 {/* Greeting row */}
-                <div className="rs-section-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <div>
+                <div className="rs-section-head home-greet" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ minWidth: 0 }}>
                     <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#98A2B3', margin: 0, marginBottom: 2 }}>
                       {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}
                     </p>
-                    <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 22, color: '#101828', margin: 0 }}>
+                    <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 22, color: '#101828', margin: 0, overflowWrap: 'anywhere' }}>
                       Welcome, {firstName}
                     </h1>
                   </div>
@@ -214,7 +214,7 @@ export default function Home() {
                 <div className="rs-search-row" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
 
                   {/* Search input */}
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#F9FAFB', border: '1.5px solid #EAECF0', borderRadius: PILL, padding: '11px 16px', gap: 8 }}>
+                  <div className="rs-search-field" style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#F9FAFB', border: '1.5px solid #EAECF0', borderRadius: PILL, padding: '11px 16px', gap: 8 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#98A2B3" strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke="#98A2B3" strokeWidth="2" strokeLinecap="round"/></svg>
                     <input
                       type="text"
@@ -232,7 +232,7 @@ export default function Home() {
                   </div>
 
                   {/* Type dropdown */}
-                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <div className="rs-search-type" style={{ position: 'relative', flexShrink: 0 }}>
                     <button onClick={() => setTypeDrop(o => !o)}
                       style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Poppins,sans-serif', fontWeight: 500, fontSize: 14, color: '#344054', background: '#F9FAFB', border: '1.5px solid #EAECF0', borderRadius: PILL, padding: '11px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                       {searchType === 'all' ? (
@@ -267,6 +267,7 @@ export default function Home() {
 
                   {/* Search button */}
                   <button onClick={handleSearch}
+                    className="rs-search-submit"
                     style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: '11px 26px', cursor: 'pointer', flexShrink: 0, transition: 'opacity 0.15s', whiteSpace: 'nowrap' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
@@ -275,6 +276,7 @@ export default function Home() {
 
                   {/* Filters button */}
                   <button onClick={() => router.push('/explore/search')}
+                    className="rs-search-filters"
                     style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Poppins,sans-serif', fontWeight: 500, fontSize: 14, color: '#344054', background: '#F9FAFB', border: '1.5px solid #D0D5DD', borderRadius: PILL, padding: '11px 16px', cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s', whiteSpace: 'nowrap' }}
                     onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = BRAND; el.style.color = BRAND; }}
                     onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#D0D5DD'; el.style.color = '#344054'; }}>
@@ -286,11 +288,11 @@ export default function Home() {
             </div>
 
             {/* ── My Bookings ──────────────────────────────────── */}
-            <section style={{ padding: '48px 0 0' }}>
+            <section className="home-bookings-section" style={{ padding: '48px 0 0' }}>
               <div className="container">
 
                 {/* Section header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div className="home-section-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
                   <div>
                     <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 22, color: '#101828', margin: 0 }}>My Bookings</h2>
                     <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', margin: '4px 0 0' }}>Your in-progress and upcoming favors</p>

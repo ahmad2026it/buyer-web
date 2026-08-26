@@ -626,6 +626,11 @@ body.animate-ready [data-animate="scale"].in-view {
     width: auto !important;
     max-width: none !important;
     max-height: min(70dvh, 520px) !important;
+    overflow-y: auto !important;
+  }
+
+  .nav-popover-arrow {
+    display: none !important;
   }
 
   .explore-float { display: none !important; }
@@ -1532,6 +1537,67 @@ body.animate-ready [data-animate="scale"].in-view {
 /* Google Places autocomplete above modals */
 .pac-container {
   z-index: 10050 !important;
+}
+
+/* ── Logged-in home: mobile search + greeting layout ──────────────────── */
+@media (max-width: 768px) {
+  .home-search-strip {
+    padding-top: 80px !important;
+  }
+
+  .home-greet {
+    gap: 4px !important;
+  }
+
+  .home-greet h1 {
+    font-size: 20px !important;
+  }
+
+  /* Keep the controls on shared rows instead of one column of full-width
+     buttons: [ search input ] / [ type ] [ filters ] / [ search ] */
+  .rs-search-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  .rs-search-field {
+    flex: 1 1 100% !important;
+    order: 1;
+  }
+
+  .rs-search-type,
+  .rs-search-filters {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+  }
+
+  .rs-search-type {
+    order: 2;
+  }
+
+  .rs-search-filters {
+    order: 3;
+  }
+
+  .rs-search-submit {
+    flex: 1 1 100% !important;
+    order: 4;
+  }
+
+  .rs-search-type > button,
+  .rs-search-filters {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .home-section-head {
+    flex-wrap: wrap;
+  }
+
+  .home-bookings-section {
+    padding-top: 28px !important;
+  }
 }
 
 /* ── WhoCan SweetAlert theme ──────────────────────────────────────────── */
