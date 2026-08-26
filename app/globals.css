@@ -1104,9 +1104,66 @@ body.animate-ready [data-animate="scale"].in-view {
     gap: 16px !important;
   }
 
+  .app-split > *,
+  .app-split-sticky,
+  .app-split-sticky > * {
+    min-width: 0 !important;
+    max-width: 100%;
+  }
+
   .app-split-sticky {
     position: static !important;
     top: auto !important;
+  }
+
+  .booking-detail-section {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .booking-detail-section-head {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .booking-detail-section-body {
+    padding: 14px !important;
+  }
+
+  .booking-favor-row {
+    gap: 10px 12px !important;
+    flex-wrap: wrap;
+  }
+
+  .booking-favor-thumb {
+    width: 72px !important;
+    height: 54px !important;
+  }
+
+  .booking-favor-price {
+    font-size: 18px !important;
+    margin-left: auto;
+  }
+
+  .booking-person-row {
+    flex-wrap: wrap;
+    row-gap: 10px !important;
+  }
+
+  .booking-person-row .booking-msg-btn {
+    margin-left: auto;
+  }
+
+  .booking-msg-btn {
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+    gap: 5px !important;
+  }
+
+  .booking-meta-copy {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .app-cards-grid {
