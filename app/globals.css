@@ -933,6 +933,123 @@ body.animate-ready [data-animate="scale"].in-view {
   }
 }
 
+.seller-profile {
+  overflow-x: clip;
+}
+
+.seller-profile-stats > *,
+.seller-profile-providers > * {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .seller-profile-providers {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .seller-profile-cover {
+    height: 200px !important;
+  }
+
+  .seller-profile-back {
+    top: 84px !important;
+    left: 16px !important;
+    z-index: 5;
+  }
+
+  .seller-profile-wrap {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .seller-profile-identity {
+    padding: 20px 16px !important;
+    margin-top: -48px !important;
+    gap: 16px !important;
+    border-radius: 20px !important;
+  }
+
+  .seller-profile-identity > div:last-child {
+    min-width: 0 !important;
+  }
+
+  .seller-profile-name {
+    font-size: 22px !important;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .seller-profile-stats {
+    grid-template-columns: 1fr !important;
+  }
+
+  .seller-profile-split {
+    padding-top: 24px !important;
+    padding-bottom: 48px !important;
+  }
+
+  .seller-profile-sidebar {
+    position: static !important;
+    top: auto !important;
+    width: 100%;
+  }
+
+  .seller-profile-section-head {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .seller-profile-section-head > div {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .seller-profile-section-head h2 {
+    font-size: 18px !important;
+    min-width: 0;
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .seller-profile-section-head button {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 16px !important;
+  }
+
+  .seller-profile-band {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+
+  .seller-profile-error {
+    padding: 120px 16px 64px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .seller-profile-cover {
+    height: 200px !important;
+  }
+
+  .seller-profile-identity {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding-top: 12px !important;
+  }
+
+  .seller-profile-identity > div:last-child {
+    width: 100%;
+  }
+
+  .seller-profile-providers {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 @media (max-width: 768px) {
   .support-chat-panel {
     width: 100% !important;

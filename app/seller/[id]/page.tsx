@@ -880,11 +880,13 @@ function ProviderCard({ provider }: { provider: BuyerBestProvider }) {
 function SellerProfileSkeleton() {
   return (
     <>
-      <div style={{ height: "340px", background: "#F2F4F7" }} />
+      <div className="seller-profile-cover" style={{ height: "340px", background: "#F2F4F7" }} />
       <div
+        className="seller-profile-wrap"
         style={{ maxWidth: "1376px", margin: "0 auto", padding: "0 32px 80px" }}
       >
         <div
+          className="seller-profile-identity"
           style={{
             background: "#fff",
             border: "1.5px solid #EAECF0",
@@ -1106,11 +1108,12 @@ export default function SellerProfilePage() {
     <>
       <Navbar />
       {authOpen && <AuthGateModal onClose={() => setAuthOpen(false)} />}
-      <main style={{ minHeight: "100vh", background: "#FAFAFA" }}>
+      <main className="seller-profile" style={{ minHeight: "100dvh", background: "#FAFAFA" }}>
         {showLoading ? (
           <SellerProfileSkeleton />
         ) : showError ? (
           <div
+            className="seller-profile-error"
             style={{
               maxWidth: "720px",
               margin: "0 auto",
@@ -1160,6 +1163,7 @@ export default function SellerProfilePage() {
         ) : seller ? (
           <>
             <div
+              className="seller-profile-cover"
               style={{
                 position: "relative",
                 height: "340px",
@@ -1177,6 +1181,8 @@ export default function SellerProfilePage() {
                 }}
               />
               <button
+                type="button"
+                className="seller-profile-back"
                 onClick={() => router.back()}
                 style={{
                   position: "absolute",
@@ -1212,6 +1218,7 @@ export default function SellerProfilePage() {
             </div>
 
             <div
+              className="seller-profile-wrap"
               style={{
                 maxWidth: "1376px",
                 margin: "0 auto",
@@ -1219,6 +1226,7 @@ export default function SellerProfilePage() {
               }}
             >
               <div
+                className="seller-profile-identity"
                 style={{
                   background: "#fff",
                   border: "1.5px solid #EAECF0",
@@ -1253,12 +1261,14 @@ export default function SellerProfilePage() {
                     }}
                   >
                     <h1
+                      className="seller-profile-name"
                       style={{
                         fontFamily: "Poppins,sans-serif",
                         fontWeight: 800,
                         fontSize: "26px",
                         color: "#101828",
                         letterSpacing: "-0.01em",
+                        textWrap: "balance",
                       }}
                     >
                       {seller.name}
@@ -1344,7 +1354,7 @@ export default function SellerProfilePage() {
               </div>
 
               <div
-                className="rs-split"
+                className="rs-split seller-profile-split"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 340px",
@@ -1356,6 +1366,7 @@ export default function SellerProfilePage() {
                 <div>
                   {statCards.length > 0 && (
                     <div
+                      className="seller-profile-stats"
                       style={{
                         display: "grid",
                         gridTemplateColumns: `repeat(${Math.min(statCards.length, 3)},1fr)`,
@@ -1374,15 +1385,14 @@ export default function SellerProfilePage() {
                         >
                           <div style={{ marginBottom: "10px" }}>{s.icon}</div>
                           <p
+                            className="seller-profile-stat-value"
                             style={{
                               fontFamily: "Poppins,sans-serif",
                               fontWeight: 700,
                               fontSize: "15px",
                               color: "#101828",
                               marginBottom: "2px",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
+                              overflowWrap: "anywhere",
                             }}
                           >
                             {s.value}
@@ -1405,11 +1415,13 @@ export default function SellerProfilePage() {
 
                   <div>
                     <div
+                      className="seller-profile-section-head"
                       style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
                         marginBottom: "20px",
+                        gap: "12px",
                       }}
                     >
                       <h2
@@ -1496,6 +1508,7 @@ export default function SellerProfilePage() {
                 </div>
 
                 <div
+                  className="seller-profile-sidebar"
                   style={{
                     position: "sticky",
                     top: "108px",
@@ -1559,6 +1572,7 @@ export default function SellerProfilePage() {
 
             {bestProviders.length > 0 && (
               <div
+                className="seller-profile-band"
                 style={{
                   background: "#F8F0FF",
                   borderTop: "1px solid #EAECF0",
@@ -1566,6 +1580,7 @@ export default function SellerProfilePage() {
                 }}
               >
                 <div
+                  className="seller-profile-wrap"
                   style={{
                     maxWidth: "1376px",
                     margin: "0 auto",
@@ -1573,11 +1588,13 @@ export default function SellerProfilePage() {
                   }}
                 >
                   <div
+                    className="seller-profile-section-head"
                     style={{
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       marginBottom: "32px",
+                      gap: "12px",
                     }}
                   >
                     <div>
@@ -1625,6 +1642,7 @@ export default function SellerProfilePage() {
                     </button>
                   </div>
                   <div
+                    className="seller-profile-providers"
                     style={{
                       display: "grid",
                       gridTemplateColumns: "repeat(4,1fr)",
@@ -1644,6 +1662,7 @@ export default function SellerProfilePage() {
 
             {recommendedFavors.length > 0 && (
               <div
+                className="seller-profile-band"
                 style={{
                   background: "#fff",
                   borderTop: "1px solid #EAECF0",
@@ -1651,6 +1670,7 @@ export default function SellerProfilePage() {
                 }}
               >
                 <div
+                  className="seller-profile-wrap"
                   style={{
                     maxWidth: "1376px",
                     margin: "0 auto",
@@ -1658,11 +1678,13 @@ export default function SellerProfilePage() {
                   }}
                 >
                   <div
+                    className="seller-profile-section-head"
                     style={{
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       marginBottom: "32px",
+                      gap: "12px",
                     }}
                   >
                     <div>
