@@ -171,10 +171,6 @@ export default function Home() {
     router.push(`/explore/search?${params.toString()}`);
   };
 
-  /* greeting */
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-
   if (!mounted) return (
     <>
       <Navbar />
@@ -206,7 +202,7 @@ export default function Home() {
                       {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}
                     </p>
                     <h1 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 22, color: '#101828', margin: 0 }}>
-                      {greeting}, {firstName}
+                      Welcome, {firstName}
                     </h1>
                   </div>
                   <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', margin: 0 }}>
