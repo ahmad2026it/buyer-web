@@ -7,6 +7,8 @@ import {
   useResetPasswordMutation,
   useVerifyOtpMutation,
 } from "@/app/auth/store/authAPI";
+import { logout } from "@/app/auth/store/authSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { showToast } from "@/lib/toast";
 import { showSuccess } from "@/lib/swal";
 
@@ -421,6 +423,8 @@ function OtpInputs({
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const signedInEmail = useAppSelector((state) => state.auth.user?.email ?? "");
   const [step, setStep] = useState<FlowStep>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -440,6 +444,13 @@ export default function ForgotPasswordPage() {
     useResetPasswordMutation();
 
   const busy = sendingCode || verifyingOtp || resendingOtp || savingPassword;
+
+  const prefilledEmail = useRef(false);
+  useEffect(() => {
+    if (prefilledEmail.current || !signedInEmail) return;
+    prefilledEmail.current = true;
+    setEmail(signedInEmail);
+  }, [signedInEmail]);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -526,11 +537,20 @@ export default function ForgotPasswordPage() {
         email,
         newPassword: password,
       }).unwrap();
+
+      // The old session is invalid once the password changes, and the login page
+      // bounces authenticated visitors back to the home page.
+      dispatch(logout());
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("whoCan_loggedIn");
+        localStorage.removeItem("whoCan_remember");
+      }
+
       await showSuccess(
         "Password updated",
         result.message || "You can now log in with your new password.",
       );
-      router.push("/auth/login");
+      router.replace("/auth/login");
     } catch {
       // API errors are shown by the axios interceptor toast
     }

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { selectIsAuthenticated } from "@/app/auth/store/authSlice";
-import { POST_LOGIN_FLAG, isAuthPath } from "@/lib/authNavigation";
+import { POST_LOGIN_FLAG, isGuestOnlyAuthPath } from "@/lib/authNavigation";
 import { useAppSelector } from "@/store/hooks";
 
 export default function AuthHistoryGuard() {
@@ -16,7 +16,7 @@ export default function AuthHistoryGuard() {
   isAuthenticatedRef.current = isAuthenticated;
 
   useEffect(() => {
-    if (!isAuthenticated || !isAuthPath(pathname)) return;
+    if (!isAuthenticated || !isGuestOnlyAuthPath(pathname)) return;
     router.replace("/");
   }, [isAuthenticated, pathname, router]);
 
@@ -44,7 +44,7 @@ export default function AuthHistoryGuard() {
         return;
       }
 
-      if (!isAuthPath(window.location.pathname)) return;
+      if (!isGuestOnlyAuthPath(window.location.pathname)) return;
       window.history.pushState(null, "", "/");
       router.replace("/");
     };
