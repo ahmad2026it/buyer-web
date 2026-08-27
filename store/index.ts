@@ -24,6 +24,7 @@ import { buyerSellersAPI } from '@/app/buyer/store/buyerSellersAPI';
 import { buyerNotificationsAPI } from '@/app/buyer/store/buyerNotificationsAPI';
 import { buyerStripeAPI } from '@/app/buyer/store/buyerStripeAPI';
 import { buyerLegalAPI } from '@/app/buyer/store/buyerLegalAPI';
+import { buyerBlogsAPI } from '@/app/buyer/store/buyerBlogsAPI';
 import { disconnectBuyerSocket } from '@/lib/buyerSocket';
 import { purgePersistedClientState } from '@/lib/storeAccess';
 
@@ -66,6 +67,7 @@ const appReducer = combineReducers({
   [buyerNotificationsAPI.reducerPath]: buyerNotificationsAPI.reducer,
   [buyerStripeAPI.reducerPath]: buyerStripeAPI.reducer,
   [buyerLegalAPI.reducerPath]: buyerLegalAPI.reducer,
+  [buyerBlogsAPI.reducerPath]: buyerBlogsAPI.reducer,
 });
 
 type AppState = ReturnType<typeof appReducer>;
@@ -91,6 +93,7 @@ const rtkQueryApis = [
   buyerNotificationsAPI,
   buyerStripeAPI,
   buyerLegalAPI,
+  buyerBlogsAPI,
 ] as const;
 
 const logoutMiddleware: Middleware = (storeApi) => (next) => (action) => {
@@ -134,6 +137,7 @@ export const makeStore = () => {
         buyerNotificationsAPI.middleware,
         buyerStripeAPI.middleware,
         buyerLegalAPI.middleware,
+        buyerBlogsAPI.middleware,
       ),
   });
 

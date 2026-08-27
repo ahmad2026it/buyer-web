@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -293,13 +293,18 @@ export default function ArticlePage() {
   const meta    = META[slug];
   const content = CONTENT_MAP[slug];
 
+  useEffect(() => {
+    if (!meta && slug) {
+      router.replace(`/blog/${slug}`);
+    }
+  }, [meta, router, slug]);
+
   if (!meta) {
     return (
       <>
         <Navbar />
         <main style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-          <h1 style={{ fontFamily: FONT, fontWeight: 700, fontSize: '28px', color: '#101828' }}>Article not found</h1>
-          <button onClick={() => router.push('/')} style={{ fontFamily: FONT, fontWeight: 600, fontSize: '14px', color: '#fff', background: BRAND, border: 'none', borderRadius: '9999px', padding: '12px 28px', cursor: 'pointer' }}>Back to Home</button>
+          <h1 style={{ fontFamily: FONT, fontWeight: 700, fontSize: '28px', color: '#101828' }}>Opening article…</h1>
         </main>
         <Footer />
       </>

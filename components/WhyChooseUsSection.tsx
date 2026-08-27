@@ -2,6 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { WrenchIcon, ShieldCheckIcon, ArrowRightIcon, ArrowUpRightIcon } from './Icons';
+import { useGetPublicBlogsQuery } from '@/app/buyer/store/buyerBlogsAPI';
+import type { PublicBlog } from '@/app/buyer/store/buyerBlogsTypes';
+import { blogHref, getBlogAuthorName } from '@/lib/publicBlogs';
 
 const SERVICE_IMAGE =
   'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&h=300&fit=crop&auto=format'; // deep home cleaning
@@ -15,7 +18,10 @@ function LearnMoreRow({ light = false, href }: { light?: boolean; href?: string 
   const router = useRouter();
   return (
     <div
-      onClick={() => href && router.push(href)}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (href) router.push(href);
+      }}
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: href ? 'pointer' : 'default' }}
     >
       <span
@@ -46,8 +52,59 @@ function LearnMoreRow({ light = false, href }: { light?: boolean; href?: string 
   );
 }
 
+const FALLBACK_CARDS = [
+  {
+    title: 'Deep Home Cleaning',
+    excerpt:
+      'Professional cleaning service for your entire home, available when you need it most. Trusted by hundreds of happy customers.',
+    href: '/articles/deep-home-cleaning',
+    image: SERVICE_IMAGE,
+    imageAlt: 'Deep Home Cleaning',
+    author: 'Alfonzo Schuessler',
+  },
+  {
+    title: 'How WhoCan Connects You with the Right Handyman',
+    excerpt: 'Trusted by hundreds of homeowners across the city',
+    href: '/articles/how-it-works',
+    image: SERVICE_IMAGE,
+    imageAlt: 'How WhoCan works',
+    author: 'Alfonzo Schuessler',
+  },
+  {
+    title: 'Trusted Local Providers',
+    excerpt:
+      'All handymen are background-checked, reviewed, and rated by real customers in your area.',
+    href: '/articles/trusted-local-providers',
+    image:
+      'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&h=200&fit=crop&auto=format&q=80',
+    imageAlt: 'Trusted Local Providers',
+    author: 'WhoCan Team',
+  },
+] as const;
+
+function cardFromBlog(
+  blog: PublicBlog | undefined,
+  fallback: (typeof FALLBACK_CARDS)[number],
+) {
+  if (!blog) return fallback;
+  return {
+    title: blog.title,
+    excerpt: blog.excerpt || fallback.excerpt,
+    href: blogHref(blog.slug),
+    image: blog.cover_image_url || fallback.image,
+    imageAlt: blog.title,
+    author: getBlogAuthorName(blog),
+  };
+}
+
 export default function WhyChooseUsSection() {
   const router = useRouter();
+  const { data } = useGetPublicBlogsQuery({ page: 1, limit: 3 });
+  const blogs = data?.data?.blogs ?? [];
+  const left = cardFromBlog(blogs[0], FALLBACK_CARDS[0]);
+  const center = cardFromBlog(blogs[1], FALLBACK_CARDS[1]);
+  const right = cardFromBlog(blogs[2], FALLBACK_CARDS[2]);
+
   return (
     <section className="rs-section" style={{ padding: '96px 0', background: '#ffffff' }}>
       <div className="container">
@@ -86,11 +143,29 @@ export default function WhyChooseUsSection() {
             </h2>
           </div>
 
-          <p data-animate data-delay="1" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', lineHeight: '1.7' }}>
-            Our platform connects you with verified, background-checked local
-            service providers — so you can book with confidence, every time.
-            Quality guaranteed or your money back.
-          </p>
+          <div data-animate data-delay="1">
+            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', lineHeight: '1.7', marginBottom: '16px' }}>
+              Our platform connects you with verified, background-checked local
+              service providers — so you can book with confidence, every time.
+              Quality guaranteed or your money back.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push('/blog')}
+              style={{
+                fontFamily: 'Poppins, sans-serif',
+                fontWeight: 600,
+                fontSize: '14px',
+                color: '#A54AFF',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              See all articles →
+            </button>
+          </div>
         </div>
 
         {/* ── CARD GRID ─────────────────────────────────────────────────── */}
@@ -108,7 +183,7 @@ export default function WhyChooseUsSection() {
           <div
             data-animate
             data-delay="1"
-            onClick={() => router.push('/articles/deep-home-cleaning')}
+            onClick={() => router.push(left.href)}
             style={{
               background: '#F7F7F7',
               borderRadius: '20px',
@@ -124,8 +199,8 @@ export default function WhyChooseUsSection() {
           >
             <div style={{ overflow: 'hidden', flexShrink: 0 }}>
               <img
-                src={SERVICE_IMAGE}
-                alt="Deep Home Cleaning"
+                src={left.image}
+                alt={left.imageAlt}
                 style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block', transition: 'transform 0.4s ease' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
@@ -133,13 +208,12 @@ export default function WhyChooseUsSection() {
             </div>
             <div style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
               <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828', marginBottom: '10px', lineHeight: '1.3' }}>
-                Deep Home Cleaning
+                {left.title}
               </h3>
               <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', lineHeight: '1.65', flex: 1, marginBottom: '20px' }}>
-                Professional cleaning service for your entire home, available
-                when you need it most. Trusted by hundreds of happy customers.
+                {left.excerpt}
               </p>
-              <LearnMoreRow href="/articles/deep-home-cleaning" />
+              <LearnMoreRow href={left.href} />
             </div>
           </div>
 
@@ -147,7 +221,7 @@ export default function WhyChooseUsSection() {
           <div
             data-animate
             data-delay="2"
-            onClick={() => router.push('/articles/how-it-works')}
+            onClick={() => router.push(center.href)}
             style={{
               background: '#EDE9FE',
               borderRadius: '20px',
@@ -176,15 +250,15 @@ export default function WhyChooseUsSection() {
               >
                 <img
                   src={SELLER_AVATAR}
-                  alt="Alfonzo Schuessler"
+                  alt={center.author}
                   style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }}
                 />
                 <div>
                   <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '10px', fontWeight: 500, color: '#98A2B3', letterSpacing: '0.05em', textTransform: 'uppercase', lineHeight: '1.2' }}>
-                    Provider
+                    Author
                   </p>
                   <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', fontWeight: 600, color: '#101828', lineHeight: '1.2' }}>
-                    Alfonzo Schuessler
+                    {center.author}
                   </p>
                 </div>
               </div>
@@ -211,12 +285,12 @@ export default function WhyChooseUsSection() {
             {/* Bottom text — padded */}
             <div style={{ padding: '0 24px 24px' }}>
               <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '22px', color: '#1E1B4B', marginBottom: '8px', lineHeight: '1.3' }}>
-                How WhoCan Connects You with the Right Handyman
+                {center.title}
               </h3>
               <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', color: '#4C1D95', lineHeight: '1.6', marginBottom: '20px', opacity: 0.72 }}>
-                Trusted by hundreds of homeowners across the city
+                {center.excerpt}
               </p>
-              <LearnMoreRow light href="/articles/how-it-works" />
+              <LearnMoreRow light href={center.href} />
             </div>
           </div>
 
@@ -227,7 +301,7 @@ export default function WhyChooseUsSection() {
             <div
               data-animate
               data-delay="3"
-              onClick={() => router.push('/articles/trusted-local-providers')}
+              onClick={() => router.push(right.href)}
               style={{
                 background: '#F7F7F7',
                 borderRadius: '20px',
@@ -244,8 +318,8 @@ export default function WhyChooseUsSection() {
             >
               <div style={{ overflow: 'hidden', flexShrink: 0 }}>
                 <img
-                  src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&h=200&fit=crop&auto=format&q=80"
-                  alt="Trusted Local Providers"
+                  src={right.image}
+                  alt={right.imageAlt}
                   style={{ width: '100%', height: '130px', objectFit: 'cover', objectPosition: 'center center', display: 'block', transition: 'transform 0.4s ease' }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
@@ -253,13 +327,12 @@ export default function WhyChooseUsSection() {
               </div>
               <div style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '16px', color: '#101828', marginBottom: '8px', lineHeight: '1.3' }}>
-                  Trusted Local Providers
+                  {right.title}
                 </h3>
                 <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#475467', lineHeight: '1.65', flex: 1, marginBottom: '16px' }}>
-                  All handymen are background-checked, reviewed, and rated by
-                  real customers in your area.
+                  {right.excerpt}
                 </p>
-                <LearnMoreRow href="/articles/trusted-local-providers" />
+                <LearnMoreRow href={right.href} />
               </div>
             </div>
 

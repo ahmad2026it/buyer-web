@@ -17,6 +17,7 @@ const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
   {
     group: 'Resources',
     links: [
+      { label: 'Blog', href: '/blog' },
       { label: 'How it works', href: '/articles/how-it-works' },
       { label: 'Trusted providers', href: '/articles/trusted-local-providers' },
     ],

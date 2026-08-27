@@ -124,7 +124,7 @@ const isPublicLegalRequest = (url?: string): boolean => {
   return Boolean(
     url &&
       (/\/api\/buyer\/legal\//.test(url) ||
-        /\/api\/public\/(privacy-policy|terms-and-conditions)/.test(url)),
+        /\/api\/public\/(privacy-policy|terms-and-conditions|blogs)/.test(url)),
   );
 };
 
