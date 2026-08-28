@@ -464,6 +464,7 @@ export type BuyerBookingSeller = {
   id: number;
   fullName: string;
   profileImage: string | null;
+  profileImageUrl?: string | null;
 };
 
 export type BuyerBookingBuyer = {

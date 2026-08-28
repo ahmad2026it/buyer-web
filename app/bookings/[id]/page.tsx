@@ -27,10 +27,11 @@ import {
   type BuyerBooking,
   type BuyerBookingAddOn,
   type BuyerBookingReview,
+  type BuyerBookingSeller,
   type BuyerBookingUiStatus,
 } from "@/app/buyer/store/buyerBookingsTypes";
 import { useAppSelector } from "@/store/hooks";
-import FavorImage, { pickFavorImage } from "@/components/FavorImage";
+import FavorImage, { isUsableImageUrl, pickFavorImage } from "@/components/FavorImage";
 
 const LiveLocationMap = dynamic(() => import("@/components/LiveLocationMap"), {
   ssr: false,
@@ -77,13 +78,13 @@ interface DetailedBooking {
   lng: number | null;
   isTeam: boolean;
   sellerName: string;
-  sellerAvatar: string;
+  sellerAvatar: string | null;
   sellerBadge: "Pro" | "Team";
   sellerDistance?: number;
   teamName?: string;
-  teamLogo?: string;
+  teamLogo?: string | null;
   providerName?: string;
-  providerAvatar?: string;
+  providerAvatar?: string | null;
   providerDistance?: number;
   plan?: string;
   isCustom: boolean;
@@ -101,8 +102,84 @@ interface DetailedBooking {
   boostDiscount: number;
 }
 
-const PLACEHOLDER_AVATAR =
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80";
+function pickSellerProfileImage(
+  seller: BuyerBookingSeller | null | undefined,
+): string | null {
+  if (!seller) return null;
+  return pickFavorImage(seller.profileImageUrl, seller.profileImage);
+}
+
+function initialsFromName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
+
+function PersonAvatar({
+  src,
+  name,
+  size,
+  border = "2px solid #DFBAFF",
+}: {
+  src?: string | null;
+  name: string;
+  size: number;
+  border?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  const showImage = isUsableImageUrl(src) && !failed;
+
+  if (showImage) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        onError={() => setFailed(true)}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          objectFit: "cover",
+          objectPosition: "top",
+          border,
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      aria-label={name}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: "linear-gradient(135deg,#F3E8FF 0%,#E9D7FE 100%)",
+        border,
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "Poppins,sans-serif",
+        fontWeight: 700,
+        fontSize: Math.max(12, Math.round(size * 0.32)),
+        color: "#7F56D9",
+      }}
+    >
+      {initialsFromName(name)}
+    </div>
+  );
+}
 
 function mapApiStatus(item: BuyerBooking): Status {
   return mapBuyerBookingUiStatus(item.status, {
@@ -205,16 +282,12 @@ function toDetailedBooking(
     lng: parseCoord(item.lng) ?? parseCoord(item.favor?.lng),
     isTeam,
     sellerName: item.seller?.fullName || "Seller",
-    sellerAvatar: item.seller?.profileImage || PLACEHOLDER_AVATAR,
+    sellerAvatar: pickSellerProfileImage(item.seller),
     sellerBadge: isTeam ? "Team" : "Pro",
     teamName: isTeam ? item.seller?.fullName : undefined,
-    teamLogo: isTeam
-      ? item.seller?.profileImage || PLACEHOLDER_AVATAR
-      : undefined,
+    teamLogo: isTeam ? pickSellerProfileImage(item.seller) : undefined,
     providerName: isTeam ? item.seller?.fullName : undefined,
-    providerAvatar: isTeam
-      ? item.seller?.profileImage || PLACEHOLDER_AVATAR
-      : undefined,
+    providerAvatar: isTeam ? pickSellerProfileImage(item.seller) : undefined,
     plan:
       favorType && favorType !== "normal" && favorType !== "team"
         ? displayCategory(favorType)
@@ -852,17 +925,11 @@ function SellerSummary({
               width: "100%",
             }}
           >
-            <img
+            <PersonAvatar
               src={booking.teamLogo}
-              alt={booking.teamName}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "2px solid rgba(52,64,84,0.25)",
-                flexShrink: 0,
-              }}
+              name={booking.teamName || "Team"}
+              size={48}
+              border="2px solid rgba(52,64,84,0.25)"
             />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p
@@ -921,17 +988,10 @@ function SellerSummary({
                 width: "100%",
               }}
             >
-              <img
+              <PersonAvatar
                 src={booking.providerAvatar}
-                alt={booking.providerName}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "2px solid #DFBAFF",
-                  flexShrink: 0,
-                }}
+                name={booking.providerName || "Provider"}
+                size={44}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p
@@ -969,17 +1029,10 @@ function SellerSummary({
             width: "100%",
           }}
         >
-          <img
+          <PersonAvatar
             src={booking.sellerAvatar}
-            alt={booking.sellerName}
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "2px solid #DFBAFF",
-              flexShrink: 0,
-            }}
+            name={booking.sellerName}
+            size={48}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
             <p
@@ -4916,17 +4969,10 @@ export default function BookingDetailPage() {
                             gap: 16,
                           }}
                         >
-                          <img
+                          <PersonAvatar
                             src={booking.sellerAvatar}
-                            alt={booking.sellerName}
-                            style={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: "50%",
-                              objectFit: "cover",
-                              flexShrink: 0,
-                              border: "2px solid #DFBAFF",
-                            }}
+                            name={booking.sellerName}
+                            size={44}
                           />
                           <div style={{ flex: 1 }}>
                             <div
