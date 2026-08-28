@@ -2,7 +2,6 @@
 import { Suspense, useState, useRef, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRegisterBuyerMutation } from "@/app/auth/store/authAPI";
-import { goHomeAfterAuth } from "@/lib/authNavigation";
 import { showSuccess } from "@/lib/swal";
 import {
   COUNTRY_DIAL_CODES,
@@ -2348,12 +2347,14 @@ function SignupFlow() {
         ...(location ?? {}),
       }).unwrap();
 
-      localStorage.setItem("whoCan_loggedIn", "true");
       clearSignupDraft();
 
-      await showSuccess("Success", result.message || "User registered successfully");
+      await showSuccess(
+        "Success",
+        result.message || "User registered successfully. Please log in to continue.",
+      );
 
-      goHomeAfterAuth();
+      router.replace("/auth/login");
     } catch (err) {
       setApiError(getRegisterErrorMessage(err));
     }
