@@ -31,7 +31,8 @@ import {
   type BuyerBookingUiStatus,
 } from "@/app/buyer/store/buyerBookingsTypes";
 import { useAppSelector } from "@/store/hooks";
-import FavorImage, { isUsableImageUrl, pickFavorImage } from "@/components/FavorImage";
+import FavorImage, { pickFavorImage } from "@/components/FavorImage";
+import PersonAvatar from "@/components/PersonAvatar";
 
 const LiveLocationMap = dynamic(() => import("@/components/LiveLocationMap"), {
   ssr: false,
@@ -107,78 +108,6 @@ function pickSellerProfileImage(
 ): string | null {
   if (!seller) return null;
   return pickFavorImage(seller.profileImageUrl, seller.profileImage);
-}
-
-function initialsFromName(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "?";
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-}
-
-function PersonAvatar({
-  src,
-  name,
-  size,
-  border = "2px solid #DFBAFF",
-}: {
-  src?: string | null;
-  name: string;
-  size: number;
-  border?: string;
-}) {
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setFailed(false);
-  }, [src]);
-
-  const showImage = isUsableImageUrl(src) && !failed;
-
-  if (showImage) {
-    return (
-      <img
-        src={src}
-        alt={name}
-        onError={() => setFailed(true)}
-        style={{
-          width: size,
-          height: size,
-          borderRadius: "50%",
-          objectFit: "cover",
-          objectPosition: "top",
-          border,
-          flexShrink: 0,
-        }}
-      />
-    );
-  }
-
-  return (
-    <div
-      aria-label={name}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        background: "linear-gradient(135deg,#F3E8FF 0%,#E9D7FE 100%)",
-        border,
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "Poppins,sans-serif",
-        fontWeight: 700,
-        fontSize: Math.max(12, Math.round(size * 0.32)),
-        color: "#7F56D9",
-      }}
-    >
-      {initialsFromName(name)}
-    </div>
-  );
 }
 
 function mapApiStatus(item: BuyerBooking): Status {
@@ -1184,6 +1113,114 @@ function DateTimeLocationSummary({ booking }: { booking: DetailedBooking }) {
             </div>
           </div>
         ))}
+      </div>
+    </Section>
+  );
+}
+
+function PriceSummary({ booking }: { booking: DetailedBooking }) {
+  const boostDiscount = booking.boostDiscount;
+  const hasBreakdown = booking.addons.length > 0 || boostDiscount > 0;
+
+  return (
+    <Section title="Price Summary">
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+        }}
+      >
+        {booking.addons.map((a, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "Poppins,sans-serif",
+                fontSize: 13,
+                color: "#98A2B3",
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                paddingRight: 12,
+              }}
+            >
+              Add-on: {a.label}
+            </span>
+            <span
+              style={{
+                fontFamily: "Poppins,sans-serif",
+                fontSize: 13,
+                color: "#344054",
+                flexShrink: 0,
+              }}
+            >
+              +{formatUsd(a.price)}
+            </span>
+          </div>
+        ))}
+        {boostDiscount > 0 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "Poppins,sans-serif",
+                fontSize: 14,
+                color: "#667085",
+              }}
+            >
+              Boost discount
+            </span>
+            <span
+              style={{
+                fontFamily: "Poppins,sans-serif",
+                fontSize: 14,
+                color: "#079455",
+              }}
+            >
+              -${boostDiscount.toFixed(2)}
+            </span>
+          </div>
+        )}
+        <div
+          style={{
+            borderTop: hasBreakdown ? "1px solid #EAECF0" : undefined,
+            paddingTop: hasBreakdown ? 12 : 0,
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "Poppins,sans-serif",
+              fontWeight: 700,
+              fontSize: 15,
+              color: "#101828",
+            }}
+          >
+            Total paid
+          </span>
+          <span
+            style={{
+              fontFamily: "Poppins,sans-serif",
+              fontWeight: 800,
+              fontSize: 16,
+              color: BRAND,
+            }}
+          >
+            ${booking.price.toFixed(2)}
+          </span>
+        </div>
       </div>
     </Section>
   );
@@ -3589,12 +3626,6 @@ export default function BookingDetailPage() {
     }
   };
 
-  const platformFee = booking.platformFee;
-  const addonsTotal = booking.addons.reduce((s, a) => s + a.price, 0);
-  const base =
-    booking.sellerAmount || booking.price - addonsTotal - platformFee;
-  const boostDiscount = booking.boostDiscount;
-
   /* Status pill (inline header) */
   function StatusPill() {
     const cfg: Record<Status, { bg: string; border: string; color: string }> = {
@@ -4327,156 +4358,7 @@ export default function BookingDetailPage() {
                   </Section>
                 )}
 
-                <Section title="Price Summary">
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 10,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "Poppins,sans-serif",
-                          fontSize: 14,
-                          color: "#667085",
-                        }}
-                      >
-                        Base price
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "Poppins,sans-serif",
-                          fontSize: 14,
-                          color: "#344054",
-                        }}
-                      >
-                        ${base.toFixed(2)}
-                      </span>
-                    </div>
-                    {booking.addons.map((a, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 13,
-                            color: "#98A2B3",
-                            flex: 1,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            paddingRight: 12,
-                          }}
-                        >
-                          Add-on: {a.label}
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 13,
-                            color: "#344054",
-                            flexShrink: 0,
-                          }}
-                        >
-                          +{formatUsd(a.price)}
-                        </span>
-                      </div>
-                    ))}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "Poppins,sans-serif",
-                          fontSize: 14,
-                          color: "#667085",
-                        }}
-                      >
-                        Platform fee
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "Poppins,sans-serif",
-                          fontSize: 14,
-                          color: "#344054",
-                        }}
-                      >
-                        ${platformFee.toFixed(2)}
-                      </span>
-                    </div>
-                    {boostDiscount > 0 && (
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#667085",
-                          }}
-                        >
-                          Boost discount
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#079455",
-                          }}
-                        >
-                          -${boostDiscount.toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        borderTop: "1px solid #EAECF0",
-                        paddingTop: 12,
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "Poppins,sans-serif",
-                          fontWeight: 700,
-                          fontSize: 15,
-                          color: "#101828",
-                        }}
-                      >
-                        Total paid
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "Poppins,sans-serif",
-                          fontWeight: 800,
-                          fontSize: 16,
-                          color: BRAND,
-                        }}
-                      >
-                        ${booking.price.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                </Section>
+                <PriceSummary booking={booking} />
               </div>
 
               {/* Right: map + updates */}
@@ -4724,156 +4606,7 @@ export default function BookingDetailPage() {
                     </Section>
                   )}
 
-                  <Section title="Price Summary">
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#667085",
-                          }}
-                        >
-                          Base price
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#344054",
-                          }}
-                        >
-                          ${base.toFixed(2)}
-                        </span>
-                      </div>
-                      {booking.addons.map((a, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontFamily: "Poppins,sans-serif",
-                              fontSize: 13,
-                              color: "#98A2B3",
-                              flex: 1,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              paddingRight: 12,
-                            }}
-                          >
-                            Add-on: {a.label}
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: "Poppins,sans-serif",
-                              fontSize: 13,
-                              color: "#344054",
-                              flexShrink: 0,
-                            }}
-                          >
-                            +{formatUsd(a.price)}
-                          </span>
-                        </div>
-                      ))}
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#667085",
-                          }}
-                        >
-                          Platform fee
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#344054",
-                          }}
-                        >
-                          ${platformFee.toFixed(2)}
-                        </span>
-                      </div>
-                      {boostDiscount > 0 && (
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontFamily: "Poppins,sans-serif",
-                              fontSize: 14,
-                              color: "#667085",
-                            }}
-                          >
-                            Boost discount
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: "Poppins,sans-serif",
-                              fontSize: 14,
-                              color: "#079455",
-                            }}
-                          >
-                            -${boostDiscount.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-                      <div
-                        style={{
-                          borderTop: "1px solid #EAECF0",
-                          paddingTop: 12,
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontWeight: 700,
-                            fontSize: 15,
-                            color: "#101828",
-                          }}
-                        >
-                          Total paid
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontWeight: 800,
-                            fontSize: 16,
-                            color: BRAND,
-                          }}
-                        >
-                          ${booking.price.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </Section>
+                  <PriceSummary booking={booking} />
 
                   {booking.status === "Pending" && canWithdraw && (
                     <button
@@ -5179,156 +4912,7 @@ export default function BookingDetailPage() {
                     </Section>
                   )}
 
-                  <Section title="Price Summary">
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#667085",
-                          }}
-                        >
-                          Base price
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#344054",
-                          }}
-                        >
-                          ${base.toFixed(2)}
-                        </span>
-                      </div>
-                      {booking.addons.map((a, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontFamily: "Poppins,sans-serif",
-                              fontSize: 13,
-                              color: "#98A2B3",
-                              flex: 1,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              paddingRight: 12,
-                            }}
-                          >
-                            Add-on: {a.label}
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: "Poppins,sans-serif",
-                              fontSize: 13,
-                              color: "#344054",
-                              flexShrink: 0,
-                            }}
-                          >
-                            +{formatUsd(a.price)}
-                          </span>
-                        </div>
-                      ))}
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#667085",
-                          }}
-                        >
-                          Platform fee
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontSize: 14,
-                            color: "#344054",
-                          }}
-                        >
-                          ${platformFee.toFixed(2)}
-                        </span>
-                      </div>
-                      {boostDiscount > 0 && (
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontFamily: "Poppins,sans-serif",
-                              fontSize: 14,
-                              color: "#667085",
-                            }}
-                          >
-                            Boost discount
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: "Poppins,sans-serif",
-                              fontSize: 14,
-                              color: "#079455",
-                            }}
-                          >
-                            -${boostDiscount.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-                      <div
-                        style={{
-                          borderTop: "1px solid #EAECF0",
-                          paddingTop: 12,
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontWeight: 700,
-                            fontSize: 15,
-                            color: "#101828",
-                          }}
-                        >
-                          Total paid
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "Poppins,sans-serif",
-                            fontWeight: 800,
-                            fontSize: 16,
-                            color: BRAND,
-                          }}
-                        >
-                          ${booking.price.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </Section>
+                  <PriceSummary booking={booking} />
                 </div>
               </div>
             </div>

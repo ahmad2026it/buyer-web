@@ -2,6 +2,7 @@ export type BuyerFavorSeller = {
   id: number;
   fullName: string;
   profileImage: string | null;
+  profileImageUrl?: string | null;
   isOnline: boolean;
 };
 
@@ -9,6 +10,7 @@ export type BuyerFavorDetailUser = {
   id: number;
   fullName: string;
   profileImage: string | null;
+  profileImageUrl?: string | null;
   phoneNumber?: string | null;
   isAway?: boolean;
   lastSeen?: string | null;
@@ -18,6 +20,7 @@ export type BuyerFavorDetailSeller = {
   id: number;
   fullName: string;
   profileImage: string | null;
+  profileImageUrl?: string | null;
   phoneNumber?: string | null;
   isOnline: boolean;
   distanceMiles: number | null;
@@ -72,6 +75,7 @@ export type BuyerFavorReviewer = {
   id?: number;
   fullName?: string;
   profileImage?: string | null;
+  profileImageUrl?: string | null;
 };
 
 export type BuyerFavorReview = {
@@ -147,12 +151,14 @@ export type BuyerRelatedFavor = {
     id?: number;
     fullName?: string;
     profileImage?: string | null;
+    profileImageUrl?: string | null;
     isOnline?: boolean;
   } | null;
   user?: {
     id?: number;
     fullName?: string;
     profileImage?: string | null;
+    profileImageUrl?: string | null;
   } | null;
 };
 

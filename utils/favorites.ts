@@ -7,7 +7,7 @@ export type FavorCard = {
   rating: string;
   reviews: string;
   category: string;
-  sellerAvatar: string;
+  sellerAvatar: string | null;
   seller: string;
 };
 

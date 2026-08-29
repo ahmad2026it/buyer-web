@@ -21,11 +21,11 @@ import {
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import PersonAvatar from '@/components/PersonAvatar';
 
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const BRAND = '#A54AFF';
 const PILL  = '9999px';
-const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80';
 const HOME_BOOKINGS_LIMIT = 4;
 
 type HomeBookingStatus = BuyerBookingUiStatus;
@@ -78,7 +78,7 @@ function toHomeBooking(item: BuyerBooking) {
     date: formatFavorDate(item.favorDate),
     time: formatFavorTime(item.favorTime),
     sellerName: item.seller?.fullName || 'Seller',
-    sellerAvatar: item.seller?.profileImage || PLACEHOLDER_AVATAR,
+    sellerAvatar: pickFavorImage(item.seller?.profileImageUrl, item.seller?.profileImage),
     price: Number(item.totalPrice) || 0,
   };
 }
@@ -361,7 +361,7 @@ export default function Home() {
                           {/* Seller + price */}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid #EAECF0' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 7, overflow: 'hidden', flex: 1, minWidth: 0 }}>
-                              <img src={bk.sellerAvatar} alt={bk.sellerName} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', border: '2px solid #DFBAFF', flexShrink: 0 }}/>
+                              <PersonAvatar src={bk.sellerAvatar} name={bk.sellerName} size={26} />
                               <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, fontWeight: 600, color: '#344054', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bk.sellerName}</span>
                             </div>
                             <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 15, color: BRAND, flexShrink: 0, marginLeft: 8 }}>{formatPrice(bk.price)}</span>

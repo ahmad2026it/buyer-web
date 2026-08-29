@@ -195,13 +195,6 @@ export default function EditProfilePage() {
     setAvatar(URL.createObjectURL(file));
   };
 
-  const handleRemovePhoto = () => {
-    if (avatar?.startsWith('blob:')) URL.revokeObjectURL(avatar);
-    setAvatar(null);
-    setAvatarFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
   const handleSave = async () => {
     if (!user) return;
 
@@ -284,22 +277,12 @@ export default function EditProfilePage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '15px', color: '#101828', marginBottom: '4px' }}>Profile photo</p>
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085', marginBottom: '14px' }}>JPG, PNG or GIF. Max 5 MB.</p>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  <label style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: BRAND, background: '#F4EBFF', border: '1px solid rgba(165,74,255,0.25)', borderRadius: PILL, padding: '8px 18px', cursor: 'pointer', transition: 'background 0.15s', display: 'inline-block' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#EDD9FF'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#F4EBFF'; }}>
-                    Upload photo
-                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif" style={{ display: 'none' }} onChange={handleAvatarChange} />
-                  </label>
-                  {avatar && (
-                    <button type="button" onClick={handleRemovePhoto}
-                      style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#667085', background: '#fff', border: '1px solid #D0D5DD', borderRadius: PILL, padding: '8px 18px', cursor: 'pointer', transition: 'all 0.15s' }}
-                      onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#D92D20'; el.style.color = '#D92D20'; }}
-                      onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#D0D5DD'; el.style.color = '#667085'; }}>
-                      Remove photo
-                    </button>
-                  )}
-                </div>
+                <label style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: BRAND, background: '#F4EBFF', border: '1px solid rgba(165,74,255,0.25)', borderRadius: PILL, padding: '8px 18px', cursor: 'pointer', transition: 'background 0.15s', display: 'inline-block' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#EDD9FF'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#F4EBFF'; }}>
+                  Upload photo
+                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif" style={{ display: 'none' }} onChange={handleAvatarChange} />
+                </label>
               </div>
             </div>
 

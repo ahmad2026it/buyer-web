@@ -11,14 +11,13 @@ import {
 } from "@/app/buyer/store/buyerFavorsAPI";
 import type { BuyerFavor } from "@/app/buyer/store/buyerFavorsTypes";
 import FavorImage, { pickFavorImage } from "@/components/FavorImage";
+import PersonAvatar from "@/components/PersonAvatar";
 import { useAppSelector } from "@/store/hooks";
 import { selectAuthToken } from "@/app/auth/store/authSlice";
 import { getAuthToken } from "@/lib/storeAccess";
 
 const GRAD = "linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)";
 const BRAND = "#A54AFF";
-const PLACEHOLDER_AVATAR =
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80";
 
 function displayCategory(type: string): string {
   if (!type) return "Favor";
@@ -43,7 +42,10 @@ function FavoriteCard({
 }) {
   const router = useRouter();
   const sellerName = favor.seller?.fullName || "Seller";
-  const sellerAvatar = favor.seller?.profileImage || PLACEHOLDER_AVATAR;
+  const sellerAvatar = pickFavorImage(
+    favor.seller?.profileImageUrl,
+    favor.seller?.profileImage,
+  );
   const rating =
     favor.averageRating != null ? Number(favor.averageRating).toFixed(1) : "—";
   const reviews = String(favor.reviewCount ?? favor.totalReviews ?? 0);
@@ -213,18 +215,7 @@ function FavoriteCard({
               minWidth: 0,
             }}
           >
-            <img
-              src={sellerAvatar}
-              alt={sellerName}
-              style={{
-                width: "30px",
-                height: "30px",
-                borderRadius: "9999px",
-                objectFit: "cover",
-                flexShrink: 0,
-                border: "2px solid #DFBAFF",
-              }}
-            />
+            <PersonAvatar src={sellerAvatar} name={sellerName} size={30} />
             <span
               style={{
                 fontFamily: "Poppins,sans-serif",

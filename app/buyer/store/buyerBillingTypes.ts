@@ -8,6 +8,7 @@ export type BuyerBillingTransactionSeller = {
   id: number;
   fullName: string;
   profileImage: string | null;
+  profileImageUrl?: string | null;
 };
 
 export type BuyerBillingTransaction = {

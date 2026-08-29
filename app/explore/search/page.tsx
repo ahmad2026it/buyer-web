@@ -11,6 +11,7 @@ import { useGetBuyerFavorsQuery } from '@/app/buyer/store/buyerFavorsAPI';
 import type { BuyerCategory } from '@/app/buyer/store/buyerCategoriesTypes';
 import type { BuyerFavor } from '@/app/buyer/store/buyerFavorsTypes';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import PersonAvatar from '@/components/PersonAvatar';
 import {
   BUYER_SELLERS_LIST_PARAMS,
   useSellersListQuery,
@@ -28,8 +29,6 @@ import {
   toBuyerFavorsParams,
   type AppliedFavorFilters,
 } from '@/app/buyer/store/buyerFavorsTypes';
-
-const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80';
 
 type SellerCard = {
   id: number;
@@ -75,7 +74,7 @@ function toFavorCard(favor: BuyerFavor, categories: BuyerCategory[]): FavorCard 
     rating: favor.averageRating != null ? Number(favor.averageRating).toFixed(1) : '—',
     reviews: String(favor.reviewCount ?? 0),
     category: displayCategory(favor.type, categories),
-    sellerAvatar: favor.seller?.profileImage || PLACEHOLDER_AVATAR,
+    sellerAvatar: pickFavorImage(favor.seller?.profileImageUrl, favor.seller?.profileImage),
     seller: favor.seller?.fullName || 'Seller',
   };
 }
@@ -496,7 +495,7 @@ function SearchContent() {
                             {/* 3. Provider + rating */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid #EAECF0' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', flex: 1, minWidth: 0 }}>
-                                <img src={favor.sellerAvatar} alt={favor.seller} style={{ width: '30px', height: '30px', borderRadius: '9999px', objectFit: 'cover', flexShrink: 0, border: '2px solid #DFBAFF' }} />
+                                <PersonAvatar src={favor.sellerAvatar} name={favor.seller} size={30} />
                                 <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{favor.seller}</span>
                                 {favor.badge ? (
                                 <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '11px', fontWeight: 700, background: favor.badge === 'Online' ? '#12B76A' : favor.badge === 'Pro' ? '#A54AFF' : '#344054', color: '#ffffff', borderRadius: '9999px', padding: '2px 8px', flexShrink: 0, letterSpacing: '0.02em' }}>{favor.badge}</span>

@@ -20,6 +20,7 @@ import {
 } from '@/app/buyer/store/buyerBookingsTypes';
 import { useAppSelector } from '@/store/hooks';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import PersonAvatar from '@/components/PersonAvatar';
 import { showToast } from '@/lib/toast';
 
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
@@ -33,7 +34,7 @@ interface Booking {
   title: string;
   image: string | null;
   seller: string;
-  sellerAvatar: string;
+  sellerAvatar: string | null;
   badge?: 'Pro' | 'Team';
   price: number;
   date: string;
@@ -45,7 +46,6 @@ interface Booking {
   rating?: number;
 }
 
-const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80';
 const PAGE_SIZE = 10;
 const CANCEL_REASONS = [
   'Plans changed',
@@ -99,7 +99,7 @@ function toBookingCard(item: BuyerBooking, tab: BuyerBookingListTab): Booking {
     title: item.favor?.title || 'Booking',
     image: pickFavorImage(item.images, item.favor?.images, item.favor?.favorImage),
     seller: item.seller?.fullName || 'Seller',
-    sellerAvatar: item.seller?.profileImage || PLACEHOLDER_AVATAR,
+    sellerAvatar: pickFavorImage(item.seller?.profileImageUrl, item.seller?.profileImage),
     badge: favorType.includes('team') ? 'Team' : 'Pro',
     price: Number(item.totalPrice) || 0,
     date: formatFavorDate(item.favorDate),
@@ -474,7 +474,7 @@ function BookingCard({ booking, onCancel, onWithdraw }: { booking: Booking; onCa
             {booking.title}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5, minWidth: 0 }}>
-            <img src={booking.sellerAvatar} alt={booking.seller} style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #DFBAFF', flexShrink: 0 }} />
+            <PersonAvatar src={booking.sellerAvatar} name={booking.seller} size={22} border="1.5px solid #DFBAFF" />
             <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, color: '#344054', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{booking.seller}</span>
             {booking.badge && (
               <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 10, fontWeight: 700, background: booking.badge === 'Pro' ? '#A54AFF' : '#344054', color: '#fff', borderRadius: PILL, padding: '1px 7px', flexShrink: 0 }}>{booking.badge}</span>

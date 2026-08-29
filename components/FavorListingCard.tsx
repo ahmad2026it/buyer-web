@@ -1,11 +1,10 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import PersonAvatar from '@/components/PersonAvatar';
 import type { BuyerFavor } from '@/app/buyer/store/buyerFavorsTypes';
 
 const BRAND = '#8E40FF';
-const PLACEHOLDER_AVATAR =
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80';
 
 function displayCategory(type: string): string {
   if (!type) return 'Favor';
@@ -65,7 +64,10 @@ export default function FavorListingCard({
   const badge = sellerBadge(favor);
   const isPro = badge === 'Pro';
   const sellerName = favor.seller?.fullName || 'Seller';
-  const sellerAvatar = favor.seller?.profileImage || PLACEHOLDER_AVATAR;
+  const sellerAvatar = pickFavorImage(
+    favor.seller?.profileImageUrl,
+    favor.seller?.profileImage,
+  );
   const sellerId = favor.seller?.id;
   const rating = favor.averageRating != null ? Number(favor.averageRating).toFixed(1) : '—';
   const reviews = Number(favor.reviewCount ?? favor.totalReviews ?? 0).toLocaleString();
@@ -137,14 +139,14 @@ export default function FavorListingCard({
 
         <div style={{ paddingTop: '10px', borderTop: '1px solid #EAECF0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', flex: 1, minWidth: 0 }}>
-            <img
+            <PersonAvatar
               src={sellerAvatar}
-              alt={sellerName}
-              onClick={e => {
+              name={sellerName}
+              size={30}
+              onClick={sellerId ? (e) => {
                 e.stopPropagation();
-                if (sellerId) router.push(`/seller/${sellerId}`);
-              }}
-              style={{ width: '30px', height: '30px', borderRadius: '9999px', objectFit: 'cover', objectPosition: 'top', flexShrink: 0, border: '2px solid #DFBAFF', cursor: sellerId ? 'pointer' : 'default' }}
+                router.push(`/seller/${sellerId}`);
+              } : undefined}
             />
             <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
               {sellerName}

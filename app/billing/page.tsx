@@ -15,6 +15,8 @@ import type { StripeCard } from '@/app/buyer/store/buyerStripeTypes';
 import { useAppSelector } from '@/store/hooks';
 import { confirmAction, showSuccess } from '@/lib/swal';
 import { showToast } from '@/lib/toast';
+import { pickFavorImage } from '@/components/FavorImage';
+import PersonAvatar from '@/components/PersonAvatar';
 
 const AddPaymentMethodModal = dynamic(
   () => import('@/components/AddPaymentMethodModal'),
@@ -24,7 +26,6 @@ const AddPaymentMethodModal = dynamic(
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const PILL  = '9999px';
-const PLACEHOLDER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&auto=format&q=80';
 const BILLING_HISTORY_LIMIT = 20;
 
 type BillingStatus = 'Paid' | 'Pending' | 'Failed' | 'Canceled';
@@ -37,7 +38,7 @@ type Transaction = {
   status: BillingStatus;
   refNumber: string;
   seller: string;
-  sellerAvatar: string;
+  sellerAvatar: string | null;
 };
 
 function formatInvoiceDate(iso: string): string {
@@ -82,7 +83,7 @@ function toBillingTransaction(item: BuyerBillingTransaction): Transaction {
     status: mapBillingStatus(item.status || item.paymentStatus),
     refNumber: item.referenceNumber,
     seller: item.seller?.fullName || 'Seller',
-    sellerAvatar: item.seller?.profileImage || PLACEHOLDER_AVATAR,
+    sellerAvatar: pickFavorImage(item.seller?.profileImageUrl, item.seller?.profileImage),
   };
 }
 
@@ -244,7 +245,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #F2F4F7' }}>
             <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>Service provider</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img src={tx.sellerAvatar} alt={tx.seller} style={{ width: '24px', height: '24px', borderRadius: PILL, objectFit: 'cover' }} />
+              <PersonAvatar src={tx.sellerAvatar} name={tx.seller} size={24} border="none" />
               <span style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '13px', color: '#101828' }}>{tx.seller}</span>
             </div>
           </div>

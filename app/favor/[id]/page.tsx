@@ -17,12 +17,24 @@ import FavorImage, {
   isUsableImageUrl,
   pickFavorImage,
 } from "@/components/FavorImage";
+import PersonAvatar from "@/components/PersonAvatar";
 import { useAppSelector } from "@/store/hooks";
 import { showToast } from "@/lib/toast";
 
 const GRAD = "linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)";
-const PLACEHOLDER_AVATAR =
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format&q=80";
+
+type ProfileImageSource = {
+  profileImage?: string | null;
+  profileImageUrl?: string | null;
+} | null | undefined;
+
+function pickProfileImage(...sources: ProfileImageSource[]): string | null {
+  return pickFavorImage(
+    ...sources.flatMap((source) =>
+      source ? [source.profileImageUrl, source.profileImage] : [],
+    ),
+  );
+}
 
 function Stars({ n, size = 14 }: { n: number; size?: number }) {
   return (
@@ -95,7 +107,7 @@ function normalizeReview(item: BuyerFavorReview, index: number) {
   return {
     id: item.id ?? index,
     author: reviewer?.fullName || item.author || "Buyer",
-    avatar: reviewer?.profileImage || item.avatar || PLACEHOLDER_AVATAR,
+    avatar: pickProfileImage(reviewer, { profileImage: item.avatar }),
     rating: Number(item.rating) || 0,
     date: formatDate(item.createdAt || item.date),
     text: item.comment || item.text || item.review || "",
@@ -125,10 +137,8 @@ function relatedSellerName(favor: BuyerRelatedFavor): string {
   return favor.seller?.fullName || favor.user?.fullName || "Seller";
 }
 
-function relatedSellerAvatar(favor: BuyerRelatedFavor): string {
-  return (
-    favor.seller?.profileImage || favor.user?.profileImage || PLACEHOLDER_AVATAR
-  );
+function relatedSellerAvatar(favor: BuyerRelatedFavor): string | null {
+  return pickProfileImage(favor.seller, favor.user);
 }
 
 export default function FavorDetailPage() {
@@ -194,10 +204,7 @@ export default function FavorDetailPage() {
 
   const sellerName =
     favor?.seller?.fullName || favor?.user?.fullName || "Seller";
-  const sellerAvatar =
-    favor?.seller?.profileImage ||
-    favor?.user?.profileImage ||
-    PLACEHOLDER_AVATAR;
+  const sellerAvatar = pickProfileImage(favor?.seller, favor?.user);
   const sellerId = favor?.seller?.id || favor?.user?.id;
   const sellerBadge = favor?.seller?.isOnline ? "Online" : "";
   const distance = favor?.seller?.distanceMiles ?? favor?.distanceMiles;
@@ -912,17 +919,10 @@ export default function FavorDetailPage() {
                         "#EAECF0";
                     }}
                   >
-                    <img
+                    <PersonAvatar
                       src={sellerAvatar}
-                      alt={sellerName}
-                      style={{
-                        width: "52px",
-                        height: "52px",
-                        borderRadius: "9999px",
-                        objectFit: "cover",
-                        border: "2px solid #DFBAFF",
-                        flexShrink: 0,
-                      }}
+                      name={sellerName}
+                      size={52}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div
@@ -1303,16 +1303,10 @@ export default function FavorDetailPage() {
                                 marginBottom: "12px",
                               }}
                             >
-                              <img
+                              <PersonAvatar
                                 src={r.avatar}
-                                alt={r.author}
-                                style={{
-                                  width: "40px",
-                                  height: "40px",
-                                  borderRadius: "9999px",
-                                  objectFit: "cover",
-                                  border: "2px solid #DFBAFF",
-                                }}
+                                name={r.author}
+                                size={40}
                               />
                               <div>
                                 <p
@@ -1510,17 +1504,11 @@ export default function FavorDetailPage() {
                                       minWidth: 0,
                                     }}
                                   >
-                                    <img
+                                    <PersonAvatar
                                       src={relatedSellerAvatar(f)}
-                                      alt={relatedSellerName(f)}
-                                      style={{
-                                        width: "24px",
-                                        height: "24px",
-                                        borderRadius: "9999px",
-                                        objectFit: "cover",
-                                        border: "1.5px solid #DFBAFF",
-                                        flexShrink: 0,
-                                      }}
+                                      name={relatedSellerName(f)}
+                                      size={24}
+                                      border="1.5px solid #DFBAFF"
                                     />
                                     <span
                                       style={{
@@ -1816,17 +1804,10 @@ export default function FavorDetailPage() {
                         if (sellerId) router.push(`/seller/${sellerId}`);
                       }}
                     >
-                      <img
+                      <PersonAvatar
                         src={sellerAvatar}
-                        alt={sellerName}
-                        style={{
-                          width: "44px",
-                          height: "44px",
-                          borderRadius: "9999px",
-                          objectFit: "cover",
-                          border: "2px solid #DFBAFF",
-                          flexShrink: 0,
-                        }}
+                        name={sellerName}
+                        size={44}
                       />
                       <div style={{ flex: 1 }}>
                         <p
@@ -2042,17 +2023,11 @@ export default function FavorDetailPage() {
                                 minWidth: 0,
                               }}
                             >
-                              <img
+                              <PersonAvatar
                                 src={relatedSellerAvatar(f)}
-                                alt={relatedSellerName(f)}
-                                style={{
-                                  width: "26px",
-                                  height: "26px",
-                                  borderRadius: "9999px",
-                                  objectFit: "cover",
-                                  border: "1.5px solid #DFBAFF",
-                                  flexShrink: 0,
-                                }}
+                                name={relatedSellerName(f)}
+                                size={26}
+                                border="1.5px solid #DFBAFF"
                               />
                               <span
                                 style={{
