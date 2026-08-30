@@ -55,12 +55,29 @@ function isImageAttachment(mime: string, type: string, url: string): boolean {
   }
 }
 
+function fileNameFromUrl(url: string): string {
+  try {
+    const path = decodeURIComponent(new URL(url).pathname);
+    const base = path.split("/").pop() ?? "";
+    return base || "Attachment";
+  } catch {
+    return "Attachment";
+  }
+}
+
 function normalizeAttachments(value: unknown): DisputeSupportAttachment[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
     if (typeof item === "string" && item.trim()) {
       const url = item.trim();
-      return [{ url, mime: "", type: isImageAttachment("", "", url) ? "image" : "file" }];
+      return [
+        {
+          url,
+          mime: "",
+          type: isImageAttachment("", "", url) ? "image" : "file",
+          name: fileNameFromUrl(url),
+        },
+      ];
     }
     const record = asRecord(item);
     const url = pickString(record?.url, record?.src, record?.path);
@@ -76,7 +93,14 @@ function normalizeAttachments(value: unknown): DisputeSupportAttachment[] {
     const type: DisputeSupportAttachmentType = isImageAttachment(mime, typeRaw, url)
       ? "image"
       : "file";
-    return [{ url, mime, type }];
+    const name = pickString(
+      record?.name,
+      record?.filename,
+      record?.file_name,
+      record?.originalName,
+      record?.original_name,
+    ) || fileNameFromUrl(url);
+    return [{ url, mime, type, name }];
   });
 }
 
@@ -201,10 +225,13 @@ export function normalizeDisputeSupportMessagesResponse(
   };
 }
 
-function buildSendMessageFormData(body: string, clientMsgId: string): FormData {
+function buildSendMessageFormData(body: string, clientMsgId: string, files: File[] = []): FormData {
   const formData = new FormData();
   formData.append("body", body);
   formData.append("client_msg_id", clientMsgId);
+  files.forEach((file) => {
+    formData.append("attachments", file);
+  });
   return formData;
 }
 
@@ -279,10 +306,10 @@ export const buyerDisputeSupportAPI = createApi({
       SendBuyerDisputeSupportMessageResponse,
       SendBuyerDisputeSupportMessageRequest
     >({
-      query: ({ disputeId, body, clientMsgId }) => ({
+      query: ({ disputeId, body, clientMsgId, files }) => ({
         url: `/api/buyer/dispute-support/${disputeId}/messages`,
         method: "POST",
-        body: buildSendMessageFormData(body, clientMsgId),
+        body: buildSendMessageFormData(body, clientMsgId, files),
       }),
       transformResponse: (response: unknown, _meta, arg) => {
         const root = asRecord(response);

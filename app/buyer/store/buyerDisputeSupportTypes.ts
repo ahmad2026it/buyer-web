@@ -15,6 +15,7 @@ export type DisputeSupportAttachment = {
   url: string;
   mime: string;
   type: DisputeSupportAttachmentType;
+  name: string;
 };
 
 export type BuyerDisputeSupportMessage = {
@@ -58,6 +59,7 @@ export type SendBuyerDisputeSupportMessageRequest = {
   disputeId: number;
   body: string;
   clientMsgId: string;
+  files?: File[];
 };
 
 export type SendBuyerDisputeSupportMessageResponse = {

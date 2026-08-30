@@ -16,10 +16,33 @@ import type {
   DisputeSupportAttachment,
 } from '@/app/buyer/store/buyerDisputeSupportTypes';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { showToast } from '@/lib/toast';
 
 const BRAND = '#A54AFF';
 const GRAD = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const FONT = 'Poppins, sans-serif';
+const MAX_ATTACHMENTS = 4;
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+const ATTACHMENT_ACCEPT = 'image/*,.pdf,.doc,.docx';
+
+type PendingAttachment = {
+  id: string;
+  file: File;
+  previewUrl: string;
+};
+
+function isImageFile(file: File): boolean {
+  return file.type.startsWith('image/');
+}
+
+function attachmentFromPending(item: PendingAttachment): DisputeSupportAttachment {
+  return {
+    url: item.previewUrl,
+    mime: item.file.type,
+    type: isImageFile(item.file) ? 'image' : 'file',
+    name: item.file.name,
+  };
+}
 
 function startOfLocalDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
@@ -73,7 +96,7 @@ function ChatAttachment({
       >
         <img
           src={attachment.url}
-          alt="Image attachment"
+          alt={attachment.name || 'Image attachment'}
           onError={() => setFailed(true)}
           style={{
             display: 'block',
@@ -111,7 +134,7 @@ function ChatAttachment({
         wordBreak: 'break-all',
       }}
     >
-      Attachment
+      {attachment.name || 'Attachment'}
     </a>
   );
 }
@@ -155,10 +178,14 @@ export default function DisputeSupportChat({
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const [input, setInput] = useState('');
+  const [pending, setPending] = useState<PendingAttachment[]>([]);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingRef = useRef<PendingAttachment[]>([]);
   const markedReadRef = useRef<number | null>(null);
+  pendingRef.current = pending;
 
   const {
     data: messagesResponse,
@@ -220,18 +247,77 @@ export default function DisputeSupportChat({
     }
   }, [open]);
 
+  useEffect(() => {
+    return () => {
+      pendingRef.current.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+    };
+  }, []);
+
   if (!open) return null;
+
+  const canSubmit = Boolean(input.trim() || pending.length) && canSend && !sending;
+
+  const addFiles = (list: FileList | File[] | null) => {
+    if (!list || !canSend || sending) return;
+    const incoming = Array.from(list);
+    const next: PendingAttachment[] = [...pending];
+    let skippedSize = 0;
+    let skippedLimit = 0;
+
+    for (const file of incoming) {
+      if (next.length >= MAX_ATTACHMENTS) {
+        skippedLimit += 1;
+        continue;
+      }
+      if (file.size > MAX_ATTACHMENT_BYTES) {
+        skippedSize += 1;
+        continue;
+      }
+      const duplicate = next.some(
+        (item) =>
+          item.file.name === file.name &&
+          item.file.size === file.size &&
+          item.file.lastModified === file.lastModified,
+      );
+      if (duplicate) continue;
+      next.push({
+        id: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2, 8)}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      });
+    }
+
+    if (skippedSize) {
+      showToast('Each attachment must be 10 MB or smaller.', 'warning');
+    } else if (skippedLimit) {
+      showToast(`You can attach up to ${MAX_ATTACHMENTS} files.`, 'warning');
+    }
+
+    setPending(next);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removePending = (id: string) => {
+    setPending((current) => {
+      const item = current.find((entry) => entry.id === id);
+      if (item) URL.revokeObjectURL(item.previewUrl);
+      return current.filter((entry) => entry.id !== id);
+    });
+  };
 
   const send = async () => {
     const text = input.trim();
-    if (!text || sending || !canSend) return;
+    const filesToSend = pending;
+    if ((!text && filesToSend.length === 0) || sending || !canSend) return;
 
     setSending(true);
     setInput('');
+    setPending([]);
     inputRef.current?.focus();
 
     const clientMsgId = newDisputeSupportClientMsgId();
     const now = new Date().toISOString();
+    const optimisticAttachments = filesToSend.map(attachmentFromPending);
     const optimistic: BuyerDisputeSupportMessage = {
       id: -Date.now(),
       disputeId,
@@ -241,7 +327,7 @@ export default function DisputeSupportChat({
       senderName: user?.fullName || 'You',
       senderImage: user?.profileImage ?? null,
       body: text,
-      attachments: [],
+      attachments: optimisticAttachments,
       clientMsgId,
       createdAt: now,
       updatedAt: now,
@@ -255,16 +341,24 @@ export default function DisputeSupportChat({
         disputeId,
         body: text,
         clientMsgId,
+        files: filesToSend.map((item) => item.file),
       }).unwrap();
 
       if (response.data?.message) {
-        upsertBuyerDisputeSupportMessage(dispatch, response.data.message);
+        const incoming = response.data.message;
+        if (incoming.attachments.length > 0 || filesToSend.length === 0) {
+          upsertBuyerDisputeSupportMessage(dispatch, incoming);
+        } else {
+          await refetch();
+        }
       } else {
-        void refetch();
+        await refetch();
       }
+      filesToSend.forEach((item) => URL.revokeObjectURL(item.previewUrl));
     } catch {
       removeOptimisticDisputeSupportMessage(dispatch, disputeId, clientMsgId);
       setInput(text);
+      setPending(filesToSend);
     } finally {
       setSending(false);
     }
@@ -495,7 +589,121 @@ export default function DisputeSupportChat({
               Messaging is unavailable for this ticket.
             </p>
           )}
+          {pending.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 8,
+                padding: '0 2px',
+              }}
+            >
+              {pending.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    maxWidth: '100%',
+                    padding: isImageFile(item.file) ? 0 : '6px 10px 6px 8px',
+                    background: '#F9FAFB',
+                    border: '1.5px solid #EAECF0',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {isImageFile(item.file) ? (
+                    <img
+                      src={item.previewUrl}
+                      alt={item.file.name}
+                      style={{ width: 56, height: 56, objectFit: 'cover', display: 'block' }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: FONT,
+                        fontSize: 12,
+                        fontWeight: 500,
+                        color: '#344054',
+                        maxWidth: 160,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {item.file.name}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${item.file.name}`}
+                    onClick={() => removePending(item.id)}
+                    disabled={sending}
+                    style={{
+                      position: isImageFile(item.file) ? 'absolute' : 'static',
+                      top: 4,
+                      right: 4,
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      background: isImageFile(item.file) ? 'rgba(16,24,40,0.72)' : '#E4E6EA',
+                      color: isImageFile(item.file) ? '#fff' : '#344054',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      cursor: sending ? 'default' : 'pointer',
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ATTACHMENT_ACCEPT}
+              multiple
+              hidden
+              disabled={!canSend || sending}
+              onChange={(event) => addFiles(event.target.files)}
+            />
+            <button
+              type="button"
+              aria-label="Attach a file"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={!canSend || sending || pending.length >= MAX_ATTACHMENTS}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                border: '1.5px solid #EAECF0',
+                background: '#F9FAFB',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                opacity: canSend && !sending ? 1 : 0.5,
+                cursor: canSend && !sending ? 'pointer' : 'default',
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 1 1-2.83-2.83l8.49-8.48"
+                  stroke="#667085"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
             <div
               style={{
                 flex: 1,
@@ -514,6 +722,13 @@ export default function DisputeSupportChat({
                 value={input}
                 disabled={!canSend || sending}
                 onChange={(event) => setInput(event.target.value)}
+                onPaste={(event) => {
+                  const pasted = event.clipboardData.files;
+                  if (pasted.length) {
+                    event.preventDefault();
+                    addFiles(pasted);
+                  }
+                }}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
@@ -535,26 +750,26 @@ export default function DisputeSupportChat({
               type="button"
               aria-label="Send message"
               onClick={() => { void send(); }}
-              disabled={!input.trim() || !canSend || sending}
+              disabled={!canSubmit}
               style={{
                 width: 40,
                 height: 40,
                 borderRadius: '50%',
                 border: 'none',
-                cursor: input.trim() && canSend && !sending ? 'pointer' : 'default',
-                background: input.trim() && canSend ? GRAD : '#F2F4F7',
+                cursor: canSubmit ? 'pointer' : 'default',
+                background: canSubmit ? GRAD : '#F2F4F7',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                opacity: input.trim() && canSend ? 1 : 0.5,
-                boxShadow: input.trim() && canSend ? '0 2px 12px rgba(165,74,255,0.35)' : 'none',
+                opacity: canSubmit ? 1 : 0.5,
+                boxShadow: canSubmit ? '0 2px 12px rgba(165,74,255,0.35)' : 'none',
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path
                   d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
-                  stroke={input.trim() && canSend ? '#fff' : '#667085'}
+                  stroke={canSubmit ? '#fff' : '#667085'}
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
