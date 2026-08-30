@@ -9,12 +9,10 @@ import {
   getCachedWebFcmToken,
   getNotificationPermission,
   getWebFcmToken,
-  isChromeBrowser,
-  isEdgeBrowser,
 } from "@/lib/fcm";
 import { goHomeAfterAuth } from "@/lib/authNavigation";
 import { showToast } from "@/lib/toast";
-import { showSuccess, showSwal } from "@/lib/swal";
+import { showSuccess } from "@/lib/swal";
 
 const GRAD = "linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)";
 const BORDER = "#D0D5DD";
@@ -207,118 +205,17 @@ export default function LoginPage() {
     password?: string;
   }>({});
   const [remember, setRemember] = useState(false);
-  const [pushPermission, setPushPermission] = useState<
-    NotificationPermission | "unsupported"
-  >("unsupported");
-  const [pushQuietPending, setPushQuietPending] = useState(false);
-  const [browserKind, setBrowserKind] = useState<"chrome" | "edge" | "other">("other");
 
   useEffect(() => {
-    setBrowserKind(isEdgeBrowser() ? "edge" : isChromeBrowser() ? "chrome" : "other");
-    setPushPermission(getNotificationPermission());
-
     if (getNotificationPermission() === "granted") {
       void getWebFcmToken();
     }
-
-    if (!navigator.permissions?.query) return;
-
-    let cancelled = false;
-    let permissionStatus: PermissionStatus | null = null;
-    const sync = () => {
-      const permission = getNotificationPermission();
-      setPushPermission(permission);
-      if (permission === "granted") {
-        setPushQuietPending(false);
-        void getWebFcmToken();
-      }
-    };
-
-    void navigator.permissions
-      .query({ name: "notifications" as PermissionName })
-      .then((status) => {
-        if (cancelled) return;
-        permissionStatus = status;
-        sync();
-        status.addEventListener("change", sync);
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-      permissionStatus?.removeEventListener("change", sync);
-    };
   }, []);
 
   useEffect(() => {
     if (skipAuthRedirectRef.current || !isAuthenticated) return;
     goHomeAfterAuth();
   }, [isAuthenticated]);
-
-  const showBlockedNotificationHelp = async (permission: NotificationPermission | "unsupported") => {
-    const chromeHelp =
-      "<p>Chrome automatically blocked the prompt. That is why no FCM token is sent on sign in.</p><p>1. Click the site settings icon (tune / crossed-out bell) in the address bar.</p><p>2. Set <strong>Notifications</strong> to <strong>Allow</strong>. If it says Automatically blocked, change it to Allow.</p><p>3. Reload this page, click <strong>Enable</strong>, then sign in.</p><p>You can also open <strong>chrome://settings/content/notifications</strong>, turn on <strong>Sites can ask to send notifications</strong>, and remove <strong>localhost:3000</strong> from Not allowed.</p>";
-    const edgeHelp =
-      "<p>Edge does not show Chrome's &quot;turn on notifications&quot; popup. It either hides the request or auto-denies it.</p><p>1. Windows Settings → System → Notifications → <strong>Microsoft Edge must be On</strong>. If this is off, Edge always reports blocked.</p><p>2. Open <strong>edge://settings/content/notifications</strong> → set to <strong>Ask before sending</strong>, and turn <strong>Quiet notification requests Off</strong>.</p><p>3. Remove <strong>localhost:3000</strong> from Block. Reload, click Enable, then click the <strong>bell</strong> next to the URL and choose Allow.</p>";
-    const genericHelp =
-      "<p>The browser denied notifications without prompting, so this device cannot send an FCM token.</p><p>Open the lock / site settings icon next to the URL, set Notifications to Allow, reload, click Enable, then sign in.</p>";
-
-    await showSwal({
-      title: `Permission is "${permission}"`,
-      html: isChromeBrowser() ? chromeHelp : isEdgeBrowser() ? edgeHelp : genericHelp,
-      variant: "warning",
-      confirmText: "Got it",
-    });
-  };
-
-  const showEdgeQuietHelp = async () => {
-    const edgeExtra =
-      "<p>If there is no bell: Windows Settings → Notifications → Microsoft Edge On, then <strong>edge://settings/content/notifications</strong> → Ask before sending, Quiet notification requests Off. Reload and click Enable again.</p>";
-    const chromeExtra =
-      "<p>If there is no bell, click the site settings icon next to the URL and set Notifications to Allow.</p>";
-
-    await showSwal({
-      title: "Click the bell in the address bar",
-      html:
-        "<p>The permission popup was hidden. Look at the address bar — there is a <strong>bell</strong> that may say Notifications blocked.</p><p>1. Click that bell.</p><p>2. Choose <strong>Allow</strong>.</p><p>3. This status will change to granted. Then sign in.</p>" +
-        (isEdgeBrowser() ? edgeExtra : chromeExtra),
-      variant: "info",
-      confirmText: "I will click the bell",
-    });
-  };
-
-  const handleEnablePush = async () => {
-    if (typeof Notification === "undefined") {
-      showToast("This browser does not support notifications.", "warning");
-      return;
-    }
-
-    if (Notification.permission === "denied") {
-      setPushPermission("denied");
-      setPushQuietPending(false);
-      await showBlockedNotificationHelp("denied");
-      return;
-    }
-
-    const fcm = await getWebFcmToken({ requestPermission: true });
-    const permission = getNotificationPermission();
-    setPushPermission(permission);
-
-    if (fcm.token) {
-      setPushQuietPending(false);
-      showToast("Notifications enabled. You can sign in now.", "success");
-      return;
-    }
-
-    if (fcm.status === "pending" || permission === "default") {
-      setPushQuietPending(true);
-      await showEdgeQuietHelp();
-      return;
-    }
-
-    setPushQuietPending(false);
-    await showBlockedNotificationHelp(permission);
-  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
@@ -334,8 +231,6 @@ export default function LoginPage() {
 
     try {
       const permission = getNotificationPermission();
-      setPushPermission(permission);
-
       const fcm =
         permission === "granted"
           ? await getWebFcmToken()
@@ -534,97 +429,6 @@ export default function LoginPage() {
           >
             Forgot password
           </a>
-        </div>
-
-        {/* Push notification status */}
-        <div
-          style={{
-            padding: "10px 14px",
-            marginBottom: "16px",
-            border: `1px solid ${
-              pushPermission === "denied"
-                ? "#FECDCA"
-                : pushQuietPending
-                  ? "#F9DB8B"
-                  : BORDER
-            }`,
-            borderRadius: "12px",
-            background:
-              pushPermission === "denied"
-                ? "#FEF3F2"
-                : pushQuietPending
-                  ? "#FFFAEB"
-                  : "#F9FAFB",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "12px",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "Poppins, sans-serif",
-                fontSize: "13px",
-                color: "#475467",
-              }}
-            >
-              Notifications:{" "}
-              <strong style={{ color: "#101828" }}>
-                {pushPermission === "denied"
-                  ? browserKind === "edge"
-                    ? "blocked by Edge"
-                    : "automatically blocked"
-                  : pushQuietPending
-                    ? "waiting for Allow"
-                    : pushPermission}
-              </strong>
-            </span>
-            {pushPermission !== "granted" && (
-              <button
-                type="button"
-                onClick={handleEnablePush}
-                style={{
-                  fontFamily: "Poppins, sans-serif",
-                  fontWeight: 600,
-                  fontSize: "13px",
-                  color: BRAND,
-                  background: "transparent",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {pushPermission === "denied"
-                  ? "How to allow"
-                  : pushQuietPending
-                    ? "Show steps"
-                    : "Enable"}
-              </button>
-            )}
-          </div>
-          {pushPermission !== "granted" && (
-            <p
-              style={{
-                fontFamily: "Poppins, sans-serif",
-                fontSize: "12px",
-                color: "#667085",
-                margin: "8px 0 0",
-              }}
-            >
-              {pushPermission === "denied"
-                ? browserKind === "edge"
-                  ? "Edge does not show Chrome's popup. Turn on Microsoft Edge in Windows Notifications, then edge://settings/content/notifications → Ask before sending, Quiet requests Off. Reload and enable."
-                  : "The browser blocked the prompt. Set Notifications to Allow in the address bar, reload, then enable before signing in."
-                : pushQuietPending || browserKind === "edge"
-                  ? "Edge hides the popup. Click Enable, then click the bell next to the URL (it may say Notifications blocked) and choose Allow."
-                  : "Enable notifications before signing in so the FCM token is sent with login."}
-            </p>
-          )}
         </div>
 
         {/* Submit */}
