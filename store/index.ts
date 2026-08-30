@@ -1,4 +1,4 @@
-import { combineReducers, configureStore, type Middleware, type UnknownAction } from '@reduxjs/toolkit';
+import { combineReducers, configureStore, type Middleware } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import {
   FLUSH,
@@ -70,15 +70,6 @@ const appReducer = combineReducers({
   [buyerBlogsAPI.reducerPath]: buyerBlogsAPI.reducer,
 });
 
-type AppState = ReturnType<typeof appReducer>;
-
-const rootReducer = (state: AppState | undefined, action: UnknownAction): AppState => {
-  if (action.type === logout.type) {
-    return appReducer(undefined, action);
-  }
-  return appReducer(state, action);
-};
-
 const rtkQueryApis = [
   authAPI,
   buyerBillingAPI,
@@ -115,7 +106,7 @@ const logoutMiddleware: Middleware = (storeApi) => (next) => (action) => {
 
 export const makeStore = () => {
   const store = configureStore({
-    reducer: rootReducer,
+    reducer: appReducer,
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
         serializableCheck: {

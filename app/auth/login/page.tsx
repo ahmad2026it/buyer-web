@@ -214,7 +214,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (skipAuthRedirectRef.current || !isAuthenticated) return;
-    goHomeAfterAuth();
+    void goHomeAfterAuth();
   }, [isAuthenticated]);
 
   const handleLogin = async () => {
@@ -256,7 +256,7 @@ export default function LoginPage() {
       skipAuthRedirectRef.current = true;
       await showSuccess("Success", result.message || "Logged in successfully");
 
-      goHomeAfterAuth();
+      await goHomeAfterAuth();
     } catch (error) {
       const details = getAxiosErrorDetails(error as AuthApiError);
       const nextErrors = {

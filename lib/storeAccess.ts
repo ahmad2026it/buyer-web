@@ -22,6 +22,14 @@ export const purgePersistedClientState = (): void => {
   window.localStorage.removeItem('persist:auth');
 };
 
+export const flushPersistedClientState = async (): Promise<void> => {
+  try {
+    await appPersistor?.flush();
+  } catch {
+    // Navigation should still proceed if persist flush fails.
+  }
+};
+
 const readPersistedToken = (): string | null => {
   if (typeof window === 'undefined') return null;
 

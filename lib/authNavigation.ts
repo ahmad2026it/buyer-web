@@ -1,3 +1,5 @@
+import { flushPersistedClientState } from "@/lib/storeAccess";
+
 export const POST_LOGIN_FLAG = "whoCan_postLogin";
 
 export function isAuthPath(pathname: string): boolean {
@@ -15,8 +17,9 @@ export function isGuestOnlyAuthPath(pathname: string): boolean {
   );
 }
 
-export function goHomeAfterAuth(): void {
+export async function goHomeAfterAuth(): Promise<void> {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(POST_LOGIN_FLAG, "1");
+  await flushPersistedClientState();
   window.location.replace("/");
 }
