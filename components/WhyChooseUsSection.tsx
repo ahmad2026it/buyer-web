@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { WrenchIcon, ShieldCheckIcon, ArrowRightIcon, ArrowUpRightIcon } from './Icons';
+import { WrenchIcon, ArrowUpRightIcon } from './Icons';
 import { useGetPublicBlogsQuery } from '@/app/buyer/store/buyerBlogsAPI';
 import type { PublicBlog } from '@/app/buyer/store/buyerBlogsTypes';
 import { blogHref, getBlogAuthorName } from '@/lib/publicBlogs';
@@ -173,7 +173,7 @@ export default function WhyChooseUsSection() {
           className="rs-why-cards"
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr 0.62fr',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
             gap: '16px',
             alignItems: 'stretch',
           }}
@@ -294,85 +294,42 @@ export default function WhyChooseUsSection() {
             </div>
           </div>
 
-          {/* ── RIGHT COLUMN ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-            {/* Top right: image + text card */}
-            <div
-              data-animate
-              data-delay="3"
-              onClick={() => router.push(right.href)}
-              style={{
-                background: '#F7F7F7',
-                borderRadius: '20px',
-                border: '1.5px solid #EAECF0',
-                display: 'flex',
-                flexDirection: 'column',
-                flex: 1,
-                overflow: 'hidden',
-                cursor: 'pointer',
-                transition: 'box-shadow 0.25s ease, transform 0.25s ease',
-              }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 8px 32px rgba(165,74,255,0.14)'; el.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = 'none'; el.style.transform = 'none'; }}
-            >
-              <div style={{ overflow: 'hidden', flexShrink: 0 }}>
-                <img
-                  src={right.image}
-                  alt={right.imageAlt}
-                  style={{ width: '100%', height: '130px', objectFit: 'cover', objectPosition: 'center center', display: 'block', transition: 'transform 0.4s ease' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
-                />
-              </div>
-              <div style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '16px', color: '#101828', marginBottom: '8px', lineHeight: '1.3' }}>
-                  {right.title}
-                </h3>
-                <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#475467', lineHeight: '1.65', flex: 1, marginBottom: '16px' }}>
-                  {right.excerpt}
-                </p>
-                <LearnMoreRow href={right.href} />
-              </div>
+          {/* ── RIGHT CARD ── */}
+          <div
+            data-animate
+            data-delay="3"
+            onClick={() => router.push(right.href)}
+            style={{
+              background: '#F7F7F7',
+              borderRadius: '20px',
+              border: '1.5px solid #EAECF0',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              cursor: 'pointer',
+              transition: 'box-shadow 0.25s ease, transform 0.25s ease',
+            }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 8px 32px rgba(165,74,255,0.14)'; el.style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = 'none'; el.style.transform = 'none'; }}
+          >
+            <div style={{ overflow: 'hidden', flexShrink: 0 }}>
+              <img
+                src={right.image}
+                alt={right.imageAlt}
+                style={{ width: '100%', height: '220px', objectFit: 'cover', objectPosition: 'center center', display: 'block', transition: 'transform 0.4s ease' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
+              />
             </div>
-
-            {/* Bottom right: icon + double arrow */}
-            <div
-              data-animate
-              data-delay="4"
-              style={{
-                background: '#F7F7F7',
-                borderRadius: '20px',
-                border: '1.5px solid #EAECF0',
-                padding: '24px',
-                flexShrink: 0,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                <div
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '50%',
-                    background: AMBER,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <ShieldCheckIcon size={22} color="#1D2939" />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <ArrowRightIcon size={24} color="#A54AFF" />
-                  <ArrowRightIcon size={24} color="#A54AFF" style={{ marginLeft: '-10px' }} />
-                </div>
-              </div>
-              <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', color: '#475467', lineHeight: '1.6' }}>
-                Secure payments, released only when your job is done.
+            <div style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828', marginBottom: '10px', lineHeight: '1.3' }}>
+                {right.title}
+              </h3>
+              <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', lineHeight: '1.65', flex: 1, marginBottom: '20px' }}>
+                {right.excerpt}
               </p>
+              <LearnMoreRow href={right.href} />
             </div>
-
           </div>
         </div>
 

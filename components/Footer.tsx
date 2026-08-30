@@ -39,7 +39,7 @@ const BOTTOM_LINKS: FooterLink[] = [
 const SOCIAL_LINKS = [
   {
     label: 'Instagram',
-    href: 'https://www.instagram.com/who_can_online?igsi=dHk0eWxyMng2a3Fw',
+    href: 'https://www.instagram.com/who_can_online?utm_source=qr',
     icon: InstagramIcon,
   },
   {
