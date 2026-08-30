@@ -11,7 +11,10 @@ import {
   useMarkBuyerDisputeSupportReadMutation,
   useSendBuyerDisputeSupportMessageMutation,
 } from '@/app/buyer/store/buyerDisputeSupportAPI';
-import type { BuyerDisputeSupportMessage } from '@/app/buyer/store/buyerDisputeSupportTypes';
+import type {
+  BuyerDisputeSupportMessage,
+  DisputeSupportAttachment,
+} from '@/app/buyer/store/buyerDisputeSupportTypes';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
 const BRAND = '#A54AFF';
@@ -46,6 +49,70 @@ function DateDivider({ label }: { label: string }) {
       </span>
       <div style={{ flex: 1, height: 1, background: '#EAECF0' }} />
     </div>
+  );
+}
+
+function ChatAttachment({
+  attachment,
+  isMe,
+}: {
+  attachment: DisputeSupportAttachment;
+  isMe: boolean;
+}) {
+  const [failed, setFailed] = useState(false);
+  const radius = isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px';
+
+  if (attachment.type === 'image' && !failed) {
+    return (
+      <a
+        href={attachment.url}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Open image attachment"
+        style={{ display: 'block', maxWidth: '100%' }}
+      >
+        <img
+          src={attachment.url}
+          alt="Image attachment"
+          onError={() => setFailed(true)}
+          style={{
+            display: 'block',
+            maxWidth: '100%',
+            maxHeight: 260,
+            width: 'auto',
+            height: 'auto',
+            borderRadius: radius,
+            border: isMe ? 'none' : '1.5px solid #EAECF0',
+            background: '#F2F4F7',
+            objectFit: 'contain',
+          }}
+        />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={attachment.url}
+      target="_blank"
+      rel="noreferrer"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '8px 12px',
+        borderRadius: radius,
+        background: isMe ? '#E4E6EA' : '#ffffff',
+        border: isMe ? 'none' : '1.5px solid #EAECF0',
+        fontFamily: FONT,
+        fontSize: 12,
+        fontWeight: 600,
+        color: BRAND,
+        wordBreak: 'break-all',
+      }}
+    >
+      Attachment
+    </a>
   );
 }
 
@@ -360,36 +427,34 @@ export default function DisputeSupportChat({
                         gap: 4,
                       }}
                     >
-                      <div
-                        style={{
-                          padding: '10px 14px',
-                          borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                          background: isMe ? '#E4E6EA' : '#ffffff',
-                          border: isMe ? 'none' : '1.5px solid #EAECF0',
-                          boxShadow: isMe
-                            ? '0 1px 4px rgba(16,24,40,0.08)'
-                            : '0 1px 4px rgba(16,24,40,0.06)',
-                          color: isMe ? '#344054' : '#101828',
-                          fontFamily: FONT,
-                          fontSize: 14,
-                          lineHeight: 1.55,
-                          wordBreak: 'break-word',
-                        }}
-                      >
-                        {msg.body}
-                      </div>
+                      {msg.body ? (
+                        <div
+                          style={{
+                            padding: '10px 14px',
+                            borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                            background: isMe ? '#E4E6EA' : '#ffffff',
+                            border: isMe ? 'none' : '1.5px solid #EAECF0',
+                            boxShadow: isMe
+                              ? '0 1px 4px rgba(16,24,40,0.08)'
+                              : '0 1px 4px rgba(16,24,40,0.06)',
+                            color: isMe ? '#344054' : '#101828',
+                            fontFamily: FONT,
+                            fontSize: 14,
+                            lineHeight: 1.55,
+                            wordBreak: 'break-word',
+                          }}
+                        >
+                          {msg.body}
+                        </div>
+                      ) : null}
                       {msg.attachments.length > 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
-                          {msg.attachments.map((src) => (
-                            <a
-                              key={src}
-                              href={src}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{ fontFamily: FONT, fontSize: 12, color: BRAND, wordBreak: 'break-all' }}
-                            >
-                              Attachment
-                            </a>
+                          {msg.attachments.map((attachment) => (
+                            <ChatAttachment
+                              key={attachment.url}
+                              attachment={attachment}
+                              isMe={isMe}
+                            />
                           ))}
                         </div>
                       )}

@@ -11,6 +11,8 @@ import type {
   SendBuyerDisputeSupportMessageResponse,
   BuyerDisputeSupportMessage,
   BuyerDisputeSupportParticipant,
+  DisputeSupportAttachment,
+  DisputeSupportAttachmentType,
   DisputeSupportSenderType,
 } from "./buyerDisputeSupportTypes";
 import { BUYER_DISPUTE_SUPPORT_MESSAGES_LIMIT } from "./buyerDisputeSupportTypes";
@@ -42,15 +44,40 @@ function normalizeSenderType(value: unknown): DisputeSupportSenderType {
   return "unknown";
 }
 
-function normalizeAttachments(value: unknown): string[] {
+const IMAGE_EXT = /\.(avif|bmp|gif|jpe?g|png|svg|webp)(?:$|\?)/i;
+
+function isImageAttachment(mime: string, type: string, url: string): boolean {
+  if (type === "image" || mime.startsWith("image/")) return true;
+  try {
+    return IMAGE_EXT.test(new URL(url).pathname);
+  } catch {
+    return IMAGE_EXT.test(url);
+  }
+}
+
+function normalizeAttachments(value: unknown): DisputeSupportAttachment[] {
   if (!Array.isArray(value)) return [];
-  return value
-    .map((item) => {
-      if (typeof item === "string" && item.trim()) return item.trim();
-      const record = asRecord(item);
-      return pickString(record?.url, record?.src, record?.path);
-    })
-    .filter(Boolean);
+  return value.flatMap((item) => {
+    if (typeof item === "string" && item.trim()) {
+      const url = item.trim();
+      return [{ url, mime: "", type: isImageAttachment("", "", url) ? "image" : "file" }];
+    }
+    const record = asRecord(item);
+    const url = pickString(record?.url, record?.src, record?.path);
+    if (!url) return [];
+    const mime = pickString(
+      record?.mime,
+      record?.mimeType,
+      record?.mime_type,
+      record?.contentType,
+      record?.content_type,
+    ).toLowerCase();
+    const typeRaw = pickString(record?.type, record?.kind).toLowerCase();
+    const type: DisputeSupportAttachmentType = isImageAttachment(mime, typeRaw, url)
+      ? "image"
+      : "file";
+    return [{ url, mime, type }];
+  });
 }
 
 function normalizeParticipant(raw: unknown): BuyerDisputeSupportParticipant | null {
@@ -74,7 +101,14 @@ export function normalizeDisputeSupportMessage(
 
   const nested = asRecord(record.message);
   const msg = nested ?? record;
-  const sender = asRecord(msg.sender) ?? asRecord(msg.user) ?? asRecord(msg.author);
+  const sender =
+    asRecord(msg.sender) ??
+    asRecord(msg.senderAdmin) ??
+    asRecord(msg.sender_admin) ??
+    asRecord(msg.senderUser) ??
+    asRecord(msg.sender_user) ??
+    asRecord(msg.user) ??
+    asRecord(msg.author);
 
   const id = toNumericId(msg.id);
   if (id == null) return null;
@@ -83,6 +117,10 @@ export function normalizeDisputeSupportMessage(
   const senderType = normalizeSenderType(
     msg.senderType ??
       msg.sender_type ??
+      msg.senderKind ??
+      msg.sender_kind ??
+      msg.senderRole ??
+      msg.sender_role ??
       msg.role ??
       msg.from ??
       sender?.userType ??

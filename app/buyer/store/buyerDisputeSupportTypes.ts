@@ -9,6 +9,14 @@ export type BuyerDisputeSupportParticipant = {
   senderType: DisputeSupportSenderType;
 };
 
+export type DisputeSupportAttachmentType = "image" | "file";
+
+export type DisputeSupportAttachment = {
+  url: string;
+  mime: string;
+  type: DisputeSupportAttachmentType;
+};
+
 export type BuyerDisputeSupportMessage = {
   id: number;
   disputeId: number;
@@ -18,7 +26,7 @@ export type BuyerDisputeSupportMessage = {
   senderName: string;
   senderImage: string | null;
   body: string;
-  attachments: string[];
+  attachments: DisputeSupportAttachment[];
   clientMsgId: string;
   createdAt: string;
   updatedAt: string;
