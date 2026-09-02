@@ -120,6 +120,24 @@ const isPublicAuthRequest = (url?: string): boolean => {
   );
 };
 
+const isBuyerProfileRequest = (url?: string): boolean => {
+  if (!url) return false;
+  return /\/api\/buyer\/profile\/?(?:\?.*)?$/.test(url);
+};
+
+const hasBuyerProfileUser = (body: unknown): boolean => {
+  if (!body || typeof body !== 'object' || !('data' in body)) return false;
+  const data = body.data;
+  if (!data || typeof data !== 'object' || !('user' in data)) return false;
+  const user = data.user;
+  return Boolean(
+    user &&
+      typeof user === 'object' &&
+      'id' in user &&
+      typeof user.id === 'number',
+  );
+};
+
 const isPublicLegalRequest = (url?: string): boolean => {
   return Boolean(
     url &&
@@ -178,6 +196,13 @@ api.interceptors.response.use(
     const payload = response.data as ApiErrorBody | undefined;
 
     if (payload && typeof payload === 'object' && payload.success === false) {
+      if (
+        isBuyerProfileRequest(response.config.url) &&
+        hasBuyerProfileUser(payload)
+      ) {
+        return response;
+      }
+
       const message = getMessageFromBody(payload, 'Something went wrong. Please try again.');
 
       if (!response.config.skipErrorToast) {
@@ -205,9 +230,14 @@ api.interceptors.response.use(
       !isPublicLegalRequest(error.config?.url) &&
       !isChangePasswordCredentialError(error.config?.url, error.response?.data);
 
-    if (isUnauthorized) {
+    const isRestrictedProfile =
+      status === 403 &&
+      isBuyerProfileRequest(error.config?.url) &&
+      hasBuyerProfileUser(error.response?.data);
+
+    if (isUnauthorized && !isRestrictedProfile) {
       logoutOnUnauthorized();
-    } else if (!error.config?.skipErrorToast) {
+    } else if (!isRestrictedProfile && !error.config?.skipErrorToast) {
       showToast(getAxiosErrorMessage(error), 'error');
     }
 

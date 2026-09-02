@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import FavoriteButton from '@/components/FavoriteButton';
 import PersonAvatar from '@/components/PersonAvatar';
 import type { BuyerFavor } from '@/app/buyer/store/buyerFavorsTypes';
 
@@ -90,31 +91,14 @@ export default function FavorListingCard({
           />
         </div>
 
-        <button
-          onClick={e => { e.stopPropagation(); if (!pending) onToggleLike(favor); }}
-          disabled={pending}
-          aria-label={liked ? 'Remove from favorites' : 'Save to favorites'}
-          style={{
-            position: 'absolute', top: '20px', right: '20px',
-            width: '34px', height: '34px', borderRadius: '50%',
-            background: liked ? 'rgba(244,63,94,0.88)' : 'rgba(16,24,40,0.42)',
-            border: 'none', cursor: pending ? 'default' : 'pointer',
-            opacity: pending ? 0.7 : 1,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'blur(4px)',
-            transition: 'background 0.15s ease',
+        <FavoriteButton
+          liked={liked}
+          pending={pending}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (!pending) onToggleLike(favor);
           }}
-          onMouseEnter={e => { if (!liked) (e.currentTarget as HTMLElement).style.background = 'rgba(16,24,40,0.65)'; }}
-          onMouseLeave={e => { if (!liked) (e.currentTarget as HTMLElement).style.background = 'rgba(16,24,40,0.42)'; }}
-        >
-          <svg viewBox="0 0 24 24" width="15" height="15">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-              stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              fill={liked ? '#ffffff' : 'none'}
-              style={{ transition: 'fill 0.15s ease' }}
-            />
-          </svg>
-        </button>
+        />
       </div>
 
       <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', flex: 1, gap: '10px' }}>

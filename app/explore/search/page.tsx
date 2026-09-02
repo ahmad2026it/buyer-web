@@ -5,12 +5,18 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FiltersModal from '@/components/FiltersModal';
 import AuthGateModal from '@/components/AuthGateModal';
-import { getFavorites, toggleFavorite, type FavorCard } from '@/utils/favorites';
+import { type FavorCard } from '@/utils/favorites';
 import { useGetBuyerCategoriesQuery } from '@/app/buyer/store/buyerCategoriesAPI';
-import { useGetBuyerFavorsQuery } from '@/app/buyer/store/buyerFavorsAPI';
+import {
+  useGetBuyerFavorsQuery,
+  useMarkBuyerFavoriteMutation,
+  useUnmarkBuyerFavoriteMutation,
+} from '@/app/buyer/store/buyerFavorsAPI';
+import { useAppSelector } from '@/store/hooks';
 import type { BuyerCategory } from '@/app/buyer/store/buyerCategoriesTypes';
 import type { BuyerFavor } from '@/app/buyer/store/buyerFavorsTypes';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
+import FavoriteButton from '@/components/FavoriteButton';
 import PersonAvatar from '@/components/PersonAvatar';
 import {
   BUYER_SELLERS_LIST_PARAMS,
@@ -76,6 +82,7 @@ function toFavorCard(favor: BuyerFavor, categories: BuyerCategory[]): FavorCard 
     category: displayCategory(favor.type, categories),
     sellerAvatar: pickFavorImage(favor.seller?.profileImageUrl, favor.seller?.profileImage),
     seller: favor.seller?.fullName || 'Seller',
+    isFavorite: Boolean(favor.isFavorite),
   };
 }
 
@@ -129,9 +136,9 @@ function SearchContent() {
   const [authOpen, setAuthOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [visibleCount, setVisible] = useState(PAGE_SELLERS);
-  const [likedFavors, setLiked] = useState<Set<string>>(new Set());
-  const [isLoggedIn, setLoggedIn] = useState(false);
+  const [pendingIds, setPendingIds] = useState<Set<number>>(new Set());
   const loaderRef = useRef<HTMLDivElement>(null);
+  const token = useAppSelector((state) => state.auth.token);
 
   const { data: categoriesData } = useGetBuyerCategoriesQuery({ search: '' });
   const categories = categoriesData?.data?.categories ?? [];
@@ -156,6 +163,8 @@ function SearchContent() {
     isFetching: favorsFetching,
     isError: favorsError,
   } = useGetBuyerFavorsQuery(favorsParams, { skip: skipFavors });
+  const [markFavorite] = useMarkBuyerFavoriteMutation();
+  const [unmarkFavorite] = useUnmarkBuyerFavoriteMutation();
 
   const skipSellers = searchType !== 'sellers';
   const {
@@ -168,14 +177,6 @@ function SearchContent() {
   const pagination = favorsData?.data?.pagination;
   const favorCards = apiFavors.map(f => toFavorCard(f, categories));
   const filtersActive = extraFiltersActive(appliedFilters);
-
-  useEffect(() => {
-    setLoggedIn(localStorage.getItem('whoCan_loggedIn') === 'true');
-    setLiked(new Set(getFavorites().map(f => f.id)));
-    const sync = () => setLiked(new Set(getFavorites().map(f => f.id)));
-    window.addEventListener('whoCan_favoritesChanged', sync);
-    return () => window.removeEventListener('whoCan_favoritesChanged', sync);
-  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -252,10 +253,30 @@ function SearchContent() {
   const hasMore = searchType === 'sellers' ? visibleCount < sortedSellers.length : favorsHasMore;
   const totalCount = searchType === 'sellers' ? sortedSellers.length : (pagination?.total ?? favorCards.length);
 
-  const toggleLike = (id: string) => {
-    if (!isLoggedIn) { setAuthOpen(true); return; }
-    const favor = favorCards.find(f => f.id === id);
-    if (favor) toggleFavorite(favor);
+  const toggleLike = async (id: string) => {
+    if (!token) {
+      setAuthOpen(true);
+      return;
+    }
+    const favor = apiFavors.find((item) => String(item.id) === id);
+    if (!favor || pendingIds.has(favor.id)) return;
+
+    setPendingIds((prev) => new Set(prev).add(favor.id));
+    try {
+      if (favor.isFavorite) {
+        await unmarkFavorite(favor.id).unwrap();
+      } else {
+        await markFavorite(favor.id).unwrap();
+      }
+    } catch {
+      // axios interceptor already toasts API errors
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(favor.id);
+        return next;
+      });
+    }
   };
 
   const catList = activeCategory !== 'All' ? [activeCategory] : [];
@@ -277,7 +298,12 @@ function SearchContent() {
           onApply={handleApplyFilters}
         />
       )}
-      {authOpen && <AuthGateModal onClose={() => setAuthOpen(false)} />}
+      {authOpen && (
+        <AuthGateModal
+          onClose={() => setAuthOpen(false)}
+          message="Log in to save this favor to your favorites."
+        />
+      )}
 
       <main style={{ minHeight: '100vh', background: '#FAFAFA', paddingTop: '88px' }}>
 
@@ -444,7 +470,8 @@ function SearchContent() {
               <div className={colCount >= 4 ? 'rs-grid-4' : 'rs-grid-3'} style={{ display: 'grid', gridTemplateColumns: `repeat(${colCount}, 1fr)`, gap: '24px' }}>
                 {searchType !== 'sellers'
                   ? (visibleItems as FavorCard[]).map(favor => {
-                      const liked = likedFavors.has(favor.id);
+                      const liked = Boolean(favor.isFavorite);
+                      const pending = pendingIds.has(Number(favor.id));
                       return (
                         <div key={favor.id}
                           onClick={() => router.push(`/favor/${favor.id}`)}
@@ -457,27 +484,14 @@ function SearchContent() {
                             <div style={{ height: '200px', borderRadius: '14px', overflow: 'hidden' }}>
                               <FavorImage src={favor.image} alt={favor.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             </div>
-                            {/* Heart — top-right */}
-                            <button
-                              onClick={e => { e.stopPropagation(); toggleLike(favor.id); }}
-                              aria-label={liked ? 'Remove from favorites' : 'Save to favorites'}
-                              style={{
-                                position: 'absolute', top: '20px', right: '20px',
-                                width: '34px', height: '34px', borderRadius: '50%',
-                                background: liked ? 'rgba(244,63,94,0.88)' : 'rgba(16,24,40,0.42)',
-                                border: 'none', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                backdropFilter: 'blur(4px)', transition: 'background 0.15s',
+                            <FavoriteButton
+                              liked={liked}
+                              pending={pending}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void toggleLike(favor.id);
                               }}
-                              onMouseEnter={e => { if (!liked) (e.currentTarget as HTMLElement).style.background = 'rgba(16,24,40,0.65)'; }}
-                              onMouseLeave={e => { if (!liked) (e.currentTarget as HTMLElement).style.background = 'rgba(16,24,40,0.42)'; }}
-                            >
-                              <svg viewBox="0 0 24 24" width="15" height="15">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                                  stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                                  fill={liked ? '#ffffff' : 'none'} style={{ transition: 'fill 0.15s' }} />
-                              </svg>
-                            </button>
+                            />
                           </div>
 
                           {/* Card body — new hierarchy */}

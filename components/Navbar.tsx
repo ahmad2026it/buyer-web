@@ -1027,7 +1027,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#FEC84B'; }}>
                 Get App
               </a>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: GRAD, borderRadius: PILL, padding: '6px 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: GRAD, borderRadius: PILL, padding: '6px 10px', overflow: 'visible' }}>
 
               {/* Favorites heart */}
               <button className="nav-hide-sm" aria-label="Favorites" onClick={() => router.push('/favorites')}
@@ -1249,13 +1249,19 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
               </div>
 
               {/* Profile avatar */}
-              <div ref={profileRef} style={{ position: 'relative' }}>
-                <button onClick={() => { setProfileOpen(o => !o); setNotifOpen(false); setLocOpen(false); }}
-                  style={{ width: '36px', height: '36px', borderRadius: PILL, border: profileOpen ? '2.5px solid #ffffff' : '2px solid rgba(255,255,255,0.4)', cursor: 'pointer', overflow: 'hidden', padding: 0, transition: 'border 0.15s', flexShrink: 0, position: 'relative' }}>
-                  <img src={avatarSrc} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}/>
-                  {/* Online dot */}
-                  <span style={{ position: 'absolute', bottom: '1px', right: '1px', width: '9px', height: '9px', borderRadius: '50%', background: '#22C55E', border: '1.5px solid #fff' }}/>
+              <div ref={profileRef} style={{ position: 'relative', width: '36px', height: '36px', flexShrink: 0, overflow: 'visible' }}>
+                <button
+                  type="button"
+                  aria-label="Open profile menu"
+                  onClick={() => { setProfileOpen(o => !o); setNotifOpen(false); setLocOpen(false); }}
+                  style={{ width: '36px', height: '36px', borderRadius: PILL, border: profileOpen ? '2.5px solid #ffffff' : '2px solid rgba(255,255,255,0.4)', cursor: 'pointer', overflow: 'hidden', padding: 0, transition: 'border 0.15s', display: 'block', background: 'transparent' }}
+                >
+                  <img src={avatarSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}/>
                 </button>
+                <span
+                  aria-hidden="true"
+                  style={{ position: 'absolute', bottom: '-1px', right: '-1px', width: '10px', height: '10px', borderRadius: '50%', background: '#22C55E', border: '1.5px solid #fff', zIndex: 2, pointerEvents: 'none', boxSizing: 'border-box' }}
+                />
 
                 {/* Profile dropdown — matches reference */}
                 {profileOpen && (
@@ -1264,9 +1270,9 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
 
                     {/* User info */}
                     <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <img src={avatarSrc} alt="Profile" style={{ width: '44px', height: '44px', borderRadius: PILL, objectFit: 'cover' }}/>
-                        <span style={{ position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', background: '#22C55E', border: '2px solid #fff' }}/>
+                      <div style={{ position: 'relative', flexShrink: 0, overflow: 'visible' }}>
+                        <img src={avatarSrc} alt="" style={{ width: '44px', height: '44px', borderRadius: PILL, objectFit: 'cover', display: 'block' }}/>
+                        <span aria-hidden="true" style={{ position: 'absolute', bottom: '-1px', right: '-1px', width: '12px', height: '12px', borderRadius: '50%', background: '#22C55E', border: '2px solid #fff', zIndex: 1, boxSizing: 'border-box' }}/>
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: '14px', color: '#101828', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</p>

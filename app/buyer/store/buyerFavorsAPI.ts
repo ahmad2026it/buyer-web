@@ -35,6 +35,49 @@ const compactParams = (params: GetBuyerFavorsParams) => {
   return out;
 };
 
+type FavoriteQueryPatch = { undo: () => void };
+
+function patchFavorFavoriteFlag(
+  dispatch: (action: unknown) => FavoriteQueryPatch,
+  getState: () => unknown,
+  favorId: number,
+  isFavorite: boolean,
+): FavoriteQueryPatch[] {
+  const patches: FavoriteQueryPatch[] = [
+    dispatch(
+      buyerFavorsAPI.util.updateQueryData(
+        "getBuyerFavorById",
+        favorId,
+        (draft) => {
+          if (draft.data?.favor) draft.data.favor.isFavorite = isFavorite;
+        },
+      ),
+    ),
+  ];
+
+  const cachedArgs = buyerFavorsAPI.util.selectCachedArgsForQuery(
+    getState() as never,
+    "getBuyerFavors",
+  );
+
+  for (const args of cachedArgs) {
+    patches.push(
+      dispatch(
+        buyerFavorsAPI.util.updateQueryData(
+          "getBuyerFavors",
+          args,
+          (draft) => {
+            const favor = draft.data?.favors.find((item) => item.id === favorId);
+            if (favor) favor.isFavorite = isFavorite;
+          },
+        ),
+      ),
+    );
+  }
+
+  return patches;
+}
+
 export const buyerFavorsAPI = createApi({
   reducerPath: "buyerFavorsAPI",
   baseQuery: axiosBaseQuery(),
@@ -139,20 +182,12 @@ export const buyerFavorsAPI = createApi({
         method: "POST",
         body: { favor_id: favorId },
       }),
-      async onQueryStarted(favorId, { dispatch, queryFulfilled }) {
-        const detailPatch = dispatch(
-          buyerFavorsAPI.util.updateQueryData(
-            "getBuyerFavorById",
-            favorId,
-            (draft) => {
-              if (draft.data?.favor) draft.data.favor.isFavorite = true;
-            },
-          ),
-        );
+      async onQueryStarted(favorId, { dispatch, getState, queryFulfilled }) {
+        const patches = patchFavorFavoriteFlag(dispatch, getState, favorId, true);
         try {
           await queryFulfilled;
         } catch {
-          detailPatch.undo();
+          patches.forEach((patch) => patch.undo());
         }
       },
       invalidatesTags: (_result, _error, favorId) => [
@@ -167,16 +202,8 @@ export const buyerFavorsAPI = createApi({
         method: "POST",
         body: { favor_id: favorId },
       }),
-      async onQueryStarted(favorId, { dispatch, queryFulfilled }) {
-        const detailPatch = dispatch(
-          buyerFavorsAPI.util.updateQueryData(
-            "getBuyerFavorById",
-            favorId,
-            (draft) => {
-              if (draft.data?.favor) draft.data.favor.isFavorite = false;
-            },
-          ),
-        );
+      async onQueryStarted(favorId, { dispatch, getState, queryFulfilled }) {
+        const patches = patchFavorFavoriteFlag(dispatch, getState, favorId, false);
         const listPatch = dispatch(
           buyerFavorsAPI.util.updateQueryData(
             "getBuyerFavorites",
@@ -198,7 +225,7 @@ export const buyerFavorsAPI = createApi({
         try {
           await queryFulfilled;
         } catch {
-          detailPatch.undo();
+          patches.forEach((patch) => patch.undo());
           listPatch.undo();
         }
       },

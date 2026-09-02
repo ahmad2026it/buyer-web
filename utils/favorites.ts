@@ -9,6 +9,7 @@ export type FavorCard = {
   category: string;
   sellerAvatar: string | null;
   seller: string;
+  isFavorite?: boolean;
 };
 
 const KEY = 'whoCan_favorites';

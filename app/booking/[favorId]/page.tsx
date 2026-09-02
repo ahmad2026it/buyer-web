@@ -19,9 +19,11 @@ import {
   useGetBuyerStripeCardsQuery,
 } from '@/app/buyer/store/buyerStripeAPI';
 import { useAppSelector } from '@/store/hooks';
+import AccountRestrictedPanel from '@/components/AccountRestrictedPanel';
 import { getAxiosErrorMessage } from '@/lib/axios';
 import { showSuccess } from '@/lib/swal';
 import { showToast } from '@/lib/toast';
+import { useAccountRestriction } from '@/lib/useAccountRestriction';
 import FavorImage, { pickFavorImage } from '@/components/FavorImage';
 
 const AddPaymentMethodModal = dynamic(
@@ -309,6 +311,8 @@ export default function BookingPage() {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const token = useAppSelector((state) => state.auth.token);
   const user = useAppSelector((state) => state.auth.user);
+  const { isInactive, message: inactiveMessage, guardActiveAccount } =
+    useAccountRestriction();
   const [createSetupIntent, { isLoading: isCreatingIntent }] = useCreateStripeSetupIntentMutation();
   const [createBooking] = useCreateBuyerBookingMutation();
   const [confirmPayment] = useConfirmBuyerBookingPaymentMutation();
@@ -476,6 +480,7 @@ export default function BookingPage() {
       setAuthOpen(true);
       return;
     }
+    if (!guardActiveAccount()) return;
     if (isPlacing) return;
     if (skipFavor) {
       showToast('Invalid favor. Please go back and try again.', 'error');
@@ -541,6 +546,26 @@ export default function BookingPage() {
   const bookingTerms = termsResponse?.data;
   const termsPoints = bookingTerms?.points?.filter(Boolean) ?? [];
   const canAcceptTerms = Boolean(bookingTerms) && termsPoints.length > 0 && !isLoadingTerms && !isTermsError;
+
+  if (isInactive) {
+    return (
+      <>
+        <Navbar />
+        <main style={{ minHeight: '100vh', background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 80 }}>
+          <AccountRestrictedPanel
+            message={inactiveMessage}
+            onBack={() => {
+              if (skipFavor) {
+                router.push('/');
+                return;
+              }
+              router.push(`/favor/${favorId}`);
+            }}
+          />
+        </main>
+      </>
+    );
+  }
 
   /* ── Step 0: Disclaimer ── */
   if (step === 0) return (

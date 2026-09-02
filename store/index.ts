@@ -49,7 +49,7 @@ const storage =
 const authPersistConfig = {
   key: 'auth',
   storage,
-  whitelist: ['user', 'token', 'isAuthenticated'] as string[],
+  whitelist: ['user', 'token', 'isAuthenticated', 'accountStatus'] as string[],
 };
 
 const appReducer = combineReducers({

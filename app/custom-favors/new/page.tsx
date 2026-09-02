@@ -14,7 +14,9 @@ import { useGetBuyerCategoriesQuery } from '@/app/buyer/store/buyerCategoriesAPI
 import { useGetBuyerFavorsQuery } from '@/app/buyer/store/buyerFavorsAPI';
 import { useGetBuyerLocationsQuery } from '@/app/buyer/store/buyerLocationsAPI';
 import { useAppSelector } from '@/store/hooks';
+import AccountRestrictedPanel from '@/components/AccountRestrictedPanel';
 import { showToast } from '@/lib/toast';
+import { useAccountRestriction } from '@/lib/useAccountRestriction';
 import {
   formatCustomFavorBudget,
   parseCustomFavorAddOns,
@@ -251,6 +253,7 @@ export default function NewCustomFavorPage() {
 
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const token = useAppSelector((state) => state.auth.token);
+  const { isInactive, message: inactiveMessage, guardActiveAccount } = useAccountRestriction();
   const [createCustomFavor, { isLoading: isCreating }] = useCreateBuyerCustomFavorMutation();
   const [updateCustomFavor, { isLoading: isUpdating }] = useUpdateBuyerCustomFavorMutation();
   const isSaving = isCreating || isUpdating;
@@ -488,6 +491,7 @@ export default function NewCustomFavorPage() {
       setAuthOpen(true);
       return;
     }
+    if (!isEditing && !guardActiveAccount()) return;
     if (isSaving) return;
     if (!typeValue) {
       showToast('Please select a service type.', 'error');
@@ -575,7 +579,11 @@ export default function NewCustomFavorPage() {
           </button>
           {!isEditing && (
             <button
-              onClick={() => { setDone(false); resetForm(); }}
+              onClick={() => {
+                if (!guardActiveAccount()) return;
+                setDone(false);
+                resetForm();
+              }}
               style={{ width: '100%', fontFamily: FONT, fontWeight: 600, fontSize: 14, color: '#667085', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: PILL, padding: 13, cursor: 'pointer', transition: 'background 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; }}
@@ -594,6 +602,21 @@ export default function NewCustomFavorPage() {
       <Footer />
     </>
   );
+
+  if (!isEditing && isInactive) {
+    return (
+      <>
+        <Navbar />
+        <main style={{ minHeight: '100vh', background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 80 }}>
+          <AccountRestrictedPanel
+            message={inactiveMessage}
+            onBack={() => router.push('/custom-favors')}
+          />
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   /* ── Step progress indicator ── */
   const Progress = () => (

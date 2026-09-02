@@ -25,6 +25,7 @@ import {
 import { useAppSelector } from '@/store/hooks';
 import { confirmDelete } from '@/lib/swal';
 import { showToast } from '@/lib/toast';
+import { useAccountRestriction } from '@/lib/useAccountRestriction';
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
@@ -289,6 +290,7 @@ export default function CustomFavorsPage() {
   });
   const [authOpen, setAuthOpen] = useState(false);
   const token = useAppSelector((state) => state.auth.token);
+  const { guardActiveAccount } = useAccountRestriction();
   const skip = !token;
   const page = pages[tab];
   const [deleteCustomFavor] = useDeleteBuyerCustomFavorMutation();
@@ -319,6 +321,7 @@ export default function CustomFavorsPage() {
       setAuthOpen(true);
       return;
     }
+    if (!guardActiveAccount()) return;
     router.push('/custom-favors/new');
   };
 

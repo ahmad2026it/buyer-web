@@ -11,6 +11,7 @@ import {
 } from "@/app/buyer/store/buyerFavorsAPI";
 import type { BuyerFavor } from "@/app/buyer/store/buyerFavorsTypes";
 import FavorImage, { pickFavorImage } from "@/components/FavorImage";
+import FavoriteButton from "@/components/FavoriteButton";
 import PersonAvatar from "@/components/PersonAvatar";
 import { useAppSelector } from "@/store/hooks";
 import { selectAuthToken } from "@/app/auth/store/authSlice";
@@ -88,51 +89,15 @@ function FavoriteCard({
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         </div>
-        {/* Heart button — always filled on favorites page */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
+        <FavoriteButton
+          liked
+          pending={removing}
+          title="Remove from favorites"
+          onClick={(event) => {
+            event.stopPropagation();
             if (!removing) onUnheart();
           }}
-          disabled={removing}
-          title="Remove from favorites"
-          style={{
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            width: "34px",
-            height: "34px",
-            borderRadius: "50%",
-            background: "rgba(244,63,94,0.88)",
-            border: "none",
-            cursor: removing ? "default" : "pointer",
-            opacity: removing ? 0.7 : 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backdropFilter: "blur(4px)",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background =
-              "rgba(244,63,94,1)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background =
-              "rgba(244,63,94,0.88)";
-          }}
-        >
-          <svg viewBox="0 0 24 24" width="15" height="15">
-            <path
-              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-              stroke="#ffffff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="#ffffff"
-            />
-          </svg>
-        </button>
+        />
       </div>
 
       {/* Card body */}

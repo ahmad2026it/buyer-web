@@ -18,8 +18,10 @@ import FavorImage, {
   pickFavorImage,
 } from "@/components/FavorImage";
 import PersonAvatar from "@/components/PersonAvatar";
+import FavoriteButton from "@/components/FavoriteButton";
 import { useAppSelector } from "@/store/hooks";
 import { showToast } from "@/lib/toast";
+import { useAccountRestriction } from "@/lib/useAccountRestriction";
 
 const GRAD = "linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)";
 
@@ -145,6 +147,8 @@ export default function FavorDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const token = useAppSelector((state) => state.auth.token);
+  const { isInactive, message: inactiveMessage, guardActiveAccount } =
+    useAccountRestriction();
   const favorId = Number(params.id);
   const skip = !Number.isFinite(favorId) || favorId <= 0;
 
@@ -225,7 +229,12 @@ export default function FavorDetailPage() {
   };
 
   const handleRequestBooking = () => {
-    if (!favor || !canRequestBooking) return;
+    if (!favor) return;
+    if (!token) {
+      openAuthGate("Log in to request a booking.");
+      return;
+    }
+    if (!guardActiveAccount()) return;
     router.push(`/booking/${favor.id}`);
   };
 
@@ -688,38 +697,15 @@ export default function FavorDetailPage() {
                         paddingTop: "4px",
                       }}
                     >
-                      <button
+                      <FavoriteButton
+                        liked={liked}
+                        pending={favoriteBusy}
+                        variant="surface"
+                        size={40}
                         onClick={() => {
                           void handleToggleFavorite();
                         }}
-                        disabled={favoriteBusy}
-                        aria-label={liked ? "Remove from saved" : "Save favor"}
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "9999px",
-                          background: liked ? "#FFF1F3" : "#F9FAFB",
-                          border: `1.5px solid ${liked ? "#F43F5E" : "#EAECF0"}`,
-                          cursor: favoriteBusy ? "default" : "pointer",
-                          opacity: favoriteBusy ? 0.7 : 1,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transition: "all 0.15s",
-                        }}
-                      >
-                        <svg viewBox="0 0 24 24" width="18" height="18">
-                          <path
-                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                            stroke={liked ? "#F43F5E" : "#98A2B3"}
-                            strokeWidth="2"
-                            fill={liked ? "#F43F5E" : "none"}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            style={{ transition: "all 0.15s" }}
-                          />
-                        </svg>
-                      </button>
+                      />
                       <button
                         type="button"
                         onClick={() => {
@@ -1790,6 +1776,20 @@ export default function FavorDetailPage() {
                           </button>
                         </p>
                       )}
+                      {canRequestBooking && isInactive && (
+                        <p
+                          style={{
+                            fontFamily: "Poppins,sans-serif",
+                            fontSize: "13px",
+                            color: "#B42318",
+                            textAlign: "center",
+                            margin: "12px 0 0",
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {inactiveMessage}
+                        </p>
+                      )}
                     </div>
 
                     <div
@@ -2166,6 +2166,21 @@ export default function FavorDetailPage() {
                       Log in
                     </button>{" "}
                     to request a booking
+                  </p>
+                )}
+                {canRequestBooking && isInactive && (
+                  <p
+                    style={{
+                      fontFamily: "Poppins,sans-serif",
+                      fontSize: "11px",
+                      color: "#B42318",
+                      margin: 0,
+                      lineHeight: 1.4,
+                      textAlign: "right",
+                      maxWidth: 220,
+                    }}
+                  >
+                    {inactiveMessage}
                   </p>
                 )}
               </div>

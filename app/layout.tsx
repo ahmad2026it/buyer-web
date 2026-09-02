@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ScrollAnimator from "@/components/ScrollAnimator";
 import Providers from "@/components/Providers";
+import AuthProvider from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
   title: "WhoCan — Find Handymen at Your Doorstep",
@@ -40,8 +41,10 @@ export default function RootLayout({
       </head>
       <body>
         <Providers>
-          <ScrollAnimator />
-          {children}
+          <AuthProvider>
+            <ScrollAnimator />
+            {children}
+          </AuthProvider>
         </Providers>
       </body>
     </html>
