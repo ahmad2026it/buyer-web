@@ -99,6 +99,7 @@ export default function AppDownloadSection() {
         background: '#ffffff',
         position: 'relative',
         overflow: 'hidden',
+        scrollMarginTop: '96px',
       }}
     >
       {/* Background decoration */}

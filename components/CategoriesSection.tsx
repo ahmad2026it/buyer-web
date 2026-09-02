@@ -4,26 +4,6 @@ import { useGetBuyerCategoriesQuery, useGetBuyerSubCategoriesQuery } from '@/app
 import type { BuyerCategory } from '@/app/buyer/store/buyerCategoriesTypes';
 import { ArrowRightIcon } from './Icons';
 
-const S1 = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=220&h=220&fit=crop&auto=format';
-const S2 = 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=220&h=220&fit=crop&auto=format';
-const S3 = 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=220&h=220&fit=crop&auto=format';
-const S4 = 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=220&h=220&fit=crop&auto=format';
-
-const LIFESTYLE = [
-  { src: S1, alt: 'Cleaning service' },
-  { src: S2, alt: 'Electrical work' },
-  { src: S3, alt: 'Gardening service' },
-  { src: S4, alt: 'Plumbing service' },
-];
-
-type AvatarItem = { type: 'avatar'; src: string; alt: string };
-type PillItem = {
-  type: 'pill';
-  category: BuyerCategory;
-  iconBg: string;
-};
-type RowItem = AvatarItem | PillItem;
-
 const SIZE = 110;
 const GAP = 16;
 
@@ -41,35 +21,10 @@ function formatSubCount(count: number): string {
   return count === 1 ? '1 sub-category' : `${count} sub-categories`;
 }
 
-function toPill(category: BuyerCategory): PillItem {
-  return {
-    type: 'pill',
-    category,
-    iconBg: withAlpha(category.colorCode || '#A54AFF', 0.14),
-  };
-}
-
-function interleave(pills: PillItem[], avatarOffset: number): RowItem[] {
-  const items: RowItem[] = [];
-  pills.forEach((pill, i) => {
-    items.push(pill);
-    const photo = LIFESTYLE[(avatarOffset + i) % LIFESTYLE.length];
-    items.push({ type: 'avatar', src: photo.src, alt: photo.alt });
-  });
-  return items;
-}
-
-function AvatarEl({ src, alt }: { src: string; alt: string }) {
-  return (
-    <div style={{ width: SIZE, height: SIZE, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '3px solid rgba(165,74,255,0.25)', boxShadow: '0 4px 16px rgba(165,74,255,0.2)' }}>
-      <img src={src} alt={alt} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
-    </div>
-  );
-}
-
-function PillEl({ category, iconBg, onClick }: { category: BuyerCategory; iconBg: string; onClick?: () => void }) {
+function PillEl({ category, onClick }: { category: BuyerCategory; onClick?: () => void }) {
   const { data } = useGetBuyerSubCategoriesQuery(category.id);
   const count = data?.data?.subCategories?.length;
+  const iconBg = withAlpha(category.colorCode || '#A54AFF', 0.14);
 
   return (
     <div
@@ -112,11 +67,6 @@ function SkeletonPill() {
   );
 }
 
-function renderItem(item: RowItem, key: string, onPillClick?: (label: string) => void) {
-  if (item.type === 'avatar') return <AvatarEl key={key} src={item.src} alt={item.alt} />;
-  return <PillEl key={key} category={item.category} iconBg={item.iconBg} onClick={() => onPillClick?.(item.category.name)} />;
-}
-
 export default function CategoriesSection() {
   const router = useRouter();
   const { data, isLoading, isError } = useGetBuyerCategoriesQuery({ search: '' });
@@ -125,8 +75,8 @@ export default function CategoriesSection() {
   const goTo = (label: string) => router.push(`/explore/search?category=${encodeURIComponent(label)}`);
 
   const mid = Math.ceil(categories.length / 2);
-  const row1 = interleave(categories.slice(0, mid).map(toPill), 0);
-  const row2 = interleave(categories.slice(mid).map(toPill), 2);
+  const row1 = categories.slice(0, mid);
+  const row2 = categories.slice(mid);
   const doubled1 = row1.length ? [...row1, ...row1] : [];
   const doubled2 = row2.length ? [...row2, ...row2] : [];
 
@@ -185,7 +135,9 @@ export default function CategoriesSection() {
               onMouseEnter={pause}
               onMouseLeave={resume}
             >
-              {doubled1.map((item, i) => renderItem(item, `r1-${i}`, goTo))}
+              {doubled1.map((cat, i) => (
+                <PillEl key={`r1-${cat.id}-${i}`} category={cat} onClick={() => goTo(cat.name)} />
+              ))}
             </div>
           </div>
 
@@ -196,7 +148,9 @@ export default function CategoriesSection() {
                 onMouseEnter={pause}
                 onMouseLeave={resume}
               >
-                {doubled2.map((item, i) => renderItem(item, `r2-${i}`, goTo))}
+                {doubled2.map((cat, i) => (
+                  <PillEl key={`r2-${cat.id}-${i}`} category={cat} onClick={() => goTo(cat.name)} />
+                ))}
               </div>
             </div>
           )}

@@ -198,8 +198,9 @@ api.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
+    const status = error.response?.status;
     const isUnauthorized =
-      error.response?.status === 401 &&
+      (status === 401 || status === 403) &&
       !isPublicAuthRequest(error.config?.url) &&
       !isPublicLegalRequest(error.config?.url) &&
       !isChangePasswordCredentialError(error.config?.url, error.response?.data);

@@ -768,21 +768,31 @@ function LeftPanel() {
       >
         <WhoCanLogo size={120} />
       </div>
-      {/* Main illustration */}
-      <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+      {/* Main illustration — one column so image and copy share the same center */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "80%",
+          maxWidth: "360px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+        }}
+      >
         <img
           src={ILLUS}
           alt="Welcome illustration"
           style={{
-            width: "80%",
-            maxWidth: "360px",
+            width: "100%",
             height: "auto",
             objectFit: "cover",
             borderRadius: "28px",
             boxShadow: "0 32px 72px rgba(165,74,255,0.22)",
           }}
         />
-        <div style={{ marginTop: "32px" }}>
+        <div style={{ marginTop: "32px", width: "100%" }}>
           <h2
             style={{
               fontFamily: "Poppins,sans-serif",
@@ -790,6 +800,7 @@ function LeftPanel() {
               fontSize: "22px",
               color: "#6B21A8",
               marginBottom: "8px",
+              textWrap: "balance",
             }}
           >
             Find anyone. Anytime.
@@ -800,6 +811,7 @@ function LeftPanel() {
               fontSize: "14px",
               color: "#7C3AED",
               maxWidth: "280px",
+              margin: "0 auto",
               lineHeight: "1.6",
             }}
           >

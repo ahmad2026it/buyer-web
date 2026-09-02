@@ -162,6 +162,12 @@ export const authAPI = createApi({
         }),
       },
     ),
+    deactivateBuyerProfile: builder.mutation<AuthMessageResponse, void>({
+      query: () => ({
+        url: "/api/buyer/profile/deactivate",
+        method: "PUT",
+      }),
+    }),
   }),
 });
 
@@ -173,4 +179,5 @@ export const {
   useResetOtpMutation,
   useResetPasswordMutation,
   useChangePasswordMutation,
+  useDeactivateBuyerProfileMutation,
 } = authAPI;

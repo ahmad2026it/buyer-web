@@ -121,8 +121,9 @@ export default function HeroSection() {
         >
           {/* Left — Copy */}
           <div>
-            {/* Badge */}
-            <div
+            {/* Badge — jumps to app download section */}
+            <a
+              href="#app"
               className="hero-text-1"
               style={{
                 display: 'inline-flex',
@@ -133,6 +134,19 @@ export default function HeroSection() {
                 borderRadius: '9999px',
                 padding: '6px 14px 6px 8px',
                 marginBottom: '24px',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                transition: 'border-color 0.2s ease, background 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = 'rgba(165, 74, 255, 0.55)';
+                el.style.background = 'rgba(165, 74, 255, 0.22)';
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = 'rgba(165, 74, 255, 0.3)';
+                el.style.background = 'rgba(165, 74, 255, 0.15)';
               }}
             >
               <span
@@ -158,7 +172,7 @@ export default function HeroSection() {
               >
                 Download the App Today
               </span>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <path
                   d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5"
                   stroke="rgba(165, 74, 255, 0.9)"
@@ -167,7 +181,7 @@ export default function HeroSection() {
                   strokeLinejoin="round"
                 />
               </svg>
-            </div>
+            </a>
 
             {/* H1 */}
             <h1

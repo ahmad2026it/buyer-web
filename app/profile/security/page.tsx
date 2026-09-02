@@ -4,12 +4,23 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { useAppSelector } from '@/store/hooks';
-import { useChangePasswordMutation } from '@/app/auth/store/authAPI';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import {
+  useChangePasswordMutation,
+  useDeactivateBuyerProfileMutation,
+} from '@/app/auth/store/authAPI';
+import { logout } from '@/app/auth/store/authSlice';
 import type { AuthApiError } from '@/app/auth/store/authTypes';
 import { getAxiosErrorDetails } from '@/lib/axios';
 import { showToast } from '@/lib/toast';
-import { showSuccess } from '@/lib/swal';
+import { confirmAction, showSuccess } from '@/lib/swal';
+
+type SecurityTab = 'password' | 'setting';
+
+const TABS: { key: SecurityTab; label: string }[] = [
+  { key: 'password', label: 'Change password' },
+  { key: 'setting', label: 'Setting' },
+];
 
 const BRAND = '#A54AFF';
 const GRAD = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
@@ -223,9 +234,13 @@ function PasswordRules({ value }: { value: string }) {
 
 export default function SecurityPage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [changePassword, { isLoading }] = useChangePasswordMutation();
+  const [deactivateBuyerProfile, { isLoading: isDeactivating }] =
+    useDeactivateBuyerProfileMutation();
+  const [tab, setTab] = useState<SecurityTab>('password');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -306,14 +321,35 @@ export default function SecurityPage() {
     }
   };
 
+  const handleDeactivate = async () => {
+    const confirmed = await confirmAction({
+      title: 'Deactivate account?',
+      confirmText: 'Deactivate',
+      text: 'Your profile will be deactivated and you will be signed out. You can contact support if you want to restore access later.',
+    });
+    if (!confirmed) return;
+
+    try {
+      const result = await deactivateBuyerProfile().unwrap();
+      await showSuccess(
+        'Account deactivated',
+        result.message || 'Your account has been deactivated.',
+      );
+      dispatch(logout());
+      router.replace('/auth/login');
+    } catch {
+      // API errors are shown by the axios interceptor toast
+    }
+  };
+
   if (!user) return null;
 
   return (
     <>
       <Navbar />
       <main className="app-page" style={{ minHeight: '100dvh', background: '#F9FAFB' }}>
-        <div className="app-page-band" style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: '32px' }}>
-          <div className="app-page-inner" style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px' }}>
+        <div className="app-page-band" style={{ background: '#fff', borderBottom: '1px solid #EAECF0', paddingTop: '104px', paddingBottom: 0 }}>
+          <div className="app-page-inner" style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px 24px' }}>
             <a
               href="/"
               style={{
@@ -344,12 +380,49 @@ export default function SecurityPage() {
               Security
             </h1>
             <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '14px', color: '#667085', marginTop: '8px' }}>
-              Update your password to keep your account secure.
+              {tab === 'password'
+                ? 'Update your password to keep your account secure.'
+                : 'Manage your account settings.'}
             </p>
+          </div>
+          <div
+            className="app-page-inner app-tabs"
+            role="tablist"
+            aria-label="Security sections"
+            style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px', display: 'flex' }}
+          >
+            {TABS.map((item) => {
+              const isActive = tab === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setTab(item.key)}
+                  style={{
+                    fontFamily: 'Poppins,sans-serif',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    color: isActive ? BRAND : '#667085',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: `2.5px solid ${isActive ? BRAND : 'transparent'}`,
+                    padding: '14px 20px',
+                    cursor: 'pointer',
+                    transition: 'color 0.15s',
+                    flexShrink: 0,
+                  }}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <div className="app-page-body" style={{ maxWidth: '720px', margin: '0 auto', padding: '40px 24px 80px' }}>
+          {tab === 'password' && (
           <form
             onSubmit={(e) => {
               void handleSubmit(e);
@@ -488,6 +561,85 @@ export default function SecurityPage() {
               </button>
             </div>
           </form>
+          )}
+
+          {tab === 'setting' && (
+            <div
+              style={{
+                background: '#fff',
+                border: '1px solid #EAECF0',
+                borderRadius: '20px',
+                overflow: 'hidden',
+                boxShadow: '0 1px 4px rgba(16,24,40,0.05)',
+              }}
+            >
+              <div className="app-panel-pad" style={{ padding: '28px 32px', borderBottom: '1px solid #F2F4F7' }}>
+                <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '15px', color: '#101828', marginBottom: '4px' }}>
+                  Deactivate account
+                </p>
+                <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#667085' }}>
+                  Hide your profile and stop using WhoCan with this account.
+                </p>
+              </div>
+
+              <div className="app-panel-pad" style={{ padding: '28px 32px' }}>
+                <div
+                  style={{
+                    background: '#FEF3F2',
+                    border: '1px solid #FECDCA',
+                    borderRadius: '16px',
+                    padding: '16px 18px',
+                  }}
+                >
+                  <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: '14px', color: '#B42318', marginBottom: '6px' }}>
+                    This will sign you out
+                  </p>
+                  <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: '13px', color: '#B42318', lineHeight: 1.6 }}>
+                    Deactivating your account hides your profile from other users. You will need to contact support if you want to restore access later.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: '20px 32px',
+                  borderTop: '1px solid #F2F4F7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleDeactivate();
+                  }}
+                  disabled={isDeactivating}
+                  style={{
+                    fontFamily: 'Poppins,sans-serif',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    color: '#fff',
+                    background: isDeactivating ? '#FDA29B' : ERROR,
+                    border: 'none',
+                    borderRadius: PILL,
+                    padding: '11px 24px',
+                    cursor: isDeactivating ? 'wait' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(217,45,32,0.22)',
+                    transition: 'opacity 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.opacity = isDeactivating ? '1' : '0.9';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.opacity = '1';
+                  }}
+                >
+                  {isDeactivating ? 'Deactivating...' : 'Deactivate account'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
