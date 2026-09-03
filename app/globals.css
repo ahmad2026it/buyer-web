@@ -704,10 +704,6 @@ body.animate-ready [data-animate="scale"].in-view {
     flex-wrap: wrap;
   }
 
-  .auth-signup-cc-iso {
-    display: none;
-  }
-
   .rs-grid-3,
   .rs-grid-4,
   .rs-why-cards {

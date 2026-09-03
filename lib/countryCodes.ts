@@ -10,6 +10,10 @@ export function countryFlag(iso: string): string {
     .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 }
 
+export function countryFlagUrl(iso: string, width = 40): string {
+  return `https://flagcdn.com/w${width}/${iso.toLowerCase()}.png`;
+}
+
 export function getCountryByIso(iso: string): CountryDialCode | undefined {
   return COUNTRY_DIAL_CODES.find((country) => country.iso === iso);
 }

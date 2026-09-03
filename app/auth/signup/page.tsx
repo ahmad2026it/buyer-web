@@ -1,13 +1,9 @@
 "use client";
-import { Suspense, useState, useRef, useEffect, useMemo } from "react";
+import { Suspense, useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRegisterBuyerMutation } from "@/app/auth/store/authAPI";
 import { showSuccess } from "@/lib/swal";
-import {
-  COUNTRY_DIAL_CODES,
-  countryFlag,
-  getCountryByIso,
-} from "@/lib/countryCodes";
+import { countryFlagUrl } from "@/lib/countryCodes";
 
 const GRAD = "linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)";
 const BRAND = "#A54AFF";
@@ -224,207 +220,52 @@ function formatDobLabel(value: string) {
   return `${date.getDate()} ${CALENDAR_MONTHS[date.getMonth()].slice(0, 3)} ${date.getFullYear()}`;
 }
 
-function CountryCodeSelect({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (iso: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const containerRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
-  const selected = getCountryByIso(value) ?? COUNTRY_DIAL_CODES.find((c) => c.iso === "US")!;
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return COUNTRY_DIAL_CODES;
-    return COUNTRY_DIAL_CODES.filter(
-      (country) =>
-        country.name.toLowerCase().includes(q) ||
-        country.iso.toLowerCase().includes(q) ||
-        country.dial.includes(q) ||
-        country.dial.replace("+", "").includes(q.replace("+", "")),
-    );
-  }, [query]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-        setQuery("");
-      }
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, [open]);
-
-  useEffect(() => {
-    if (open) searchRef.current?.focus();
-  }, [open]);
-
+function CountryFlag({ iso, size = 18 }: { iso: string; size?: number }) {
   return (
-    <div ref={containerRef} style={{ position: "relative", flexShrink: 0 }}>
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
+    <img
+      src={countryFlagUrl(iso, 40)}
+      srcSet={`${countryFlagUrl(iso, 80)} 2x`}
+      alt=""
+      width={size}
+      height={Math.round((size * 3) / 4)}
+      style={{
+        display: "block",
+        width: size,
+        height: Math.round((size * 3) / 4),
+        objectFit: "cover",
+        borderRadius: 2,
+        flexShrink: 0,
+      }}
+    />
+  );
+}
+
+function CountryCodeBadge() {
+  return (
+    <div
+      aria-label="United States +1"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        padding: "12px 14px",
+        background: "#ffffff",
+        border: "1.5px solid #D0D5DD",
+        borderRadius: PILL,
+        flexShrink: 0,
+      }}
+    >
+      <CountryFlag iso="US" />
+      <span
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          padding: "12px 14px",
-          background: "#ffffff",
-          border: `1.5px solid ${open ? BRAND : "#D0D5DD"}`,
-          borderRadius: PILL,
-          cursor: "pointer",
-          boxShadow: open ? "0 0 0 4px rgba(165,74,255,0.12)" : "none",
-          transition: "border-color 0.15s, box-shadow 0.15s",
+          fontFamily: "Poppins,sans-serif",
+          fontSize: "14px",
+          color: "#344054",
+          whiteSpace: "nowrap",
         }}
       >
-        <span style={{ fontSize: "18px", lineHeight: 1 }}>
-          {countryFlag(selected.iso)}
-        </span>
-        <span
-          className="auth-signup-cc-text"
-          style={{
-            fontFamily: "Poppins,sans-serif",
-            fontSize: "14px",
-            color: "#344054",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <span className="auth-signup-cc-iso">{selected.iso} </span>
-          {selected.dial}
-        </span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M6 9l6 6 6-6"
-            stroke="#667085"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-
-      {open && (
-        <div
-          className="auth-dropdown"
-          style={{
-            position: "absolute",
-            top: "calc(100% + 6px)",
-            left: 0,
-            zIndex: 40,
-            background: "#ffffff",
-            border: "1px solid #EAECF0",
-            borderRadius: "16px",
-            boxShadow:
-              "0px 12px 16px -4px rgba(16,24,40,0.08), 0px 4px 6px -2px rgba(16,24,40,0.03)",
-            overflow: "hidden",
-          }}
-        >
-          <div style={{ padding: "10px 10px 6px" }}>
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search country"
-              style={{
-                width: "100%",
-                fontFamily: "Poppins,sans-serif",
-                fontSize: "13px",
-                color: "#101828",
-                background: "#F9FAFB",
-                border: "1px solid #E4E7EC",
-                borderRadius: "10px",
-                padding: "8px 12px",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-          <div
-            role="listbox"
-            style={{ maxHeight: "240px", overflowY: "auto", padding: "4px 0 8px" }}
-          >
-            {filtered.length === 0 && (
-              <p
-                style={{
-                  fontFamily: "Poppins,sans-serif",
-                  fontSize: "13px",
-                  color: "#667085",
-                  padding: "12px 16px",
-                  margin: 0,
-                }}
-              >
-                No countries found
-              </p>
-            )}
-            {filtered.map((country) => {
-              const isActive = country.iso === selected.iso;
-              return (
-                <button
-                  key={country.iso}
-                  type="button"
-                  role="option"
-                  aria-selected={isActive}
-                  onClick={() => {
-                    onChange(country.iso);
-                    setOpen(false);
-                    setQuery("");
-                  }}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    padding: "8px 14px",
-                    border: "none",
-                    background: isActive ? "#F4EBFF" : "transparent",
-                    cursor: "pointer",
-                    textAlign: "left",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.background = "#F9FAFB";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = isActive
-                      ? "#F4EBFF"
-                      : "transparent";
-                  }}
-                >
-                  <span style={{ fontSize: "18px", lineHeight: 1 }}>
-                    {countryFlag(country.iso)}
-                  </span>
-                  <span
-                    style={{
-                      flex: 1,
-                      fontFamily: "Poppins,sans-serif",
-                      fontSize: "13px",
-                      color: "#101828",
-                    }}
-                  >
-                    {country.name}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "Poppins,sans-serif",
-                      fontSize: "13px",
-                      color: "#667085",
-                    }}
-                  >
-                    {country.dial}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        +1
+      </span>
     </div>
   );
 }
@@ -984,7 +825,6 @@ function Step1({
 }) {
   const [name, setName] = useState(initial.fullName);
   const [email, setEmail] = useState(initial.email);
-  const [countryIso, setCountryIso] = useState(initial.countryIso);
   const [phone, setPhone] = useState(initial.phone);
   const [dob, setDob] = useState(initial.dateOfBirth);
   const [gender, setGender] = useState(initial.gender);
@@ -1009,12 +849,11 @@ function Step1({
       return;
     }
 
-    const country = getCountryByIso(countryIso) ?? COUNTRY_DIAL_CODES.find((c) => c.iso === "US")!;
     const national = phone.replace(/[^\d]/g, "").replace(/^0+/, "");
     const draft: Step1Draft = {
       fullName: name.trim(),
       email: email.trim(),
-      countryIso,
+      countryIso: "US",
       phone,
       dateOfBirth: dob.trim(),
       gender,
@@ -1025,7 +864,7 @@ function Step1({
     onNext(draft, {
       fullName: draft.fullName,
       email: draft.email,
-      phoneNumber: `${country.dial}${national}`,
+      phoneNumber: `+1${national}`,
       dateOfBirth: draft.dateOfBirth,
       gender,
       password,
@@ -1090,7 +929,7 @@ function Step1({
             Phone number
           </label>
           <div className="auth-signup-phone">
-            <CountryCodeSelect value={countryIso} onChange={setCountryIso} />
+            <CountryCodeBadge />
             <input
               type="tel"
               placeholder="Type here"
