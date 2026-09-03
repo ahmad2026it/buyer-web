@@ -93,21 +93,29 @@ function PillInput({
   placeholder,
   value,
   onChange,
+  id,
+  describedBy,
+  invalid,
 }: {
   label: string;
   type?: string;
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
+  id?: string;
+  describedBy?: string;
+  invalid?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
   const isPassword = type === "password";
   const inputType = isPassword ? (visible ? "text" : "password") : type;
+  const borderColor = invalid ? "#D92D20" : focused ? BRAND : "#D0D5DD";
 
   return (
     <div>
       <label
+        htmlFor={id}
         style={{
           fontFamily: "Poppins,sans-serif",
           fontWeight: 500,
@@ -121,6 +129,7 @@ function PillInput({
       </label>
       <div style={{ position: "relative" }}>
         <input
+          id={id}
           type={inputType}
           placeholder={placeholder}
           value={value}
@@ -128,13 +137,15 @@ function PillInput({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           autoComplete={isPassword ? "new-password" : undefined}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
           style={{
             width: "100%",
             fontFamily: "Poppins,sans-serif",
             fontSize: "15px",
             color: "#101828",
             background: "#ffffff",
-            border: `1.5px solid ${focused ? BRAND : "#D0D5DD"}`,
+            border: `1.5px solid ${borderColor}`,
             borderRadius: PILL,
             padding: isPassword ? "12px 48px 12px 20px" : "12px 20px",
             outline: "none",
@@ -813,6 +824,85 @@ function getRegisterErrorMessage(error: unknown): string {
   return "Registration failed. Please try again.";
 }
 
+const PASSWORD_RULES = [
+  {
+    id: "uppercase",
+    label: "One uppercase letter",
+    test: (value: string) => /[A-Z]/.test(value),
+  },
+  {
+    id: "lowercase",
+    label: "One lowercase letter",
+    test: (value: string) => /[a-z]/.test(value),
+  },
+  {
+    id: "special",
+    label: "One special character (e.g. !@#$%)",
+    test: (value: string) => /[^A-Za-z0-9]/.test(value),
+  },
+] as const;
+
+function getPasswordError(password: string): string | undefined {
+  const failed = PASSWORD_RULES.filter((rule) => !rule.test(password));
+  if (failed.length === 0) return undefined;
+  return `Password must include ${failed
+    .map((rule) => rule.label.toLowerCase())
+    .join(", ")}.`;
+}
+
+function PasswordRules({ value }: { value: string }) {
+  return (
+    <ul
+      id="signup-password-rules"
+      style={{
+        listStyle: "none",
+        margin: "8px 0 0",
+        padding: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px",
+      }}
+    >
+      {PASSWORD_RULES.map((rule) => {
+        const passed = rule.test(value);
+        return (
+          <li
+            key={rule.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontFamily: "Poppins, sans-serif",
+              fontSize: "12px",
+              color: passed ? "#027A48" : "#667085",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: passed ? "#ECFDF3" : "#F2F4F7",
+                color: passed ? "#027A48" : "#98A2B3",
+                fontSize: "10px",
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              {passed ? "✓" : "•"}
+            </span>
+            {rule.label}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /* ══════════════════════════════════════════════════════════
    STEP 1 — Sign Up form
 ══════════════════════════════════════════════════════════ */
@@ -831,6 +921,8 @@ function Step1({
   const [password, setPassword] = useState(initial.password);
   const [confirm, setConfirm] = useState(initial.confirm);
   const [formError, setFormError] = useState("");
+  const passwordError = getPasswordError(password);
+  const passwordInvalid = Boolean(formError) && formError === passwordError;
 
   const handleContinue = () => {
     if (
@@ -842,6 +934,10 @@ function Step1({
       !password
     ) {
       setFormError("Please fill in all fields.");
+      return;
+    }
+    if (passwordError) {
+      setFormError(passwordError);
       return;
     }
     if (password !== confirm) {
@@ -1048,24 +1144,43 @@ function Step1({
           </div>
         </div>
 
-        <PillInput
-          label="Password"
-          type="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={setPassword}
-        />
+        <div>
+          <PillInput
+            id="signup-password"
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            invalid={passwordInvalid}
+            describedBy={
+              passwordInvalid
+                ? "signup-form-error signup-password-rules"
+                : "signup-password-rules"
+            }
+            onChange={(value) => {
+              setPassword(value);
+              if (formError) setFormError("");
+            }}
+          />
+          <PasswordRules value={password} />
+        </div>
         <PillInput
           label="Confirm Password"
           type="password"
           placeholder="••••••••"
           value={confirm}
-          onChange={setConfirm}
+          invalid={formError === "Passwords do not match."}
+          onChange={(value) => {
+            setConfirm(value);
+            if (formError) setFormError("");
+          }}
         />
       </div>
 
       {formError && (
         <p
+          id="signup-form-error"
+          role="alert"
           style={{
             fontFamily: "Poppins,sans-serif",
             fontSize: "13px",

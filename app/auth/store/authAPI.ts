@@ -10,23 +10,7 @@ import type {
   VerifyOtpRequest,
 } from "./authTypes";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
-
-const DEVICE_ID_KEY = "whoCan_deviceId";
-
-export const getOrCreateDeviceId = (): string => {
-  if (typeof window === "undefined") return "server";
-
-  const existing = localStorage.getItem(DEVICE_ID_KEY);
-  if (existing) return existing;
-
-  const deviceId =
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `web-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-
-  localStorage.setItem(DEVICE_ID_KEY, deviceId);
-  return deviceId;
-};
+import { getMachineIdentity } from "@/lib/machineKey";
 
 export type RegisterBuyerRequest = {
   email: string;
@@ -61,8 +45,11 @@ const appendIfPresent = (
   formData.append(key, value instanceof File ? value : String(value));
 };
 
-const buildRegisterFormData = (payload: RegisterBuyerRequest): FormData => {
+const buildRegisterFormData = async (
+  payload: RegisterBuyerRequest,
+): Promise<FormData> => {
   const formData = new FormData();
+  const identity = await getMachineIdentity();
 
   formData.append("email", payload.email);
   formData.append("password", payload.password);
@@ -70,7 +57,7 @@ const buildRegisterFormData = (payload: RegisterBuyerRequest): FormData => {
   formData.append("dateOfBirth", payload.dateOfBirth);
   formData.append("gender", payload.gender);
   formData.append("phoneNumber", payload.phoneNumber);
-  formData.append("deviceId", payload.deviceId ?? getOrCreateDeviceId());
+  formData.append("deviceId", payload.deviceId ?? identity.machineKey);
   formData.append("deviceType", payload.deviceType ?? "web");
 
   appendIfPresent(formData, "additionalDetail", payload.additionalDetail);
@@ -106,11 +93,24 @@ export const authAPI = createApi({
       RegisterBuyerResponse,
       RegisterBuyerRequest
     >({
-      query: (payload) => ({
-        url: "/api/buyer/auth/register",
-        method: "POST",
-        body: buildRegisterFormData(payload),
-      }),
+      async queryFn(payload, _queryApi, _extraOptions, baseQuery) {
+        const result = await baseQuery({
+          url: "/api/buyer/auth/register",
+          method: "POST",
+          body: await buildRegisterFormData(payload),
+        });
+
+        if (result.error) {
+          return { error: result.error };
+        }
+
+        const data =
+          result.data && typeof result.data === "object"
+            ? result.data
+            : {};
+
+        return { data };
+      },
     }),
     updateBuyerProfile: builder.mutation<
       UpdateBuyerProfileResponse,

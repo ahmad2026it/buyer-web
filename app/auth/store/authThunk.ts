@@ -8,8 +8,8 @@ import {
   type LoginBuyerResponse,
 } from "./authTypes";
 import { api, getAxiosErrorDetails } from "@/lib/axios";
+import { getMachineIdentity } from "@/lib/machineKey";
 import { getAuthToken } from "@/lib/storeAccess";
-import { getOrCreateDeviceId } from "./authAPI";
 
 export const loginBuyer = createAsyncThunk<
   LoginBuyerResponse,
@@ -17,12 +17,13 @@ export const loginBuyer = createAsyncThunk<
   { rejectValue: AuthApiError }
 >("auth/loginBuyer", async (payload, { rejectWithValue }) => {
   try {
+    const identity = await getMachineIdentity();
     const { data } = await api.post<LoginBuyerResponse>(
       "/api/buyer/auth/login",
       {
         email: payload.email,
         password: payload.password,
-        deviceId: payload.deviceId ?? getOrCreateDeviceId(),
+        deviceId: payload.deviceId ?? identity.machineKey,
         deviceType: payload.deviceType ?? "web",
         ...(payload.fcmToken ? { fcmToken: payload.fcmToken } : {}),
       },
