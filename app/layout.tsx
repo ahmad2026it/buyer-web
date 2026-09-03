@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ScrollAnimator from "@/components/ScrollAnimator";
+import DeviceFingerprintLogger from "@/components/DeviceFingerprintLogger";
 import Providers from "@/components/Providers";
 import AuthProvider from "@/components/AuthProvider";
 
@@ -43,6 +44,7 @@ export default function RootLayout({
         <Providers>
           <AuthProvider>
             <ScrollAnimator />
+            <DeviceFingerprintLogger />
             {children}
           </AuthProvider>
         </Providers>

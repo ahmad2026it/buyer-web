@@ -229,102 +229,112 @@ export default function HeroSection() {
             </p>
 
             {/* Search bar */}
-            <div className="hero-text-4" style={{ position: 'relative', maxWidth: '500px', marginBottom: '24px' }}>
-              <div
-                className="rs-hero-search"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  background: 'rgba(255,255,255,0.06)',
-                  border: searchFocused ? '1px solid rgba(165,74,255,0.55)' : '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: '9999px',
-                  padding: '6px 6px 6px 20px',
-                  gap: '12px',
-                  backdropFilter: 'blur(12px)',
-                  transition: 'border-color 0.2s',
-                }}
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 18 18"
-                  fill="none"
-                  style={{ flexShrink: 0, opacity: 0.5 }}
-                >
-                  <circle cx="8" cy="8" r="5.5" stroke="white" strokeWidth="1.5" />
-                  <path d="M12.5 12.5L16 16" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-                <input
-                  type="text"
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setTimeout(() => setSearchFocused(false), 160)}
-                  placeholder={placeholder}
+            <div className="hero-text-4" style={{ position: 'relative', zIndex: 20, maxWidth: '500px', marginBottom: '24px' }}>
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                <div
+                  className="rs-hero-search"
                   style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    background: 'transparent',
-                    fontSize: '14px',
-                    color: '#ffffff',
-                    fontFamily: 'Poppins, sans-serif',
-                  }}
-                />
-                <button
-                  onClick={handleSearch}
-                  style={{
-                    background: 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)',
-                    color: '#ffffff',
-                    fontFamily: 'Poppins, sans-serif',
-                    fontWeight: 600,
-                    fontSize: '14px',
-                    padding: '10px 24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: searchFocused ? '1px solid rgba(165,74,255,0.55)' : '1px solid rgba(255,255,255,0.12)',
                     borderRadius: '9999px',
-                    cursor: 'pointer',
-                    border: 'none',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 12px rgba(165, 74, 255, 0.4)',
+                    padding: '6px 6px 6px 20px',
+                    gap: '12px',
+                    backdropFilter: 'blur(12px)',
+                    transition: 'border-color 0.2s',
                   }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}
                 >
-                  Search
-                </button>
-              </div>
-
-              {/* Popular searches dropdown */}
-              {searchFocused && (
-                <div style={{
-                  position: 'absolute', top: 'calc(100% + 10px)', left: 0, right: 0,
-                  background: '#ffffff', borderRadius: '16px',
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.18)', zIndex: 200,
-                  paddingTop: '16px', paddingBottom: '8px', overflow: 'hidden',
-                }}>
-                  <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '13px', color: '#A54AFF', padding: '0 20px 10px', letterSpacing: '0.01em' }}>
-                    Popular searches
-                  </p>
-                  {POPULAR_SEARCHES.map(s => (
-                    <button
-                      key={s}
-                      onMouseDown={() => { setQuery(s); setSearchFocused(false); }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', fontFamily: 'Poppins, sans-serif', fontSize: '15px', color: '#101828', padding: '11px 20px', cursor: 'pointer', transition: 'background 0.1s' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    style={{ flexShrink: 0, opacity: 0.5 }}
+                  >
+                    <circle cx="8" cy="8" r="5.5" stroke="white" strokeWidth="1.5" />
+                    <path d="M12.5 12.5L16 16" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setSearchFocused(false), 160)}
+                    placeholder={placeholder}
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      fontSize: '14px',
+                      color: '#ffffff',
+                      fontFamily: 'Poppins, sans-serif',
+                    }}
+                  />
+                  <button
+                    onClick={handleSearch}
+                    style={{
+                      background: 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)',
+                      color: '#ffffff',
+                      fontFamily: 'Poppins, sans-serif',
+                      fontWeight: 600,
+                      fontSize: '14px',
+                      padding: '10px 24px',
+                      borderRadius: '9999px',
+                      cursor: 'pointer',
+                      border: 'none',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 12px rgba(165, 74, 255, 0.4)',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}
+                  >
+                    Search
+                  </button>
                 </div>
-              )}
-            </div>
+
+                {/* Popular searches dropdown */}
+                {searchFocused && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 10px)',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: '#ffffff',
+                      borderRadius: '16px',
+                      boxShadow: '0 12px 40px rgba(0,0,0,0.18)',
+                      zIndex: 30,
+                      paddingTop: '16px',
+                      paddingBottom: '8px',
+                      overflow: 'hidden',
+                      isolation: 'isolate',
+                    }}
+                  >
+                    <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '13px', color: '#A54AFF', padding: '0 20px 10px', letterSpacing: '0.01em' }}>
+                      Popular searches
+                    </p>
+                    {POPULAR_SEARCHES.map(s => (
+                      <button
+                        key={s}
+                        onMouseDown={() => { setQuery(s); setSearchFocused(false); }}
+                        style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', fontFamily: 'Poppins, sans-serif', fontSize: '15px', color: '#101828', padding: '11px 20px', cursor: 'pointer', transition: 'background 0.1s' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
             {/* Quick category filters — selectable */}
             <div
-              className="hero-text-4"
-              style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}
+              style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginTop: '24px', position: 'relative', zIndex: 1 }}
             >
               {CATEGORIES.map((cat) => {
                 const active = selectedCat === cat.label;
@@ -383,6 +393,7 @@ export default function HeroSection() {
                   <path d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
+            </div>
             </div>
 
             {/* Stats strip */}
