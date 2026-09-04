@@ -1,4 +1,4 @@
-const MACHINE_KEY_VERSION = 2;
+const MACHINE_KEY_VERSION = 3;
 
 export type MachineSignals = {
   os: string;
@@ -145,16 +145,31 @@ async function sha256Hex(value: string): Promise<string> {
   return sha256HexSync(value);
 }
 
-function normalizeOs(platform: string): string {
-  const value = platform.toLowerCase();
-  if (value.includes("win")) return "windows";
-  if (value.includes("mac")) return "macos";
-  if (value.includes("android")) return "android";
-  if (value.includes("iphone") || value.includes("ipad") || value.includes("ios")) {
+function detectOs(): string {
+  const platform = (navigator.platform || "").toLowerCase();
+  const userAgent = (navigator.userAgent || "").toLowerCase();
+  const haystack = `${platform} ${userAgent}`;
+
+  if (
+    haystack.includes("iphone") ||
+    haystack.includes("ipad") ||
+    haystack.includes("ipod")
+  ) {
     return "ios";
   }
-  if (value.includes("linux")) return "linux";
-  return value || "unknown";
+  if (haystack.includes("android")) return "android";
+  if (haystack.includes("win")) return "windows";
+  if (
+    haystack.includes("mac") ||
+    haystack.includes("macintosh") ||
+    haystack.includes("mac os")
+  ) {
+    return "macos";
+  }
+  if (haystack.includes("cros")) return "chromeos";
+  if (haystack.includes("linux")) return "linux";
+
+  return platform || "unknown";
 }
 
 function normalizeHexId(raw: string): string {
@@ -162,7 +177,16 @@ function normalizeHexId(raw: string): string {
   return `0x${hex.toLowerCase()}`;
 }
 
-function normalizeGpu(renderer: string): string {
+function normalizeGpu(renderer: string, vendor: string, os: string): string {
+  const combined = `${vendor} ${renderer}`.toLowerCase();
+
+  if (
+    combined.includes("apple") ||
+    (os === "macos" && combined.includes("webkit"))
+  ) {
+    return "apple";
+  }
+
   const pciIds = [
     ...new Set(
       [...renderer.matchAll(/0x[0-9a-f]+/gi)].map((match) =>
@@ -218,11 +242,12 @@ function getWebGLInfo(): { vendor: string; renderer: string } {
 }
 
 function collectMachineSignals(): MachineSignals {
+  const os = detectOs();
   const webgl = getWebGLInfo();
-  const gpuNormalized = normalizeGpu(webgl.renderer);
+  const gpuNormalized = normalizeGpu(webgl.renderer, webgl.vendor, os);
 
   return {
-    os: normalizeOs(navigator.platform || "unknown"),
+    os,
     hardwareConcurrency: Number.isFinite(navigator.hardwareConcurrency)
       ? navigator.hardwareConcurrency
       : null,

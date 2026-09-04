@@ -52,58 +52,186 @@ function LearnMoreRow({ light = false, href }: { light?: boolean; href?: string 
   );
 }
 
-const FALLBACK_CARDS = [
-  {
-    title: 'Deep Home Cleaning',
-    excerpt:
-      'Professional cleaning service for your entire home, available when you need it most. Trusted by hundreds of happy customers.',
-    href: '/articles/deep-home-cleaning',
-    image: SERVICE_IMAGE,
-    imageAlt: 'Deep Home Cleaning',
-    author: 'Alfonzo Schuessler',
-  },
-  {
-    title: 'How WhoCan Connects You with the Right Handyman',
-    excerpt: 'Trusted by hundreds of homeowners across the city',
-    href: '/articles/how-it-works',
-    image: SERVICE_IMAGE,
-    imageAlt: 'How WhoCan works',
-    author: 'Alfonzo Schuessler',
-  },
-  {
-    title: 'Trusted Local Providers',
-    excerpt:
-      'All handymen are background-checked, reviewed, and rated by real customers in your area.',
-    href: '/articles/trusted-local-providers',
-    image:
-      'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&h=200&fit=crop&auto=format&q=80',
-    imageAlt: 'Trusted Local Providers',
-    author: 'WhoCan Team',
-  },
-] as const;
+type ArticleCard = {
+  id: number;
+  title: string;
+  excerpt: string;
+  href: string;
+  image: string;
+  imageAlt: string;
+  author: string;
+};
 
-function cardFromBlog(
-  blog: PublicBlog | undefined,
-  fallback: (typeof FALLBACK_CARDS)[number],
-) {
-  if (!blog) return fallback;
+function cardFromBlog(blog: PublicBlog): ArticleCard {
   return {
+    id: blog.id,
     title: blog.title,
-    excerpt: blog.excerpt || fallback.excerpt,
+    excerpt: blog.excerpt ?? '',
     href: blogHref(blog.slug),
-    image: blog.cover_image_url || fallback.image,
+    image: blog.cover_image_url || SERVICE_IMAGE,
     imageAlt: blog.title,
     author: getBlogAuthorName(blog),
   };
 }
 
+function SideArticleCard({ card, delay }: { card: ArticleCard; delay?: number }) {
+  const router = useRouter();
+  return (
+    <div
+      data-animate
+      data-delay={delay}
+      onClick={() => router.push(card.href)}
+      style={{
+        background: '#F7F7F7',
+        borderRadius: '20px',
+        border: '1.5px solid #EAECF0',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        cursor: 'pointer',
+        transition: 'box-shadow 0.25s ease, transform 0.25s ease',
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = '0 8px 32px rgba(165,74,255,0.14)';
+        el.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = 'none';
+        el.style.transform = 'none';
+      }}
+    >
+      <div style={{ overflow: 'hidden', flexShrink: 0 }}>
+        <img
+          src={card.image}
+          alt={card.imageAlt}
+          style={{
+            width: '100%',
+            height: '220px',
+            objectFit: 'cover',
+            objectPosition: 'center center',
+            display: 'block',
+            transition: 'transform 0.4s ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)';
+          }}
+        />
+      </div>
+      <div style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828', marginBottom: '10px', lineHeight: '1.3' }}>
+          {card.title}
+        </h3>
+        {card.excerpt ? (
+          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', lineHeight: '1.65', flex: 1, marginBottom: '20px' }}>
+            {card.excerpt}
+          </p>
+        ) : (
+          <div style={{ flex: 1, marginBottom: '20px' }} />
+        )}
+        <LearnMoreRow href={card.href} />
+      </div>
+    </div>
+  );
+}
+
+function FeaturedArticleCard({ card, delay }: { card: ArticleCard; delay?: number }) {
+  const router = useRouter();
+  return (
+    <div
+      data-animate
+      data-delay={delay}
+      onClick={() => router.push(card.href)}
+      style={{
+        background: '#EDE9FE',
+        borderRadius: '20px',
+        border: '1.5px solid #DDD6FE',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        transition: 'box-shadow 0.25s ease, transform 0.25s ease',
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = '0 8px 32px rgba(124,58,237,0.18)';
+        el.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = 'none';
+        el.style.transform = 'none';
+      }}
+    >
+      <div style={{ padding: '22px 24px 0' }}>
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: '#ffffff',
+            borderRadius: '9999px',
+            padding: '6px 14px 6px 6px',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+          }}
+        >
+          <img
+            src={SELLER_AVATAR}
+            alt={card.author}
+            style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }}
+          />
+          <div>
+            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '10px', fontWeight: 500, color: '#98A2B3', letterSpacing: '0.05em', textTransform: 'uppercase', lineHeight: '1.2' }}>
+              Author
+            </p>
+            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', fontWeight: 600, color: '#101828', lineHeight: '1.2' }}>
+              {card.author}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '14px 0' }}>
+        <svg
+          viewBox="0 0 340 155"
+          fill="none"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+          aria-hidden="true"
+        >
+          <path
+            d="M -10 138 C 40 138, 55 17, 120 17 C 185 17, 195 142, 250 142 C 305 142, 320 72, 360 62"
+            stroke={AMBER}
+            strokeWidth="22"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+      </div>
+
+      <div style={{ padding: '0 24px 24px' }}>
+        <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '22px', color: '#1E1B4B', marginBottom: '8px', lineHeight: '1.3' }}>
+          {card.title}
+        </h3>
+        {card.excerpt ? (
+          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', color: '#4C1D95', lineHeight: '1.6', marginBottom: '20px', opacity: 0.72 }}>
+            {card.excerpt}
+          </p>
+        ) : null}
+        <LearnMoreRow light href={card.href} />
+      </div>
+    </div>
+  );
+}
+
 export default function WhyChooseUsSection() {
   const router = useRouter();
-  const { data } = useGetPublicBlogsQuery({ page: 1, limit: 3 });
-  const blogs = data?.data?.blogs ?? [];
-  const left = cardFromBlog(blogs[0], FALLBACK_CARDS[0]);
-  const center = cardFromBlog(blogs[1], FALLBACK_CARDS[1]);
-  const right = cardFromBlog(blogs[2], FALLBACK_CARDS[2]);
+  const { data, isLoading } = useGetPublicBlogsQuery({ page: 1, limit: 3 });
+  const cards = (data?.data?.blogs ?? []).slice(0, 3).map(cardFromBlog);
+  const showCards = !isLoading && cards.length > 0;
 
   return (
     <section className="rs-section" style={{ padding: '96px 0', background: '#ffffff' }}>
@@ -144,194 +272,51 @@ export default function WhyChooseUsSection() {
           </div>
 
           <div data-animate data-delay="1">
-            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', lineHeight: '1.7', marginBottom: '16px' }}>
+            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', lineHeight: '1.7', marginBottom: showCards ? '16px' : 0 }}>
               Our platform connects you with verified, background-checked local
               service providers — so you can book with confidence, every time.
               Quality guaranteed or your money back.
             </p>
-            <button
-              type="button"
-              onClick={() => router.push('/blog')}
-              style={{
-                fontFamily: 'Poppins, sans-serif',
-                fontWeight: 600,
-                fontSize: '14px',
-                color: '#A54AFF',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
-              See all articles →
-            </button>
-          </div>
-        </div>
-
-        {/* ── CARD GRID ─────────────────────────────────────────────────── */}
-        <div
-          className="rs-why-cards"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-            gap: '16px',
-            alignItems: 'stretch',
-          }}
-        >
-
-          {/* ── LEFT CARD ── */}
-          <div
-            data-animate
-            data-delay="1"
-            onClick={() => router.push(left.href)}
-            style={{
-              background: '#F7F7F7',
-              borderRadius: '20px',
-              border: '1.5px solid #EAECF0',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              cursor: 'pointer',
-              transition: 'box-shadow 0.25s ease, transform 0.25s ease',
-            }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 8px 32px rgba(165,74,255,0.14)'; el.style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = 'none'; el.style.transform = 'none'; }}
-          >
-            <div style={{ overflow: 'hidden', flexShrink: 0 }}>
-              <img
-                src={left.image}
-                alt={left.imageAlt}
-                style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block', transition: 'transform 0.4s ease' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
-              />
-            </div>
-            <div style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828', marginBottom: '10px', lineHeight: '1.3' }}>
-                {left.title}
-              </h3>
-              <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', lineHeight: '1.65', flex: 1, marginBottom: '20px' }}>
-                {left.excerpt}
-              </p>
-              <LearnMoreRow href={left.href} />
-            </div>
-          </div>
-
-          {/* ── CENTER CARD: edge-to-edge squiggle ── */}
-          <div
-            data-animate
-            data-delay="2"
-            onClick={() => router.push(center.href)}
-            style={{
-              background: '#EDE9FE',
-              borderRadius: '20px',
-              border: '1.5px solid #DDD6FE',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              cursor: 'pointer',
-              transition: 'box-shadow 0.25s ease, transform 0.25s ease',
-            }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 8px 32px rgba(124,58,237,0.18)'; el.style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = 'none'; el.style.transform = 'none'; }}
-          >
-            {/* Author pill — padded */}
-            <div style={{ padding: '22px 24px 0' }}>
-              <div
+            {showCards && (
+              <button
+                type="button"
+                onClick={() => router.push('/blog')}
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: '#ffffff',
-                  borderRadius: '9999px',
-                  padding: '6px 14px 6px 6px',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  color: '#A54AFF',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
                 }}
               >
-                <img
-                  src={SELLER_AVATAR}
-                  alt={center.author}
-                  style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }}
-                />
-                <div>
-                  <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '10px', fontWeight: 500, color: '#98A2B3', letterSpacing: '0.05em', textTransform: 'uppercase', lineHeight: '1.2' }}>
-                    Author
-                  </p>
-                  <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', fontWeight: 600, color: '#101828', lineHeight: '1.2' }}>
-                    {center.author}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Squiggle — full width, no horizontal padding */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '14px 0' }}>
-              <svg
-                viewBox="0 0 340 155"
-                fill="none"
-                style={{ width: '100%', height: 'auto', display: 'block' }}
-                aria-hidden="true"
-              >
-                <path
-                  d="M -10 138 C 40 138, 55 17, 120 17 C 185 17, 195 142, 250 142 C 305 142, 320 72, 360 62"
-                  stroke={AMBER}
-                  strokeWidth="22"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-              </svg>
-            </div>
-
-            {/* Bottom text — padded */}
-            <div style={{ padding: '0 24px 24px' }}>
-              <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '22px', color: '#1E1B4B', marginBottom: '8px', lineHeight: '1.3' }}>
-                {center.title}
-              </h3>
-              <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', color: '#4C1D95', lineHeight: '1.6', marginBottom: '20px', opacity: 0.72 }}>
-                {center.excerpt}
-              </p>
-              <LearnMoreRow light href={center.href} />
-            </div>
-          </div>
-
-          {/* ── RIGHT CARD ── */}
-          <div
-            data-animate
-            data-delay="3"
-            onClick={() => router.push(right.href)}
-            style={{
-              background: '#F7F7F7',
-              borderRadius: '20px',
-              border: '1.5px solid #EAECF0',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              cursor: 'pointer',
-              transition: 'box-shadow 0.25s ease, transform 0.25s ease',
-            }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 8px 32px rgba(165,74,255,0.14)'; el.style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = 'none'; el.style.transform = 'none'; }}
-          >
-            <div style={{ overflow: 'hidden', flexShrink: 0 }}>
-              <img
-                src={right.image}
-                alt={right.imageAlt}
-                style={{ width: '100%', height: '220px', objectFit: 'cover', objectPosition: 'center center', display: 'block', transition: 'transform 0.4s ease' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
-              />
-            </div>
-            <div style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828', marginBottom: '10px', lineHeight: '1.3' }}>
-                {right.title}
-              </h3>
-              <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', lineHeight: '1.65', flex: 1, marginBottom: '20px' }}>
-                {right.excerpt}
-              </p>
-              <LearnMoreRow href={right.href} />
-            </div>
+                See all articles →
+              </button>
+            )}
           </div>
         </div>
+
+        {showCards && (
+          <div
+            className="rs-why-cards"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))`,
+              gap: '16px',
+              alignItems: 'stretch',
+            }}
+          >
+            {cards.map((card, index) =>
+              index === 1 ? (
+                <FeaturedArticleCard key={card.id} card={card} delay={index + 1} />
+              ) : (
+                <SideArticleCard key={card.id} card={card} delay={index + 1} />
+              ),
+            )}
+          </div>
+        )}
 
       </div>
     </section>
