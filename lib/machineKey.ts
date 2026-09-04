@@ -1,4 +1,4 @@
-const MACHINE_KEY_VERSION = 3;
+const MACHINE_KEY_VERSION = 4;
 
 export type MachineSignals = {
   os: string;
@@ -6,6 +6,7 @@ export type MachineSignals = {
   maxTouchPoints: number;
   screenWidth: number;
   screenHeight: number;
+  screenLongSide: number;
   colorDepth: number;
   pixelDepth: number;
   devicePixelRatio: number;
@@ -241,6 +242,22 @@ function getWebGLInfo(): { vendor: string; renderer: string } {
   }
 }
 
+function stableScreenLongSide(os: string): number {
+  const longSide = Math.max(window.screen.width || 0, window.screen.height || 0);
+  const dpr = window.devicePixelRatio || 1;
+
+  if ((os === "macos" || os === "ios") && dpr >= 2) {
+    let physicalLong = Math.round(longSide * dpr);
+    // Safari often reports about half of Chrome's CSS pixels on Retina.
+    if (physicalLong > 0 && physicalLong < 2200) {
+      physicalLong *= 2;
+    }
+    return Math.round(physicalLong / 100) * 100;
+  }
+
+  return longSide;
+}
+
 function collectMachineSignals(): MachineSignals {
   const os = detectOs();
   const webgl = getWebGLInfo();
@@ -254,6 +271,7 @@ function collectMachineSignals(): MachineSignals {
     maxTouchPoints: navigator.maxTouchPoints || 0,
     screenWidth: window.screen.width,
     screenHeight: window.screen.height,
+    screenLongSide: stableScreenLongSide(os),
     colorDepth: window.screen.colorDepth,
     pixelDepth: window.screen.pixelDepth,
     devicePixelRatio: Math.round(window.devicePixelRatio * 100) / 100,
@@ -266,13 +284,10 @@ function collectMachineSignals(): MachineSignals {
 
 function canonicalMachinePayload(signals: MachineSignals): string {
   return JSON.stringify({
-    colorDepth: signals.colorDepth,
     gpu: signals.gpuNormalized,
-    hardwareConcurrency: signals.hardwareConcurrency,
     maxTouchPoints: signals.maxTouchPoints,
     os: signals.os,
-    screenHeight: signals.screenHeight,
-    screenWidth: signals.screenWidth,
+    screenLongSide: signals.screenLongSide,
     timezone: signals.timezone,
     v: MACHINE_KEY_VERSION,
   });
@@ -290,6 +305,7 @@ export async function getMachineIdentity(): Promise<MachineIdentity> {
       maxTouchPoints: 0,
       screenWidth: 0,
       screenHeight: 0,
+      screenLongSide: 0,
       colorDepth: 0,
       pixelDepth: 0,
       devicePixelRatio: 1,
