@@ -61,6 +61,9 @@ function GridIcon() {
 function FileTextIcon() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
 }
+function StoreIcon() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 10V20h16V10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 7l2-4h14l2 4H3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 20v-6h4v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+}
 
 /* ── Logo ──────────────────────────────────────────────── */
 function WhoCanLogo({ markColor, textColor }: { markColor: string; textColor: string }) {
@@ -625,6 +628,7 @@ function EditLocationModal({
 
 /* ── Nav config ────────────────────────────────────────── */
 const EXPLORE_ITEMS = [
+  { label: 'Marketplace', Icon: StoreIcon,      desc: 'Buy & sell items near you', href: '/marketplace' },
   { label: 'Sellers',    Icon: UserIcon,        desc: 'Browse service providers', href: '/explore/search?type=sellers' },
   { label: 'Buyers',     Icon: ShoppingBagIcon, desc: 'Find what you need',       href: '/explore/search'             },
   { label: 'Categories', Icon: GridIcon,        desc: 'All service categories',   href: '/categories'                 },
@@ -633,6 +637,7 @@ const EXPLORE_ITEMS = [
 const NAV_LINKS = [
   { label: 'Home',         href: '/',        protected: false },
   { label: 'Explore',      href: '/explore', hasDropdown: true, protected: false },
+  { label: 'Marketplace',  href: '/marketplace', protected: false },
   { label: 'My Bookings',  href: '/bookings', protected: true  },
   { label: 'Custom Favor', href: '/custom-favors', protected: true  },
 ];
