@@ -25,9 +25,42 @@ import {
 import type { GetMarketplaceListingsParams } from '@/app/buyer/store/marketplaceListingsTypes';
 import { useSaveMarketplaceListing } from '@/lib/marketplace/useSaveMarketplaceListing';
 import { useAppSelector } from '@/store/hooks';
-
-const FONT = 'Poppins, sans-serif';
-const BRAND = '#A54AFF';
+import {
+  cx,
+  mpBanner,
+  mpBannerCopy,
+  mpBannerCta,
+  mpBannerOrb,
+  mpBannerTag,
+  mpBannerText,
+  mpBannerTitle,
+  mpBody,
+  mpChipsWrap,
+  mpEmpty,
+  mpEmptyText,
+  mpEmptyTitle,
+  mpFilterBtn,
+  mpGhostBtn,
+  mpGrid,
+  mpHero,
+  mpHeroActions,
+  mpHeroCopy,
+  mpHeroInner,
+  mpHeroLead,
+  mpHeroSubtitle,
+  mpHeroTitle,
+  mpIconBtn,
+  mpMoreBtn,
+  mpPage,
+  mpPostBtn,
+  mpSearch,
+  mpSearchInput,
+  mpSearchRow,
+  mpSectionCount,
+  mpSectionHead,
+  mpSectionTitle,
+  mpSoftBtn,
+} from '@/components/marketplace/ui';
 
 function listingsQueryFromFilters(
   filters: MarketplaceFilters,
@@ -137,47 +170,50 @@ export default function MarketplacePage() {
         onClose={() => setFilterOpen(false)}
       />
 
-      <main className="marketplace-page">
-        <div className="marketplace-hero">
-          <div className="marketplace-hero-inner">
-            <Link href="/" className="marketplace-back">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
+      <main className={mpPage}>
+        <div className={mpHero}>
+          <div className={mpHeroInner}>
+            <div className={mpHeroLead}>
+              <Link href="/" className={mpIconBtn}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
 
-            <div className="marketplace-hero-copy">
-              <h1>Marketplace</h1>
-              <p>Buy &amp; sell items near you</p>
+              <div className={mpHeroCopy}>
+                <h1 className={mpHeroTitle}>Marketplace</h1>
+                <p className={mpHeroSubtitle}>Buy &amp; sell items near you</p>
+              </div>
             </div>
 
-            <div className="marketplace-hero-actions">
+            <div className={mpHeroActions}>
               {token ? (
-                <Link href="/chat?tab=listing" className="marketplace-ghost-btn">
+                <Link href="/chat?tab=listing" className={mpGhostBtn}>
                   Chats
                 </Link>
               ) : null}
               {token ? (
-                <Link href="/marketplace/saved" className="marketplace-ghost-btn">
+                <Link href="/marketplace/saved" className={mpGhostBtn}>
                   Saved
                 </Link>
               ) : null}
               {token ? (
-                <Link href="/marketplace/mine" className="marketplace-ghost-btn">
+                <Link href="/marketplace/mine" className={mpGhostBtn}>
                   My ads
                 </Link>
               ) : null}
-              <button type="button" className="marketplace-post-btn" onClick={goPostAd}>
+              <button type="button" className={mpPostBtn} onClick={goPostAd}>
                 <PlusIcon size={15} />
                 Post Ad
               </button>
             </div>
           </div>
 
-          <div className="marketplace-search-row">
-            <label className="marketplace-search">
+          <div className={mpSearchRow}>
+            <label className={mpSearch}>
               <SearchIcon size={18} color="#98A2B3" />
               <input
+                className={mpSearchInput}
                 type="search"
                 value={searchDraft}
                 placeholder="Search electronics, cars, phones..."
@@ -186,7 +222,7 @@ export default function MarketplacePage() {
             </label>
             <button
               type="button"
-              className="marketplace-filter-btn"
+              className={mpFilterBtn}
               aria-label="Open filters"
               onClick={() => setFilterOpen(true)}
             >
@@ -194,7 +230,7 @@ export default function MarketplacePage() {
             </button>
           </div>
 
-          <div className="marketplace-chips-wrap">
+          <div className={mpChipsWrap}>
             <MarketplaceCategoryChips
               value={filters.categoryId}
               onChange={(categoryId) => updateFilters({ ...filters, categoryId })}
@@ -202,112 +238,68 @@ export default function MarketplacePage() {
           </div>
         </div>
 
-        <div className="marketplace-body">
+        <div className={mpBody}>
           <MarketplaceSidebar filters={filters} onChange={updateFilters} onReset={resetFilters} />
 
-          <div className="marketplace-main">
-            <section className="marketplace-banner" aria-label="Sell on WhoCan">
-              <div className="marketplace-banner-copy">
-                <span className="marketplace-banner-tag">FREE LISTING</span>
-                <h2>Sell anything in seconds!</h2>
-                <p>Reach thousands of verified buyers in your area.</p>
+          <div>
+            <section className={mpBanner} aria-label="Sell on WhoCan">
+              <div className={mpBannerCopy}>
+                <span className={mpBannerTag}>FREE LISTING</span>
+                <h2 className={mpBannerTitle}>Sell anything in seconds!</h2>
+                <p className={mpBannerText}>Reach thousands of verified buyers in your area.</p>
               </div>
-              <button type="button" className="marketplace-banner-cta" onClick={goPostAd}>
+              <button type="button" className={mpBannerCta} onClick={goPostAd}>
                 Sell Now
               </button>
-              <div className="marketplace-banner-orb marketplace-banner-orb-a" />
-              <div className="marketplace-banner-orb marketplace-banner-orb-b" />
+              <div className={cx(mpBannerOrb, 'right-20 -top-[70px] size-[180px]')} />
+              <div className={cx(mpBannerOrb, '-right-5 -bottom-10 size-[120px]')} />
             </section>
 
-            <div className="marketplace-section-head">
-              <h2>
-                Recent Listings {token && total > 0 ? <span>({total})</span> : null}
+            <div className={mpSectionHead}>
+              <h2 className={mpSectionTitle}>
+                Recent Listings {token && total > 0 ? <span className={mpSectionCount}>({total})</span> : null}
               </h2>
             </div>
 
             {!token ? (
-              <div className="marketplace-empty">
-                <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>
-                  Log in to browse listings
-                </h3>
-                <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085', marginBottom: 16 }}>
-                  Sign in to see items for sale near you.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setAuthOpen(true)}
-                  style={{
-                    fontFamily: FONT,
-                    fontWeight: 700,
-                    fontSize: 14,
-                    color: BRAND,
-                    background: '#F4EBFF',
-                    borderRadius: 9999,
-                    padding: '10px 20px',
-                  }}
-                >
+              <div className={mpEmpty}>
+                <h3 className={mpEmptyTitle}>Log in to browse listings</h3>
+                <p className={mpEmptyText}>Sign in to see items for sale near you.</p>
+                <button type="button" className={mpSoftBtn} onClick={() => setAuthOpen(true)}>
                   Log in
                 </button>
               </div>
             ) : showListLoading ? (
-              <div className="marketplace-grid">
+              <div className={mpGrid}>
                 {Array.from({ length: 8 }, (_, index) => (
                   <MarketplaceCardSkeleton key={index} />
                 ))}
               </div>
             ) : isError ? (
-              <div className="marketplace-empty">
-                <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>
-                  Could not load listings
-                </h3>
-                <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085', marginBottom: 16 }}>
-                  There was a problem fetching marketplace ads. Please try again.
-                </p>
+              <div className={mpEmpty}>
+                <h3 className={mpEmptyTitle}>Could not load listings</h3>
+                <p className={mpEmptyText}>There was a problem fetching marketplace ads. Please try again.</p>
                 <button
                   type="button"
+                  className={mpSoftBtn}
                   onClick={() => {
                     void refetch();
-                  }}
-                  style={{
-                    fontFamily: FONT,
-                    fontWeight: 700,
-                    fontSize: 14,
-                    color: BRAND,
-                    background: '#F4EBFF',
-                    borderRadius: 9999,
-                    padding: '10px 20px',
                   }}
                 >
                   Try again
                 </button>
               </div>
             ) : listings.length === 0 ? (
-              <div className="marketplace-empty">
-                <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>
-                  No listings match
-                </h3>
-                <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085', marginBottom: 16 }}>
-                  Try another category, search, or reset your filters.
-                </p>
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  style={{
-                    fontFamily: FONT,
-                    fontWeight: 700,
-                    fontSize: 14,
-                    color: BRAND,
-                    background: '#F4EBFF',
-                    borderRadius: 9999,
-                    padding: '10px 20px',
-                  }}
-                >
+              <div className={mpEmpty}>
+                <h3 className={mpEmptyTitle}>No listings match</h3>
+                <p className={mpEmptyText}>Try another category, search, or reset your filters.</p>
+                <button type="button" className={mpSoftBtn} onClick={resetFilters}>
                   Clear filters
                 </button>
               </div>
             ) : (
               <>
-                <div className="marketplace-grid">
+                <div className={mpGrid}>
                   {listings.map((listing) => (
                     <MarketplaceListingCard
                       key={listing.id}
@@ -321,26 +313,16 @@ export default function MarketplacePage() {
                   ))}
                 </div>
                 {hasMore ? (
-                  <div style={{ marginTop: 28, textAlign: 'center' }}>
+                  <div className="mt-7 text-center">
                     <button
                       type="button"
+                      className={mpMoreBtn}
                       disabled={isFetching}
                       onClick={() => setPage((current) => current + 1)}
-                      style={{
-                        fontFamily: FONT,
-                        fontWeight: 600,
-                        fontSize: 14,
-                        color: BRAND,
-                        background: '#ffffff',
-                        border: `1.5px solid ${BRAND}`,
-                        borderRadius: 9999,
-                        padding: '12px 36px',
-                        cursor: isFetching ? 'not-allowed' : 'pointer',
-                      }}
                     >
                       {isFetching ? 'Loading…' : 'Show more'}
                     </button>
-                    <p style={{ fontFamily: FONT, fontSize: 12, color: '#98A2B3', marginTop: 8 }}>
+                    <p className="mt-2 text-xs text-ink-subtle">
                       Showing {data?.data.listings.length ?? listings.length} of {total}
                     </p>
                   </div>

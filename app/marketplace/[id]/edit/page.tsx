@@ -8,10 +8,14 @@ import Footer from '@/components/Footer';
 import AuthGateModal from '@/components/AuthGateModal';
 import MarketplaceListingForm from '@/components/marketplace/MarketplaceListingForm';
 import { MarketplaceCardSkeleton } from '@/components/marketplace/MarketplaceListingCard';
+import {
+  mpOutlineBtn,
+  mpPage,
+  mpPost,
+  mpPostBtn,
+} from '@/components/marketplace/ui';
 import { useGetMarketplaceListingQuery } from '@/app/buyer/store/marketplaceListingsAPI';
 import { useAppSelector } from '@/store/hooks';
-
-const FONT = 'Poppins, sans-serif';
 
 export default function MarketplaceEditListingPage() {
   const params = useParams<{ id: string }>();
@@ -41,25 +45,25 @@ export default function MarketplaceEditListingPage() {
           message="Log in to edit this listing."
         />
       )}
-      <main className="marketplace-page">
+      <main className={mpPage}>
         {!token ? null : isLoading ? (
-          <div className="marketplace-post">
+          <div className={mpPost}>
             <MarketplaceCardSkeleton />
           </div>
         ) : isError || !listing ? (
-          <div className="marketplace-post" style={{ textAlign: 'center', paddingTop: 48 }}>
-            <h1 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 28, color: '#101828', marginBottom: 8 }}>
+          <div className={`${mpPost} pt-12 text-center`}>
+            <h1 className="mb-2 text-[28px] font-extrabold text-ink">
               Listing not found
             </h1>
-            <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>
+            <p className="mb-5 text-[15px] text-ink-muted">
               This ad may have been removed, or you may not have access to edit it.
             </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/marketplace/mine" className="marketplace-post-btn" style={{ display: 'inline-flex' }}>
+            <div className="flex flex-wrap justify-center gap-2.5">
+              <Link href="/marketplace/mine" className={mpPostBtn}>
                 Back to my listings
               </Link>
               {isError ? (
-                <button type="button" className="marketplace-outline-btn" onClick={() => void refetch()}>
+                <button type="button" className={mpOutlineBtn} onClick={() => void refetch()}>
                   Try again
                 </button>
               ) : null}

@@ -5,9 +5,34 @@ import { useMarketplaceCategories } from '@/app/buyer/store/marketplaceCategorie
 import type { MarketplaceCategory, MarketplaceCategoryId, MarketplaceFilters } from '@/lib/marketplace/types';
 import { MARKETPLACE_LISTING_CONDITIONS } from '@/lib/marketplace/types';
 import { MarketplaceCategoryIcon } from './MarketplaceIcons';
-
-const FONT = 'Poppins, sans-serif';
-const GRAD = 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)';
+import {
+  cx,
+  mpCheck,
+  mpCheckInput,
+  mpChip,
+  mpChipActive,
+  mpChips,
+  mpChipSkel,
+  mpControl,
+  mpField,
+  mpFilterFields,
+  mpPostBtn,
+  mpPriceFields,
+  mpReset,
+  mpSheet,
+  mpSheetBackdrop,
+  mpSheetBar,
+  mpSideCat,
+  mpSideCatActive,
+  mpSideCatIcon,
+  mpSideCatIconActive,
+  mpSideCats,
+  mpSideCatSkel,
+  mpSidebar,
+  mpSidebarCard,
+  mpSidebarHead,
+  mpSidebarTitle,
+} from './ui';
 
 const SORT_OPTIONS: { value: MarketplaceFilters['sort']; label: string }[] = [
   { value: 'newest', label: 'Newest first' },
@@ -21,7 +46,7 @@ function CategorySkeletons({ count, variant }: { count: number; variant: 'chip' 
       {Array.from({ length: count }, (_, index) => (
         <div
           key={index}
-          className={variant === 'chip' ? 'marketplace-chip-skel' : 'marketplace-side-cat-skel'}
+          className={variant === 'chip' ? mpChipSkel : mpSideCatSkel}
           aria-hidden="true"
         />
       ))}
@@ -50,7 +75,7 @@ function CategoryButton({
         type="button"
         role="tab"
         aria-selected={active}
-        className={`marketplace-chip${active ? ' is-active' : ''}`}
+        className={cx(mpChip, active && mpChipActive)}
         onClick={onClick}
       >
         <MarketplaceCategoryIcon category={category} size={15} color={iconColor} />
@@ -62,10 +87,10 @@ function CategoryButton({
   return (
     <button
       type="button"
-      className={`marketplace-side-cat${active ? ' is-active' : ''}`}
+      className={cx(mpSideCat, active && mpSideCatActive)}
       onClick={onClick}
     >
-      <span className="marketplace-side-cat-icon">
+      <span className={cx(mpSideCatIcon, active && mpSideCatIconActive)}>
         <MarketplaceCategoryIcon category={category} size={16} color={iconColor} />
       </span>
       {category.label}
@@ -83,7 +108,7 @@ export function MarketplaceCategoryChips({
   const { categories, isLoading } = useMarketplaceCategories();
 
   return (
-    <div className="marketplace-chips" role="tablist" aria-label="Marketplace categories">
+    <div className={mpChips} role="tablist" aria-label="Marketplace categories">
       {isLoading && categories.length === 0 ? (
         <CategorySkeletons count={6} variant="chip" />
       ) : (
@@ -113,10 +138,11 @@ export function MarketplaceFilterFields({
   };
 
   return (
-    <div className="marketplace-filter-fields">
-      <label className="marketplace-field">
+    <div className={mpFilterFields}>
+      <label className={mpField}>
         <span>Sort by</span>
         <select
+          className={mpControl}
           value={filters.sort}
           onChange={(event) => set('sort', event.target.value as MarketplaceFilters['sort'])}
         >
@@ -128,9 +154,10 @@ export function MarketplaceFilterFields({
         </select>
       </label>
 
-      <label className="marketplace-field">
+      <label className={mpField}>
         <span>Condition</span>
         <select
+          className={mpControl}
           value={filters.condition}
           onChange={(event) => set('condition', event.target.value as MarketplaceFilters['condition'])}
         >
@@ -143,10 +170,11 @@ export function MarketplaceFilterFields({
         </select>
       </label>
 
-      <div className="marketplace-price-fields">
-        <label className="marketplace-field">
+      <div className={mpPriceFields}>
+        <label className={mpField}>
           <span>Min price ($)</span>
           <input
+            className={mpControl}
             type="number"
             min={0}
             step="0.01"
@@ -156,9 +184,10 @@ export function MarketplaceFilterFields({
             onChange={(event) => set('minPrice', event.target.value)}
           />
         </label>
-        <label className="marketplace-field">
+        <label className={mpField}>
           <span>Max price ($)</span>
           <input
+            className={mpControl}
             type="number"
             min={0}
             step="0.01"
@@ -170,16 +199,18 @@ export function MarketplaceFilterFields({
         </label>
       </div>
 
-      <label className="marketplace-check">
+      <label className={mpCheck}>
         <input
+          className={mpCheckInput}
           type="checkbox"
           checked={filters.featuredOnly}
           onChange={(event) => set('featuredOnly', event.target.checked)}
         />
         Featured ads only
       </label>
-      <label className="marketplace-check">
+      <label className={mpCheck}>
         <input
+          className={mpCheckInput}
           type="checkbox"
           checked={filters.negotiableOnly}
           onChange={(event) => set('negotiableOnly', event.target.checked)}
@@ -202,10 +233,10 @@ export function MarketplaceSidebar({
   const { categories, isLoading } = useMarketplaceCategories();
 
   return (
-    <aside className="marketplace-sidebar">
-      <div className="marketplace-sidebar-card">
-        <p className="marketplace-sidebar-title">Categories</p>
-        <div className="marketplace-sidebar-cats">
+    <aside className={mpSidebar}>
+      <div className={mpSidebarCard}>
+        <p className={mpSidebarTitle}>Categories</p>
+        <div className={mpSideCats}>
           {isLoading && categories.length === 0 ? (
             <CategorySkeletons count={7} variant="side" />
           ) : (
@@ -222,10 +253,10 @@ export function MarketplaceSidebar({
         </div>
       </div>
 
-      <div className="marketplace-sidebar-card">
-        <div className="marketplace-sidebar-head">
-          <p className="marketplace-sidebar-title">Filters</p>
-          <button type="button" className="marketplace-reset" onClick={onReset}>
+      <div className={mpSidebarCard}>
+        <div className={mpSidebarHead}>
+          <p className={cx(mpSidebarTitle, 'mb-0')}>Filters</p>
+          <button type="button" className={mpReset} onClick={onReset}>
             Reset
           </button>
         </div>
@@ -265,41 +296,25 @@ export function MarketplaceFilterSheet({
   if (!open) return null;
 
   return (
-    <div className="marketplace-sheet-backdrop" onClick={onClose} role="presentation">
+    <div className={mpSheetBackdrop} onClick={onClose} role="presentation">
       <div
-        className="marketplace-sheet"
+        className={mpSheet}
         role="dialog"
         aria-modal="true"
         aria-labelledby="marketplace-filters-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="marketplace-sheet-bar" />
-        <div className="marketplace-sidebar-head">
-          <p id="marketplace-filters-title" className="marketplace-sidebar-title" style={{ margin: 0 }}>
+        <div className={mpSheetBar} />
+        <div className={mpSidebarHead}>
+          <p id="marketplace-filters-title" className={cx(mpSidebarTitle, 'mb-0')}>
             Filters
           </p>
-          <button type="button" className="marketplace-reset" onClick={onReset}>
+          <button type="button" className={mpReset} onClick={onReset}>
             Reset
           </button>
         </div>
         <MarketplaceFilterFields filters={filters} onChange={onChange} />
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            marginTop: 8,
-            width: '100%',
-            fontFamily: FONT,
-            fontWeight: 700,
-            fontSize: 14,
-            color: '#ffffff',
-            background: GRAD,
-            border: 'none',
-            borderRadius: 14,
-            padding: '13px 16px',
-            cursor: 'pointer',
-          }}
-        >
+        <button type="button" className={cx(mpPostBtn, 'mt-2 w-full')} onClick={onClose}>
           Show results
         </button>
       </div>

@@ -22,6 +22,30 @@ import {
   HeartOutlineIcon,
   PinIcon,
 } from './MarketplaceIcons';
+import {
+  cx,
+  mpCard,
+  mpCardActions,
+  mpCardBody,
+  mpCardCategory,
+  mpCardEdit,
+  mpCardEditDanger,
+  mpCardLoc,
+  mpCardMedia,
+  mpCardMeta,
+  mpCardTitle,
+  mpCardViews,
+  mpCondition,
+  mpFeatured,
+  mpHeartOnMedia,
+  mpNeg,
+  mpPhotoCount,
+  mpPrice,
+  mpPriceRow,
+  mpSkelBar,
+  mpStatus,
+  mpStatusTone,
+} from './ui';
 
 function listingStatusKey(status: string): string {
   return status.trim().toLowerCase() || 'active';
@@ -75,13 +99,13 @@ function MineListingActions({ listing }: { listing: MarketplaceListing }) {
 
   return (
     <div
-      className="marketplace-card-actions"
+      className={mpCardActions}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
       <button
         type="button"
-        className="marketplace-card-edit"
+        className={mpCardEdit}
         disabled={actionsBusy}
         onClick={() => router.push(`/marketplace/${listing.id}/edit`)}
       >
@@ -90,7 +114,7 @@ function MineListingActions({ listing }: { listing: MarketplaceListing }) {
       {statusKey !== 'active' ? (
         <button
           type="button"
-          className="marketplace-card-edit"
+          className={mpCardEdit}
           disabled={actionsBusy}
           onClick={() => {
             void setStatus('active');
@@ -102,7 +126,7 @@ function MineListingActions({ listing }: { listing: MarketplaceListing }) {
       {statusKey !== 'sold' ? (
         <button
           type="button"
-          className="marketplace-card-edit"
+          className={mpCardEdit}
           disabled={actionsBusy}
           onClick={() => {
             void setStatus('sold');
@@ -113,7 +137,7 @@ function MineListingActions({ listing }: { listing: MarketplaceListing }) {
       ) : null}
       <button
         type="button"
-        className="marketplace-card-edit is-danger"
+        className={cx(mpCardEdit, mpCardEditDanger)}
         disabled={actionsBusy}
         onClick={() => {
           void removeListing();
@@ -145,7 +169,7 @@ export default function MarketplaceListingCard({
 
   return (
     <article
-      className="marketplace-card"
+      className={mpCard}
       onClick={() => router.push(href)}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -157,23 +181,23 @@ export default function MarketplaceListingCard({
       tabIndex={0}
       aria-label={listing.title}
     >
-      <div className="marketplace-card-media">
+      <div className={mpCardMedia}>
         <FavorImage
           src={listing.images[0]}
           alt={listing.title}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
 
-        <span className="marketplace-condition">{formatMarketplaceCondition(listing.condition)}</span>
+        <span className={mpCondition}>{formatMarketplaceCondition(listing.condition)}</span>
 
         {isMine ? (
-          <span className={`marketplace-status is-${statusKey}`}>
+          <span className={cx(mpStatus, mpStatusTone(statusKey))}>
             {formatMarketplaceListingStatus(listing.status)}
           </span>
         ) : onToggleLike ? (
           <button
             type="button"
-            className="marketplace-heart"
+            className={mpHeartOnMedia}
             aria-label={liked ? 'Remove from saved ads' : 'Save this ad'}
             disabled={savePending}
             onClick={(event) => {
@@ -185,32 +209,32 @@ export default function MarketplaceListingCard({
           </button>
         ) : null}
 
-        {listing.featured ? <span className="marketplace-featured">FEATURED</span> : null}
+        {listing.featured ? <span className={mpFeatured}>FEATURED</span> : null}
 
-        <span className="marketplace-photo-count">
+        <span className={mpPhotoCount}>
           <CameraIcon size={11} />
           {listing.imageCount}
         </span>
       </div>
 
-      <div className="marketplace-card-body">
-        <div className="marketplace-price-row">
-          <p className="marketplace-price">{formatMarketplacePrice(listing.price, listing.currency)}</p>
-          {listing.negotiable ? <span className="marketplace-neg">Neg.</span> : null}
+      <div className={mpCardBody}>
+        <div className={mpPriceRow}>
+          <p className={mpPrice}>{formatMarketplacePrice(listing.price, listing.currency)}</p>
+          {listing.negotiable ? <span className={mpNeg}>Neg.</span> : null}
         </div>
-        <h3 className="marketplace-card-title">{listing.title}</h3>
+        <h3 className={mpCardTitle}>{listing.title}</h3>
         {listing.categoryName ? (
-          <p className="marketplace-card-category">{listing.categoryName}</p>
+          <p className={mpCardCategory}>{listing.categoryName}</p>
         ) : null}
-        <p className="marketplace-card-meta">
-          <span className="marketplace-card-loc">
+        <p className={mpCardMeta}>
+          <span className={mpCardLoc}>
             <PinIcon size={11} />
             {listing.location}
           </span>
           <span>{listing.postedLabel}</span>
         </p>
         {isMine ? (
-          <p className="marketplace-card-views">
+          <p className={mpCardViews}>
             <EyeIcon size={12} />
             {formatMarketplaceViewCount(listing.viewCount)}
           </p>
@@ -223,13 +247,13 @@ export default function MarketplaceListingCard({
 
 export function MarketplaceCardSkeleton() {
   return (
-    <div className="marketplace-card marketplace-card-skel" aria-hidden="true">
-      <div className="marketplace-card-media" style={{ background: '#F2F4F7' }} />
-      <div className="marketplace-card-body">
-        <div style={{ width: '55%', height: 16, borderRadius: 4, background: '#F2F4F7', marginBottom: 10 }} />
-        <div style={{ width: '90%', height: 12, borderRadius: 4, background: '#F2F4F7', marginBottom: 6 }} />
-        <div style={{ width: '70%', height: 12, borderRadius: 4, background: '#F2F4F7', marginBottom: 12 }} />
-        <div style={{ width: '80%', height: 10, borderRadius: 4, background: '#F2F4F7' }} />
+    <div className={mpCard} aria-hidden="true">
+      <div className={mpCardMedia} />
+      <div className={mpCardBody}>
+        <div className={cx(mpSkelBar, 'mb-2.5 h-4 w-[55%]')} />
+        <div className={cx(mpSkelBar, 'mb-1.5 h-3 w-[90%]')} />
+        <div className={cx(mpSkelBar, 'mb-3 h-3 w-[70%]')} />
+        <div className={cx(mpSkelBar, 'h-2.5 w-4/5')} />
       </div>
     </div>
   );

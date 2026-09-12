@@ -34,9 +34,41 @@ import type { MarketplaceListing } from '@/lib/marketplace/types';
 import { useSaveMarketplaceListing } from '@/lib/marketplace/useSaveMarketplaceListing';
 import { useAppSelector } from '@/store/hooks';
 import { showToast } from '@/lib/toast';
+import {
+  cx,
+  mpCardLoc,
+  mpCardMeta,
+  mpCondition,
+  mpDetail,
+  mpDetailActions,
+  mpDetailBack,
+  mpDetailDesc,
+  mpDetailFact,
+  mpDetailFactLabel,
+  mpDetailFacts,
+  mpDetailFactValue,
+  mpDetailGrid,
+  mpDetailH,
+  mpDetailPanel,
+  mpDetailTitle,
+  mpFeatured,
+  mpGalleryMain,
+  mpGrid,
+  mpHeartInline,
+  mpNeg,
+  mpOutlineBtn,
+  mpPage,
+  mpPostBtn,
+  mpPriceLg,
+  mpPriceRow,
+  mpSellerCard,
+  mpSellerMeta,
+  mpSellerName,
+  mpThumb,
+  mpThumbActive,
+  mpThumbs,
+} from '@/components/marketplace/ui';
 
-const FONT = 'Poppins, sans-serif';
-const BRAND = '#A54AFF';
 const DEFAULT_CHAT_MESSAGE = 'Is this still available?';
 
 export default function MarketplaceListingDetailPage() {
@@ -158,9 +190,9 @@ export default function MarketplaceListingDetailPage() {
     return (
       <>
         <Navbar solid />
-        <main className="marketplace-page">
-          <div className="marketplace-detail">
-            <div className="marketplace-detail-grid">
+        <main className={mpPage}>
+          <div className={mpDetail}>
+            <div className={mpDetailGrid}>
               <MarketplaceCardSkeleton />
               <MarketplaceCardSkeleton />
             </div>
@@ -175,21 +207,19 @@ export default function MarketplaceListingDetailPage() {
     return (
       <>
         <Navbar solid />
-        <main className="marketplace-page" style={{ padding: '140px 24px 80px', textAlign: 'center' }}>
-          <h1 style={{ fontFamily: FONT, fontWeight: 800, fontSize: 28, color: '#101828', marginBottom: 8 }}>
-            Listing not found
-          </h1>
-          <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>
+        <main className={cx(mpPage, 'px-6 pt-[140px] pb-20 text-center')}>
+          <h1 className="mb-2 text-[28px] font-extrabold text-ink">Listing not found</h1>
+          <p className="mb-5 text-[15px] text-ink-muted">
             This ad may have been removed or the link is incorrect.
           </p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/marketplace" className="marketplace-post-btn" style={{ display: 'inline-flex' }}>
+          <div className="flex flex-wrap justify-center gap-2.5">
+            <Link href="/marketplace" className={mpPostBtn}>
               Back to Marketplace
             </Link>
             {isError ? (
               <button
                 type="button"
-                className="marketplace-outline-btn"
+                className={mpOutlineBtn}
                 onClick={() => {
                   void refetch();
                 }}
@@ -219,11 +249,11 @@ export default function MarketplaceListingDetailPage() {
           message="Log in to save ads or contact the seller."
         />
       )}
-      <main className="marketplace-page">
-        <div className="marketplace-detail">
+      <main className={mpPage}>
+        <div className={mpDetail}>
           <button
             type="button"
-            className="marketplace-detail-back"
+            className={mpDetailBack}
             onClick={() => router.push(isOwner ? '/marketplace/mine' : '/marketplace')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -232,25 +262,25 @@ export default function MarketplaceListingDetailPage() {
             Back to listings
           </button>
 
-          <div className="marketplace-detail-grid">
+          <div className={mpDetailGrid}>
             <div>
-              <div className="marketplace-gallery">
-                <div className="marketplace-gallery-main">
+              <div>
+                <div className={mpGalleryMain}>
                   <FavorImage
                     src={image}
                     alt={listing.title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  <span className="marketplace-condition">{conditionLabel}</span>
-                  {listing.featured ? <span className="marketplace-featured">FEATURED</span> : null}
+                  <span className={mpCondition}>{conditionLabel}</span>
+                  {listing.featured ? <span className={mpFeatured}>FEATURED</span> : null}
                 </div>
                 {listing.images.length > 1 ? (
-                  <div className="marketplace-thumbs">
+                  <div className={mpThumbs}>
                     {listing.images.map((src, index) => (
                       <button
                         key={`${src}-${index}`}
                         type="button"
-                        className={`marketplace-thumb${index === activeImage ? ' is-active' : ''}`}
+                        className={cx(mpThumb, index === activeImage && mpThumbActive)}
                         onClick={() => setActiveImage(index)}
                         aria-label={`Photo ${index + 1}`}
                       >
@@ -262,17 +292,16 @@ export default function MarketplaceListingDetailPage() {
               </div>
             </div>
 
-            <div className="marketplace-detail-panel">
-              <div className="marketplace-price-row" style={{ marginBottom: 8 }}>
-                <p className="marketplace-price" style={{ fontSize: 28 }}>
+            <div className={mpDetailPanel}>
+              <div className={cx(mpPriceRow, 'mb-2')}>
+                <p className={mpPriceLg}>
                   {formatMarketplacePrice(listing.price, listing.currency)}
                 </p>
-                {listing.negotiable ? <span className="marketplace-neg">Negotiable</span> : null}
+                {listing.negotiable ? <span className={mpNeg}>Negotiable</span> : null}
                 {isOwner ? null : (
                   <button
                     type="button"
-                    className="marketplace-heart"
-                    style={{ position: 'relative', top: 'auto', right: 'auto', marginLeft: 'auto' }}
+                    className={mpHeartInline}
                     aria-label={liked ? 'Remove from saved ads' : 'Save this ad'}
                     disabled={pendingIds.has(listing.id)}
                     onClick={() => {
@@ -284,49 +313,48 @@ export default function MarketplaceListingDetailPage() {
                 )}
               </div>
 
-              <h1 className="marketplace-detail-title">{listing.title}</h1>
-              <p className="marketplace-card-meta" style={{ marginBottom: 20 }}>
-                <span className="marketplace-card-loc">
+              <h1 className={mpDetailTitle}>{listing.title}</h1>
+              <p className={cx(mpCardMeta, 'mb-5')}>
+                <span className={mpCardLoc}>
                   <PinIcon size={13} />
                   {listing.location}
                 </span>
                 <span>{listing.postedLabel}</span>
               </p>
 
-              <div className="marketplace-detail-facts">
-                <div>
-                  <span>Category</span>
-                  <strong>{categoryLabel}</strong>
+              <div className={mpDetailFacts}>
+                <div className={mpDetailFact}>
+                  <span className={mpDetailFactLabel}>Category</span>
+                  <strong className={mpDetailFactValue}>{categoryLabel}</strong>
                 </div>
-                <div>
-                  <span>Condition</span>
-                  <strong>{conditionLabel}</strong>
+                <div className={mpDetailFact}>
+                  <span className={mpDetailFactLabel}>Condition</span>
+                  <strong className={mpDetailFactValue}>{conditionLabel}</strong>
                 </div>
-                <div>
-                  <span>Photos</span>
-                  <strong>{listing.imageCount}</strong>
+                <div className={mpDetailFact}>
+                  <span className={mpDetailFactLabel}>Photos</span>
+                  <strong className={mpDetailFactValue}>{listing.imageCount}</strong>
                 </div>
               </div>
 
-              <h2 className="marketplace-detail-h">Description</h2>
-              <p className="marketplace-detail-desc">{listing.description}</p>
+              <h2 className={mpDetailH}>Description</h2>
+              <p className={mpDetailDesc}>{listing.description}</p>
 
-              <div className="marketplace-seller-card">
+              <div className={mpSellerCard}>
                 <PersonAvatar src={listing.seller.avatar} name={listing.seller.name} size={48} />
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <p className="marketplace-seller-name">{listing.seller.name}</p>
+                <div className="min-w-0 flex-1">
+                  <p className={mpSellerName}>{listing.seller.name}</p>
                   {listing.seller.memberSince ? (
-                    <p className="marketplace-seller-meta">Member since {listing.seller.memberSince}</p>
+                    <p className={mpSellerMeta}>Member since {listing.seller.memberSince}</p>
                   ) : null}
                 </div>
               </div>
 
-              <div className="marketplace-detail-actions">
+              <div className={mpDetailActions}>
                 {isOwner ? (
                   <Link
                     href={`/marketplace/${listing.id}/edit`}
-                    className="marketplace-post-btn"
-                    style={{ flex: 1, justifyContent: 'center', display: 'inline-flex' }}
+                    className={cx(mpPostBtn, 'flex-1')}
                   >
                     Edit listing
                   </Link>
@@ -334,8 +362,7 @@ export default function MarketplaceListingDetailPage() {
                   <>
                     <button
                       type="button"
-                      className="marketplace-post-btn"
-                      style={{ flex: 1, justifyContent: 'center' }}
+                      className={cx(mpPostBtn, 'flex-1')}
                       disabled={isStartingChat}
                       onClick={() => {
                         void startChat();
@@ -343,7 +370,7 @@ export default function MarketplaceListingDetailPage() {
                     >
                       {isStartingChat ? 'Starting chat…' : 'Chat with seller'}
                     </button>
-                    <button type="button" className="marketplace-outline-btn" onClick={() => requireAuth('Calling the seller will connect with the listing API.')}>
+                    <button type="button" className={mpOutlineBtn} onClick={() => requireAuth('Calling the seller will connect with the listing API.')}>
                       Call
                     </button>
                   </>
@@ -353,9 +380,9 @@ export default function MarketplaceListingDetailPage() {
           </div>
 
           {related.length > 0 ? (
-            <section style={{ marginTop: 40 }}>
-              <h2 className="marketplace-detail-h" style={{ marginBottom: 16 }}>Similar listings</h2>
-              <div className="marketplace-grid">
+            <section className="mt-10">
+              <h2 className={cx(mpDetailH, 'mb-4')}>Similar listings</h2>
+              <div className={mpGrid}>
                 {related.map((item) => (
                   <MarketplaceListingCard
                     key={item.id}

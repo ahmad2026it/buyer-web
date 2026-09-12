@@ -18,9 +18,33 @@ import { MARKETPLACE_MY_LISTING_STATUSES } from '@/lib/marketplace/types';
 import type { MarketplaceMyListingStatus } from '@/lib/marketplace/types';
 import { formatMarketplaceListingStatus } from '@/lib/marketplace/listings';
 import { useAppSelector } from '@/store/hooks';
-
-const FONT = 'Poppins, sans-serif';
-const BRAND = '#A54AFF';
+import {
+  cx,
+  mpChip,
+  mpChipActive,
+  mpChips,
+  mpEmpty,
+  mpEmptyText,
+  mpEmptyTitle,
+  mpGhostBtn,
+  mpGrid,
+  mpHero,
+  mpHeroActions,
+  mpHeroCopy,
+  mpHeroInner,
+  mpHeroLead,
+  mpHeroSubtitle,
+  mpHeroTitle,
+  mpIconBtn,
+  mpMineBody,
+  mpMoreBtn,
+  mpPage,
+  mpPostBtn,
+  mpSectionCount,
+  mpSectionHead,
+  mpSectionTitle,
+  mpSoftBtn,
+} from '@/components/marketplace/ui';
 
 const STATUS_FILTERS: Array<MarketplaceMyListingStatus | 'all'> = [
   'all',
@@ -77,31 +101,33 @@ export default function MyMarketplaceListingsPage() {
         />
       )}
 
-      <main className="marketplace-page">
-        <div className="marketplace-hero">
-          <div className="marketplace-hero-inner">
-            <Link href="/marketplace" className="marketplace-back" aria-label="Back to marketplace">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
+      <main className={mpPage}>
+        <div className={mpHero}>
+          <div className={mpHeroInner}>
+            <div className={mpHeroLead}>
+              <Link href="/marketplace" className={mpIconBtn} aria-label="Back to marketplace">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
 
-            <div className="marketplace-hero-copy">
-              <h1>My listings</h1>
-              <p>Ads you have posted on Marketplace</p>
+              <div className={mpHeroCopy}>
+                <h1 className={mpHeroTitle}>My listings</h1>
+                <p className={mpHeroSubtitle}>Ads you have posted on Marketplace</p>
+              </div>
             </div>
 
-            <div className="marketplace-hero-actions">
-              <Link href="/chat?tab=listing" className="marketplace-ghost-btn">
+            <div className={mpHeroActions}>
+              <Link href="/chat?tab=listing" className={mpGhostBtn}>
                 Chats
               </Link>
-              <Link href="/marketplace/saved" className="marketplace-ghost-btn">
+              <Link href="/marketplace/saved" className={mpGhostBtn}>
                 Saved
               </Link>
-              <Link href="/marketplace" className="marketplace-ghost-btn">
+              <Link href="/marketplace" className={mpGhostBtn}>
                 Browse
               </Link>
-              <button type="button" className="marketplace-post-btn" onClick={goPostAd}>
+              <button type="button" className={mpPostBtn} onClick={goPostAd}>
                 <PlusIcon size={15} />
                 Post Ad
               </button>
@@ -109,15 +135,15 @@ export default function MyMarketplaceListingsPage() {
           </div>
         </div>
 
-        <div className="marketplace-mine-body">
-          <div className="marketplace-chips" role="tablist" aria-label="Listing status">
+        <div className={mpMineBody}>
+          <div className={mpChips} role="tablist" aria-label="Listing status">
             {STATUS_FILTERS.map((value) => (
               <button
                 key={value}
                 type="button"
                 role="tab"
                 aria-selected={status === value}
-                className={`marketplace-chip${status === value ? ' is-active' : ''}`}
+                className={cx(mpChip, status === value && mpChipActive)}
                 onClick={() => changeStatus(value)}
               >
                 {value === 'all' ? 'All' : formatMarketplaceListingStatus(value)}
@@ -125,112 +151,72 @@ export default function MyMarketplaceListingsPage() {
             ))}
           </div>
 
-          <div className="marketplace-section-head" style={{ marginTop: 22 }}>
-            <h2>
+          <div className={cx(mpSectionHead, 'mt-[22px]')}>
+            <h2 className={mpSectionTitle}>
               {status === 'all' ? 'Your ads' : `${formatMarketplaceListingStatus(status)} ads`}
-              {token && total > 0 ? <span> ({total})</span> : null}
+              {token && total > 0 ? <span className={mpSectionCount}> ({total})</span> : null}
             </h2>
           </div>
 
           {!token ? (
-            <div className="marketplace-empty">
-              <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>
-                Log in to see your ads
-              </h3>
-              <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085', marginBottom: 16 }}>
-                Sign in to manage listings you have posted.
-              </p>
-              <button
-                type="button"
-                onClick={() => setAuthOpen(true)}
-                style={{
-                  fontFamily: FONT,
-                  fontWeight: 700,
-                  fontSize: 14,
-                  color: BRAND,
-                  background: '#F4EBFF',
-                  borderRadius: 9999,
-                  padding: '10px 20px',
-                }}
-              >
+            <div className={mpEmpty}>
+              <h3 className={mpEmptyTitle}>Log in to see your ads</h3>
+              <p className={mpEmptyText}>Sign in to manage listings you have posted.</p>
+              <button type="button" className={mpSoftBtn} onClick={() => setAuthOpen(true)}>
                 Log in
               </button>
             </div>
           ) : showListLoading ? (
-            <div className="marketplace-grid">
+            <div className={mpGrid}>
               {Array.from({ length: 8 }, (_, index) => (
                 <MarketplaceCardSkeleton key={index} />
               ))}
             </div>
           ) : isError ? (
-            <div className="marketplace-empty">
-              <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>
-                Could not load your ads
-              </h3>
-              <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085', marginBottom: 16 }}>
-                There was a problem fetching your listings. Please try again.
-              </p>
+            <div className={mpEmpty}>
+              <h3 className={mpEmptyTitle}>Could not load your ads</h3>
+              <p className={mpEmptyText}>There was a problem fetching your listings. Please try again.</p>
               <button
                 type="button"
+                className={mpSoftBtn}
                 onClick={() => {
                   void refetch();
-                }}
-                style={{
-                  fontFamily: FONT,
-                  fontWeight: 700,
-                  fontSize: 14,
-                  color: BRAND,
-                  background: '#F4EBFF',
-                  borderRadius: 9999,
-                  padding: '10px 20px',
                 }}
               >
                 Try again
               </button>
             </div>
           ) : listings.length === 0 ? (
-            <div className="marketplace-empty">
-              <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>
-                No ads yet
-              </h3>
-              <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085', marginBottom: 16 }}>
+            <div className={mpEmpty}>
+              <h3 className={mpEmptyTitle}>No ads yet</h3>
+              <p className={mpEmptyText}>
                 {status === 'active'
                   ? 'You have not posted an active ad. Publish one to see it here.'
                   : `You have no ${status === 'all' ? '' : `${formatMarketplaceListingStatus(status).toLowerCase()} `}ads.`}
               </p>
-              <button type="button" className="marketplace-post-btn" onClick={goPostAd} style={{ margin: '0 auto' }}>
+              <button type="button" className={cx(mpPostBtn, 'mx-auto')} onClick={goPostAd}>
                 <PlusIcon size={15} />
                 Post Ad
               </button>
             </div>
           ) : (
             <>
-              <div className="marketplace-grid">
+              <div className={mpGrid}>
                 {listings.map((listing) => (
                   <MarketplaceListingCard key={listing.id} listing={listing} variant="mine" />
                 ))}
               </div>
               {hasMore ? (
-                <div style={{ marginTop: 28, textAlign: 'center' }}>
+                <div className="mt-7 text-center">
                   <button
                     type="button"
+                    className={mpMoreBtn}
                     disabled={isFetching}
                     onClick={() => setPage((current) => current + 1)}
-                    style={{
-                      fontFamily: FONT,
-                      fontWeight: 600,
-                      fontSize: 14,
-                      color: BRAND,
-                      background: '#ffffff',
-                      border: `1.5px solid ${BRAND}`,
-                      borderRadius: 9999,
-                      padding: '12px 36px',
-                      cursor: isFetching ? 'not-allowed' : 'pointer',
-                    }}
                   >
                     {isFetching ? 'Loading…' : 'Show more'}
                   </button>
-                  <p style={{ fontFamily: FONT, fontSize: 12, color: '#98A2B3', marginTop: 8 }}>
+                  <p className="mt-2 text-xs text-ink-subtle">
                     Showing {listings.length} of {total}
                   </p>
                 </div>

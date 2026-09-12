@@ -17,17 +17,42 @@ import {
 } from '@/lib/marketplace/types';
 import { useAppSelector } from '@/store/hooks';
 import { showToast } from '@/lib/toast';
+import {
+  cx,
+  mpControl,
+  mpDetailBack,
+  mpField,
+  mpFieldError,
+  mpFieldHint,
+  mpLocationGrid,
+  mpMapSkel,
+  mpMapWrap,
+  mpPhotoDrop,
+  mpPhotoDropActive,
+  mpPhotoDropHint,
+  mpPhotoDropTitle,
+  mpPhotoGrid,
+  mpPhotoInput,
+  mpPhotoRemove,
+  mpPhotoThumb,
+  mpPhotoUpload,
+  mpPost,
+  mpPostBtn,
+  mpPostForm,
+  mpPostLead,
+  mpPostTitle,
+  mpPriceFields,
+  mpTextarea,
+} from './ui';
 
 const LocationMapPicker = dynamic(() => import('@/components/LocationMapPicker'), {
   ssr: false,
   loading: () => (
-    <div className="marketplace-map-skel" aria-hidden="true">
+    <div className={mpMapSkel} aria-hidden="true">
       Loading map...
     </div>
   ),
 });
-
-const GRAD = 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)';
 
 type PostForm = {
   title: string;
@@ -300,25 +325,26 @@ export default function MarketplaceListingForm({
   const backHref = isEdit ? '/marketplace/mine' : '/marketplace';
 
   return (
-    <div className="marketplace-post">
-      <button type="button" className="marketplace-detail-back" onClick={() => router.push(backHref)}>
+    <div className={mpPost}>
+      <button type="button" className={mpDetailBack} onClick={() => router.push(backHref)}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         {isEdit ? 'Back to my listings' : 'Back to Marketplace'}
       </button>
 
-      <h1>{isEdit ? 'Edit listing' : 'Post an ad'}</h1>
-      <p>
+      <h1 className={mpPostTitle}>{isEdit ? 'Edit listing' : 'Post an ad'}</h1>
+      <p className={mpPostLead}>
         {isEdit
           ? 'Update the details, photos, or location for this ad.'
           : 'Free listing — add photos and pin a location so buyers can find your item.'}
       </p>
 
-      <form className="marketplace-post-form" onSubmit={handleSubmit} noValidate aria-busy={saving}>
-        <label className="marketplace-field">
+      <form className={mpPostForm} onSubmit={handleSubmit} noValidate aria-busy={saving}>
+        <label className={mpField}>
           <span>Title</span>
           <input
+            className={mpControl}
             value={form.title}
             onChange={(event) => set('title', event.target.value)}
             placeholder="e.g. iPhone 14 Pro Max - 256GB"
@@ -327,16 +353,17 @@ export default function MarketplaceListingForm({
             aria-describedby={errors.title ? 'listing-title-error' : undefined}
           />
           {errors.title ? (
-            <em id="listing-title-error" className="marketplace-field-error">
+            <em id="listing-title-error" className={mpFieldError}>
               {errors.title}
             </em>
           ) : null}
         </label>
 
-        <div className="marketplace-price-fields">
-          <label className="marketplace-field">
+        <div className={mpPriceFields}>
+          <label className={mpField}>
             <span>Category</span>
             <select
+              className={mpControl}
               value={form.categoryId}
               onChange={(event) => set('categoryId', event.target.value)}
               disabled={categoriesLoading && postableCategories.length === 0}
@@ -355,14 +382,15 @@ export default function MarketplaceListingForm({
               )}
             </select>
             {errors.categoryId ? (
-              <em id="listing-category-error" className="marketplace-field-error">
+              <em id="listing-category-error" className={mpFieldError}>
                 {errors.categoryId}
               </em>
             ) : null}
           </label>
-          <label className="marketplace-field">
+          <label className={mpField}>
             <span>Condition</span>
             <select
+              className={mpControl}
               value={form.condition}
               onChange={(event) => set('condition', event.target.value as MarketplaceListingCondition)}
               required
@@ -376,16 +404,17 @@ export default function MarketplaceListingForm({
               ))}
             </select>
             {errors.condition ? (
-              <em id="listing-condition-error" className="marketplace-field-error">
+              <em id="listing-condition-error" className={mpFieldError}>
                 {errors.condition}
               </em>
             ) : null}
           </label>
         </div>
 
-        <label className="marketplace-field">
+        <label className={mpField}>
           <span>Price ($)</span>
           <input
+            className={mpControl}
             type="number"
             min={1}
             step="0.01"
@@ -398,15 +427,16 @@ export default function MarketplaceListingForm({
             aria-describedby={errors.price ? 'listing-price-error' : undefined}
           />
           {errors.price ? (
-            <em id="listing-price-error" className="marketplace-field-error">
+            <em id="listing-price-error" className={mpFieldError}>
               {errors.price}
             </em>
           ) : null}
         </label>
 
-        <label className="marketplace-field">
+        <label className={mpField}>
           <span>Description</span>
           <textarea
+            className={mpTextarea}
             rows={5}
             value={form.description}
             onChange={(event) => set('description', event.target.value)}
@@ -416,15 +446,15 @@ export default function MarketplaceListingForm({
             aria-describedby={errors.description ? 'listing-description-error' : undefined}
           />
           {errors.description ? (
-            <em id="listing-description-error" className="marketplace-field-error">
+            <em id="listing-description-error" className={mpFieldError}>
               {errors.description}
             </em>
           ) : null}
         </label>
 
-        <div className="marketplace-field">
+        <div className={mpField}>
           <span>Location</span>
-          <div className="marketplace-map-wrap">
+          <div className={mpMapWrap}>
             <LocationMapPicker
               brandColor="#A54AFF"
               value={picked}
@@ -434,15 +464,16 @@ export default function MarketplaceListingForm({
             />
           </div>
           {errors.location ? (
-            <em className="marketplace-field-error">{errors.location}</em>
+            <em className={mpFieldError}>{errors.location}</em>
           ) : (
-            <span className="marketplace-field-hint">Search or pin the map. City, state, and ZIP fill in from the pin.</span>
+            <span className={mpFieldHint}>Search or pin the map. City, state, and ZIP fill in from the pin.</span>
           )}
         </div>
 
-        <label className="marketplace-field">
+        <label className={mpField}>
           <span>Location label</span>
           <input
+            className={mpControl}
             value={form.locationLabel}
             onChange={(event) => set('locationLabel', event.target.value)}
             placeholder="Austin, TX"
@@ -451,16 +482,17 @@ export default function MarketplaceListingForm({
             aria-describedby={errors.locationLabel ? 'listing-location-label-error' : undefined}
           />
           {errors.locationLabel ? (
-            <em id="listing-location-label-error" className="marketplace-field-error">
+            <em id="listing-location-label-error" className={mpFieldError}>
               {errors.locationLabel}
             </em>
           ) : null}
         </label>
 
-        <div className="marketplace-location-grid">
-          <label className="marketplace-field">
+        <div className={mpLocationGrid}>
+          <label className={mpField}>
             <span>City</span>
             <input
+              className={mpControl}
               value={form.city}
               onChange={(event) => set('city', event.target.value)}
               placeholder="Austin"
@@ -469,14 +501,15 @@ export default function MarketplaceListingForm({
               aria-describedby={errors.city ? 'listing-city-error' : undefined}
             />
             {errors.city ? (
-              <em id="listing-city-error" className="marketplace-field-error">
+              <em id="listing-city-error" className={mpFieldError}>
                 {errors.city}
               </em>
             ) : null}
           </label>
-          <label className="marketplace-field">
+          <label className={mpField}>
             <span>State</span>
             <input
+              className={mpControl}
               value={form.state}
               onChange={(event) => set('state', event.target.value)}
               placeholder="TX"
@@ -485,14 +518,15 @@ export default function MarketplaceListingForm({
               aria-describedby={errors.state ? 'listing-state-error' : undefined}
             />
             {errors.state ? (
-              <em id="listing-state-error" className="marketplace-field-error">
+              <em id="listing-state-error" className={mpFieldError}>
                 {errors.state}
               </em>
             ) : null}
           </label>
-          <label className="marketplace-field">
+          <label className={mpField}>
             <span>ZIP code</span>
             <input
+              className={mpControl}
               value={form.zipCode}
               onChange={(event) => set('zipCode', event.target.value)}
               placeholder="78701"
@@ -501,17 +535,17 @@ export default function MarketplaceListingForm({
               aria-describedby={errors.zipCode ? 'listing-zip-error' : undefined}
             />
             {errors.zipCode ? (
-              <em id="listing-zip-error" className="marketplace-field-error">
+              <em id="listing-zip-error" className={mpFieldError}>
                 {errors.zipCode}
               </em>
             ) : null}
           </label>
         </div>
 
-        <div className="marketplace-field">
+        <div className={mpField}>
           <span>Photos</span>
           <div
-            className={`marketplace-photo-drop${dragging ? ' is-drag' : ''}`}
+            className={cx(mpPhotoDrop, dragging && mpPhotoDropActive)}
             onDragOver={(event) => {
               event.preventDefault();
               setDragging(true);
@@ -519,13 +553,13 @@ export default function MarketplaceListingForm({
             onDragLeave={() => setDragging(false)}
             onDrop={onDrop}
           >
-            <p>{isEdit ? 'Update photos' : 'Add photos'}</p>
-            <span>
+            <p className={mpPhotoDropTitle}>{isEdit ? 'Update photos' : 'Add photos'}</p>
+            <span className={mpPhotoDropHint}>
               Up to {MAX_MARKETPLACE_LISTING_IMAGES} images. Keep current photos or add new ones.
             </span>
             <button
               type="button"
-              className="marketplace-photo-upload"
+              className={mpPhotoUpload}
               onClick={() => fileRef.current?.click()}
             >
               Choose photos
@@ -535,22 +569,22 @@ export default function MarketplaceListingForm({
               type="file"
               accept="image/*"
               multiple
-              className="marketplace-photo-input"
+              className={mpPhotoInput}
               aria-label="Listing photos"
               onChange={onFileChange}
             />
           </div>
           {errors.images ? (
-            <em className="marketplace-field-error">{errors.images}</em>
+            <em className={mpFieldError}>{errors.images}</em>
           ) : null}
           {photos.length > 0 ? (
-            <ul className="marketplace-photo-grid">
+            <ul className={mpPhotoGrid}>
               {photos.map((photo, index) => (
-                <li key={photo.id} className="marketplace-photo-thumb">
-                  <img src={photo.url} alt="" />
+                <li key={photo.id} className={mpPhotoThumb}>
+                  <img src={photo.url} alt="" className="h-full w-full object-cover" />
                   <button
                     type="button"
-                    className="marketplace-photo-remove"
+                    className={mpPhotoRemove}
                     aria-label={`Remove photo ${index + 1}`}
                     onClick={() => removePhoto(index)}
                   >
@@ -566,15 +600,8 @@ export default function MarketplaceListingForm({
 
         <button
           type="submit"
-          className="marketplace-post-btn"
+          className={cx(mpPostBtn, 'w-full py-3.5 disabled:bg-[#D0D5DD] disabled:shadow-none')}
           disabled={saving}
-          style={{
-            justifyContent: 'center',
-            width: '100%',
-            background: saving ? '#D0D5DD' : GRAD,
-            padding: '14px 20px',
-            cursor: saving ? 'not-allowed' : 'pointer',
-          }}
         >
           {saving ? (isEdit ? 'Saving...' : 'Publishing...') : isEdit ? 'Save changes' : 'Publish ad'}
         </button>
