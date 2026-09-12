@@ -146,6 +146,10 @@ const isPublicLegalRequest = (url?: string): boolean => {
   );
 };
 
+const isMarketplaceRequest = (url?: string): boolean => {
+  return Boolean(url && /\/api\/(?:admin|public|buyer)\/marketplace\//.test(url));
+};
+
 const isChangePasswordCredentialError = (url?: string, body?: unknown): boolean => {
   if (!url?.includes('/api/buyer/auth/change-password')) return false;
   const message = getMessageFromBody(body, '').toLowerCase();
@@ -228,6 +232,7 @@ api.interceptors.response.use(
       (status === 401 || status === 403) &&
       !isPublicAuthRequest(error.config?.url) &&
       !isPublicLegalRequest(error.config?.url) &&
+      !isMarketplaceRequest(error.config?.url) &&
       !isChangePasswordCredentialError(error.config?.url, error.response?.data);
 
     const isRestrictedProfile =

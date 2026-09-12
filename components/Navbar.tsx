@@ -13,7 +13,8 @@ import {
 } from '@/app/buyer/store/buyerLocationsAPI';
 import type { BuyerLocation } from '@/app/buyer/store/buyerLocationsTypes';
 import {
-  BUYER_CONVERSATIONS_LIST_PARAMS,
+  BUYER_BOOKING_CONVERSATIONS_LIST_PARAMS,
+  BUYER_LISTING_CONVERSATIONS_LIST_PARAMS,
   useGetBuyerConversationsQuery,
 } from '@/app/buyer/store/buyerConversationsAPI';
 import {
@@ -646,6 +647,8 @@ const PROFILE_AVA = 'https://images.unsplash.com/photo-1534528741775-53994a69dae
 /* ── Profile menu items ─────────────────────────────────── */
 const PROFILE_MENU = [
   { label: 'Edit profile',       href: '/profile/edit', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/></svg> },
+  { label: 'My listings',        href: '/marketplace/mine', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/></svg> },
+  { label: 'Saved ads',          href: '/marketplace/saved', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
   { label: 'Billing & Payments', href: '/billing',      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> },
   { label: 'Security',           href: '/profile/security', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
   { label: 'Dispute center', href: '/disputes', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> },
@@ -711,18 +714,27 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
     },
   );
 
-  const { data: conversationsResponse } = useGetBuyerConversationsQuery(
-    BUYER_CONVERSATIONS_LIST_PARAMS,
+  const { data: bookingConversationsResponse } = useGetBuyerConversationsQuery(
+    BUYER_BOOKING_CONVERSATIONS_LIST_PARAMS,
+    { skip: !token },
+  );
+  const { data: listingConversationsResponse } = useGetBuyerConversationsQuery(
+    BUYER_LISTING_CONVERSATIONS_LIST_PARAMS,
     { skip: !token },
   );
 
   const notifications = notificationsResponse?.data?.notifications ?? [];
   const unreadCount = notificationsResponse?.data?.unreadCount ?? 0;
   const notifTotal = notificationsResponse?.data?.pagination?.total ?? 0;
-  const chatUnread = (conversationsResponse?.data?.conversations ?? []).reduce(
-    (sum, conversation) => sum + (conversation.unreadCount || 0),
-    0,
-  );
+  const chatUnread =
+    (bookingConversationsResponse?.data?.conversations ?? []).reduce(
+      (sum, conversation) => sum + (conversation.unreadCount || 0),
+      0,
+    ) +
+    (listingConversationsResponse?.data?.conversations ?? []).reduce(
+      (sum, conversation) => sum + (conversation.unreadCount || 0),
+      0,
+    );
 
   const notificationsErrorMessage = getMutationErrorMessage(
     notificationsQueryError,

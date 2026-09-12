@@ -1,6 +1,6 @@
 import {
+  BUYER_CONVERSATION_LIST_CACHE_ARGS,
   BUYER_CONVERSATION_MESSAGES_LIMIT,
-  BUYER_CONVERSATIONS_LIST_PARAMS,
   buyerConversationsAPI,
 } from '@/app/buyer/store/buyerConversationsAPI';
 import { buyerBookingsAPI } from '@/app/buyer/store/buyerBookingsAPI';
@@ -78,11 +78,12 @@ export function touchBuyerConversationPreview(
     lastReadMessageId?: number;
   },
 ): void {
-  dispatch(
-    buyerConversationsAPI.util.updateQueryData(
-      'getBuyerConversations',
-      BUYER_CONVERSATIONS_LIST_PARAMS,
-      (draft) => {
+  BUYER_CONVERSATION_LIST_CACHE_ARGS.forEach((listParams) => {
+    dispatch(
+      buyerConversationsAPI.util.updateQueryData(
+        'getBuyerConversations',
+        listParams,
+        (draft) => {
         const conv = draft.data?.conversations?.find((item) => item.id === args.conversationId);
         if (!conv) return;
 
@@ -99,9 +100,10 @@ export function touchBuyerConversationPreview(
         } else if (args.incrementUnread) {
           conv.unreadCount = (conv.unreadCount || 0) + 1;
         }
-      },
-    ),
-  );
+        },
+      ),
+    );
+  });
 }
 
 export function applyIncomingBuyerMessage(
@@ -112,11 +114,12 @@ export function applyIncomingBuyerMessage(
   upsertBuyerConversationMessage(dispatch, message);
 
   let found = false;
-  dispatch(
-    buyerConversationsAPI.util.updateQueryData(
-      'getBuyerConversations',
-      BUYER_CONVERSATIONS_LIST_PARAMS,
-      (draft) => {
+  BUYER_CONVERSATION_LIST_CACHE_ARGS.forEach((listParams) => {
+    dispatch(
+      buyerConversationsAPI.util.updateQueryData(
+        'getBuyerConversations',
+        listParams,
+        (draft) => {
         const conv = draft.data?.conversations?.find((item) => item.id === message.conversationId);
         if (!conv) return;
 
@@ -131,9 +134,10 @@ export function applyIncomingBuyerMessage(
         if (incrementUnread) {
           conv.unreadCount = (conv.unreadCount || 0) + 1;
         }
-      },
-    ),
-  );
+        },
+      ),
+    );
+  });
 
   if (!found) {
     dispatch(

@@ -51,8 +51,11 @@ function chatPath(params: Record<string, string | null>): string {
   return query ? `/chat?${query}` : '/chat';
 }
 
-export function getChatConversationPath(conversationId: number | string): string {
-  return chatPath({ id: String(conversationId) });
+export function getChatConversationPath(
+  conversationId: number | string,
+  tab?: 'booking' | 'listing',
+): string {
+  return chatPath({ id: String(conversationId), tab: tab ?? null });
 }
 
 export function getIncomingEventTargetPath(data: Record<string, unknown>): string | null {
@@ -152,6 +155,13 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
   const customFavorId =
     firstId(sources, ['customFavorId', 'custom_favor_id', 'customFavor_id']) ??
     (customFavorRequest ? favorId : null);
+  const listingId =
+    firstId(sources, [
+      'listingId',
+      'listing_id',
+      'marketplaceListingId',
+      'marketplace_listing_id',
+    ]) ?? pickId(asRecord(payload?.listing), ['id']);
   const conversationId =
     firstId(sources, ['conversationId', 'conversation_id', 'chatId', 'chat_id', 'threadId', 'thread_id']) ??
     pickId(nestedConversation, ['id']) ??
@@ -167,10 +177,13 @@ export function getNotificationTargetPath(notification: BuyerNotification): stri
   }
 
   if (isChat || conversationId) {
+    const looksLikeListing = /(listing|marketplace)/.test(type);
     return chatPath({
       id: conversationId,
+      tab: looksLikeListing || listingId ? 'listing' : 'booking',
       bookingId: conversationId ? null : bookingId,
-      sellerId: conversationId || bookingId ? null : sellerId,
+      listingId: conversationId ? null : listingId,
+      sellerId: conversationId || bookingId || listingId ? null : sellerId,
     });
   }
 

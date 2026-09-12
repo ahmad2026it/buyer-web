@@ -48,8 +48,11 @@ const formatAddressParts = (place: google.maps.places.PlaceResult | google.maps.
     components.find((c) => c.types.includes('country'))?.short_name ||
     '';
 
+  const zipCode =
+    components.find((c) => c.types.includes('postal_code'))?.long_name || '';
+
   const detail = [city, region, country].filter(Boolean).join(', ');
-  return { address, detail };
+  return { address, detail, city, state: region, zipCode };
 };
 
 export default function LocationMapPicker({
@@ -103,12 +106,15 @@ export default function LocationMapPicker({
           detail: '',
           lat,
           lng,
+          city: '',
+          state: '',
+          zipCode: '',
         });
         return;
       }
 
-      const { address, detail } = formatAddressParts(first);
-      const next = { address, detail, lat, lng };
+      const { address, detail, city, state, zipCode } = formatAddressParts(first);
+      const next = { address, detail, lat, lng, city, state, zipCode };
       setQuery(address);
       onChange(next);
     },
@@ -135,12 +141,15 @@ export default function LocationMapPicker({
 
     const lat = loc.lat();
     const lng = loc.lng();
-    const { address, detail } = formatAddressParts(place);
+    const { address, detail, city, state, zipCode } = formatAddressParts(place);
     const next = {
       address: address || query,
       detail,
       lat,
       lng,
+      city,
+      state,
+      zipCode,
     };
     setQuery(next.address);
     setMapCenter({ lat, lng });

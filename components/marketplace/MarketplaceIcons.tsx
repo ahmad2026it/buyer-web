@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import type { MarketplaceCategoryId } from '@/lib/marketplace/types';
+import { marketplaceCategorySlug } from '@/lib/marketplace/categories';
+import type { MarketplaceCategory } from '@/lib/marketplace/types';
 
 type IconProps = { size?: number; color?: string };
 
@@ -126,6 +127,20 @@ export function PlusIcon({ size = 16, color = '#ffffff' }: IconProps) {
   );
 }
 
+export function EyeIcon({ size = 12, color = '#98A2B3' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2" />
+    </svg>
+  );
+}
+
 export function HeartOutlineIcon({ size = 16, color = '#667085' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -151,7 +166,7 @@ export function HeartFilledIcon({ size = 16, color = '#F43F5E' }: IconProps) {
   );
 }
 
-export const CATEGORY_ICONS: Record<MarketplaceCategoryId, (props: IconProps) => ReactNode> = {
+export const CATEGORY_ICONS: Record<string, (props: IconProps) => ReactNode> = {
   all: GridIcon,
   mobiles: PhoneIcon,
   vehicles: CarIcon,
@@ -160,3 +175,30 @@ export const CATEGORY_ICONS: Record<MarketplaceCategoryId, (props: IconProps) =>
   fashion: ShirtIcon,
   property: HomeIcon,
 };
+
+export function MarketplaceCategoryIcon({
+  category,
+  size = 16,
+  color = 'currentColor',
+}: {
+  category: MarketplaceCategory;
+  size?: number;
+  color?: string;
+}) {
+  const remoteIcon = category.icon;
+  if (remoteIcon && /^(https?:|data:|\/)/i.test(remoteIcon)) {
+    return (
+      <img
+        src={remoteIcon}
+        alt=""
+        width={size}
+        height={size}
+        style={{ width: size, height: size, objectFit: 'contain' }}
+      />
+    );
+  }
+
+  const key = (category.slug ?? marketplaceCategorySlug(category.label)).toLowerCase();
+  const Icon = CATEGORY_ICONS[category.id] ?? CATEGORY_ICONS[key] ?? GridIcon;
+  return <Icon size={size} color={color} />;
+}

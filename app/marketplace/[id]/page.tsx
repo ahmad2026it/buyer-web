@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
@@ -8,56 +8,82 @@ import Footer from '@/components/Footer';
 import AuthGateModal from '@/components/AuthGateModal';
 import FavorImage from '@/components/FavorImage';
 import PersonAvatar from '@/components/PersonAvatar';
-import MarketplaceListingCard from '@/components/marketplace/MarketplaceListingCard';
+import MarketplaceListingCard, {
+  MarketplaceCardSkeleton,
+} from '@/components/marketplace/MarketplaceListingCard';
 import {
   HeartFilledIcon,
   HeartOutlineIcon,
   PinIcon,
 } from '@/components/marketplace/MarketplaceIcons';
+import { useMarketplaceCategories } from '@/app/buyer/store/marketplaceCategoriesAPI';
 import {
-  MARKETPLACE_CATEGORIES,
-  MOCK_MARKETPLACE_LISTINGS,
-  formatMarketplacePrice,
-  getMarketplaceListing,
-} from '@/lib/marketplace/data';
+  useGetMarketplaceListingQuery,
+  useGetMarketplaceListingsQuery,
+} from '@/app/buyer/store/marketplaceListingsAPI';
+import {
+  BUYER_LISTING_CONVERSATIONS_LIST_PARAMS,
+  conversationIdFromResponse,
+  useGetBuyerConversationsQuery,
+  useStartBuyerConversationMutation,
+} from '@/app/buyer/store/buyerConversationsAPI';
+import { marketplaceCategoryLabel } from '@/lib/marketplace/categories';
+import { formatMarketplaceCondition, isOwnMarketplaceListing } from '@/lib/marketplace/listings';
+import { formatMarketplacePrice } from '@/lib/marketplace/data';
 import type { MarketplaceListing } from '@/lib/marketplace/types';
+import { useSaveMarketplaceListing } from '@/lib/marketplace/useSaveMarketplaceListing';
 import { useAppSelector } from '@/store/hooks';
 import { showToast } from '@/lib/toast';
 
 const FONT = 'Poppins, sans-serif';
 const BRAND = '#A54AFF';
-const GRAD = 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)';
+const DEFAULT_CHAT_MESSAGE = 'Is this still available?';
 
 export default function MarketplaceListingDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const token = useAppSelector((state) => state.auth.token);
+  const userId = useAppSelector((state) => state.auth.user?.id);
+  const { categories } = useMarketplaceCategories();
   const listingId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const listing = listingId ? getMarketplaceListing(listingId) : undefined;
   const [activeImage, setActiveImage] = useState(0);
   const [authOpen, setAuthOpen] = useState(false);
-  const [savedIds, setSavedIds] = useState<Set<string>>(() => {
-    return new Set(MOCK_MARKETPLACE_LISTINGS.filter((item) => item.isFavorite).map((item) => item.id));
-  });
+  const { toggleSave, pendingIds } = useSaveMarketplaceListing();
+  const [startListingChat, { isLoading: isStartingChat }] =
+    useStartBuyerConversationMutation();
+  const { data: listingChats } = useGetBuyerConversationsQuery(
+    BUYER_LISTING_CONVERSATIONS_LIST_PARAMS,
+    { skip: !token },
+  );
 
+  useEffect(() => {
+    setActiveImage(0);
+  }, [listingId]);
+
+  const { data, isLoading, isError, refetch } = useGetMarketplaceListingQuery(listingId ?? '', {
+    skip: !token || !listingId,
+  });
+  const listing = data?.data ?? null;
+
+  const relatedQuery = useGetMarketplaceListingsQuery(
+    {
+      page: 1,
+      limit: 5,
+      sort: 'newest',
+      category_id: listing?.categoryId || undefined,
+    },
+    { skip: !token || !listing?.categoryId },
+  );
   const related = useMemo(() => {
     if (!listing) return [];
-    return MOCK_MARKETPLACE_LISTINGS.filter(
-      (item) => item.id !== listing.id && item.categoryId === listing.categoryId,
-    ).slice(0, 4);
-  }, [listing]);
+    return (relatedQuery.data?.data.listings ?? [])
+      .filter((item) => item.id !== listing.id)
+      .slice(0, 4);
+  }, [listing, relatedQuery.data]);
 
-  const toggleLike = (item: MarketplaceListing) => {
-    if (!token) {
-      setAuthOpen(true);
-      return;
-    }
-    setSavedIds((current) => {
-      const next = new Set(current);
-      if (next.has(item.id)) next.delete(item.id);
-      else next.add(item.id);
-      return next;
-    });
+  const toggleLike = async (item: MarketplaceListing) => {
+    const result = await toggleSave(item);
+    if (result.needsAuth) setAuthOpen(true);
   };
 
   const requireAuth = (message: string) => {
@@ -68,7 +94,84 @@ export default function MarketplaceListingDetailPage() {
     showToast(message, 'info', 'Coming next');
   };
 
-  if (!listing) {
+  const existingConversationId = useMemo(() => {
+    if (!listing) return null;
+    const listingKey = String(listing.id);
+    const match = (listingChats?.data.conversations ?? []).find((conv) => {
+      const ids = [conv.listingId, conv.marketplaceListingId, conv.listing?.id, conv.marketplaceListing?.id];
+      return ids.some((id) => id != null && String(id) === listingKey);
+    });
+    return match?.id ?? null;
+  }, [listing, listingChats]);
+
+  const openListingChat = (conversationId?: number | null) => {
+    if (!listing) return;
+    if (conversationId) {
+      router.push(`/chat?tab=listing&id=${conversationId}&listingId=${listing.id}`);
+      return;
+    }
+    router.push(`/chat?tab=listing&listingId=${listing.id}`);
+  };
+
+  const startChat = async () => {
+    if (!listing || isStartingChat) return;
+    if (!token) {
+      setAuthOpen(true);
+      return;
+    }
+    if (existingConversationId) {
+      openListingChat(existingConversationId);
+      return;
+    }
+
+    const listingNumericId = Number(listing.id);
+    if (!Number.isFinite(listingNumericId) || listingNumericId <= 0) {
+      showToast('Could not start this chat. Please try again.', 'error');
+      return;
+    }
+
+    try {
+      const result = await startListingChat({
+        type: 'listing',
+        id: listingNumericId,
+        message: DEFAULT_CHAT_MESSAGE,
+      }).unwrap();
+      openListingChat(conversationIdFromResponse(result));
+    } catch {
+      // axios interceptor already toasts API errors
+    }
+  };
+
+  if (!token) {
+    return (
+      <>
+        <Navbar solid />
+        <AuthGateModal
+          onClose={() => router.push('/marketplace')}
+          message="Log in to view this marketplace listing."
+        />
+      </>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <>
+        <Navbar solid />
+        <main className="marketplace-page">
+          <div className="marketplace-detail">
+            <div className="marketplace-detail-grid">
+              <MarketplaceCardSkeleton />
+              <MarketplaceCardSkeleton />
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (isError || !listing) {
     return (
       <>
         <Navbar solid />
@@ -79,18 +182,33 @@ export default function MarketplaceListingDetailPage() {
           <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>
             This ad may have been removed or the link is incorrect.
           </p>
-          <Link href="/marketplace" className="marketplace-post-btn" style={{ display: 'inline-flex' }}>
-            Back to Marketplace
-          </Link>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href="/marketplace" className="marketplace-post-btn" style={{ display: 'inline-flex' }}>
+              Back to Marketplace
+            </Link>
+            {isError ? (
+              <button
+                type="button"
+                className="marketplace-outline-btn"
+                onClick={() => {
+                  void refetch();
+                }}
+              >
+                Try again
+              </button>
+            ) : null}
+          </div>
         </main>
         <Footer />
       </>
     );
   }
 
-  const liked = savedIds.has(listing.id);
+  const liked = listing.isFavorite;
   const image = listing.images[activeImage] ?? listing.images[0];
-  const categoryLabel = MARKETPLACE_CATEGORIES.find((category) => category.id === listing.categoryId)?.label ?? listing.categoryId;
+  const categoryLabel = marketplaceCategoryLabel(listing.categoryId, categories);
+  const conditionLabel = formatMarketplaceCondition(listing.condition);
+  const isOwner = isOwnMarketplaceListing(listing, userId);
 
   return (
     <>
@@ -103,7 +221,11 @@ export default function MarketplaceListingDetailPage() {
       )}
       <main className="marketplace-page">
         <div className="marketplace-detail">
-          <button type="button" className="marketplace-detail-back" onClick={() => router.push('/marketplace')}>
+          <button
+            type="button"
+            className="marketplace-detail-back"
+            onClick={() => router.push(isOwner ? '/marketplace/mine' : '/marketplace')}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -119,14 +241,14 @@ export default function MarketplaceListingDetailPage() {
                     alt={listing.title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  <span className="marketplace-condition">{listing.condition}</span>
+                  <span className="marketplace-condition">{conditionLabel}</span>
                   {listing.featured ? <span className="marketplace-featured">FEATURED</span> : null}
                 </div>
                 {listing.images.length > 1 ? (
                   <div className="marketplace-thumbs">
                     {listing.images.map((src, index) => (
                       <button
-                        key={src}
+                        key={`${src}-${index}`}
                         type="button"
                         className={`marketplace-thumb${index === activeImage ? ' is-active' : ''}`}
                         onClick={() => setActiveImage(index)}
@@ -146,15 +268,20 @@ export default function MarketplaceListingDetailPage() {
                   {formatMarketplacePrice(listing.price, listing.currency)}
                 </p>
                 {listing.negotiable ? <span className="marketplace-neg">Negotiable</span> : null}
-                <button
-                  type="button"
-                  className="marketplace-heart"
-                  style={{ position: 'relative', top: 'auto', right: 'auto', marginLeft: 'auto' }}
-                  aria-label={liked ? 'Remove from saved ads' : 'Save this ad'}
-                  onClick={() => toggleLike(listing)}
-                >
-                  {liked ? <HeartFilledIcon size={16} /> : <HeartOutlineIcon size={16} />}
-                </button>
+                {isOwner ? null : (
+                  <button
+                    type="button"
+                    className="marketplace-heart"
+                    style={{ position: 'relative', top: 'auto', right: 'auto', marginLeft: 'auto' }}
+                    aria-label={liked ? 'Remove from saved ads' : 'Save this ad'}
+                    disabled={pendingIds.has(listing.id)}
+                    onClick={() => {
+                      void toggleLike(listing);
+                    }}
+                  >
+                    {liked ? <HeartFilledIcon size={16} /> : <HeartOutlineIcon size={16} />}
+                  </button>
+                )}
               </div>
 
               <h1 className="marketplace-detail-title">{listing.title}</h1>
@@ -173,7 +300,7 @@ export default function MarketplaceListingDetailPage() {
                 </div>
                 <div>
                   <span>Condition</span>
-                  <strong>{listing.condition}</strong>
+                  <strong>{conditionLabel}</strong>
                 </div>
                 <div>
                   <span>Photos</span>
@@ -188,17 +315,39 @@ export default function MarketplaceListingDetailPage() {
                 <PersonAvatar src={listing.seller.avatar} name={listing.seller.name} size={48} />
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <p className="marketplace-seller-name">{listing.seller.name}</p>
-                  <p className="marketplace-seller-meta">Member since {listing.seller.memberSince}</p>
+                  {listing.seller.memberSince ? (
+                    <p className="marketplace-seller-meta">Member since {listing.seller.memberSince}</p>
+                  ) : null}
                 </div>
               </div>
 
               <div className="marketplace-detail-actions">
-                <button type="button" className="marketplace-post-btn" style={{ flex: 1, justifyContent: 'center' }} onClick={() => requireAuth('Chat will connect when listing APIs are live.')}>
-                  Chat with seller
-                </button>
-                <button type="button" className="marketplace-outline-btn" onClick={() => requireAuth('Calling the seller will connect with the listing API.')}>
-                  Call
-                </button>
+                {isOwner ? (
+                  <Link
+                    href={`/marketplace/${listing.id}/edit`}
+                    className="marketplace-post-btn"
+                    style={{ flex: 1, justifyContent: 'center', display: 'inline-flex' }}
+                  >
+                    Edit listing
+                  </Link>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="marketplace-post-btn"
+                      style={{ flex: 1, justifyContent: 'center' }}
+                      disabled={isStartingChat}
+                      onClick={() => {
+                        void startChat();
+                      }}
+                    >
+                      {isStartingChat ? 'Starting chat…' : 'Chat with seller'}
+                    </button>
+                    <button type="button" className="marketplace-outline-btn" onClick={() => requireAuth('Calling the seller will connect with the listing API.')}>
+                      Call
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -211,8 +360,11 @@ export default function MarketplaceListingDetailPage() {
                   <MarketplaceListingCard
                     key={item.id}
                     listing={item}
-                    liked={savedIds.has(item.id)}
-                    onToggleLike={toggleLike}
+                    liked={item.isFavorite}
+                    savePending={pendingIds.has(item.id)}
+                    onToggleLike={(relatedListing) => {
+                      void toggleLike(relatedListing);
+                    }}
                   />
                 ))}
               </div>

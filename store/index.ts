@@ -25,6 +25,8 @@ import { buyerNotificationsAPI } from '@/app/buyer/store/buyerNotificationsAPI';
 import { buyerStripeAPI } from '@/app/buyer/store/buyerStripeAPI';
 import { buyerLegalAPI } from '@/app/buyer/store/buyerLegalAPI';
 import { buyerBlogsAPI } from '@/app/buyer/store/buyerBlogsAPI';
+import { marketplaceCategoriesAPI } from '@/app/buyer/store/marketplaceCategoriesAPI';
+import { marketplaceListingsAPI } from '@/app/buyer/store/marketplaceListingsAPI';
 import { disconnectBuyerSocket } from '@/lib/buyerSocket';
 import { purgePersistedClientState } from '@/lib/storeAccess';
 
@@ -68,6 +70,8 @@ const appReducer = combineReducers({
   [buyerStripeAPI.reducerPath]: buyerStripeAPI.reducer,
   [buyerLegalAPI.reducerPath]: buyerLegalAPI.reducer,
   [buyerBlogsAPI.reducerPath]: buyerBlogsAPI.reducer,
+  [marketplaceCategoriesAPI.reducerPath]: marketplaceCategoriesAPI.reducer,
+  [marketplaceListingsAPI.reducerPath]: marketplaceListingsAPI.reducer,
 });
 
 const rtkQueryApis = [
@@ -85,6 +89,8 @@ const rtkQueryApis = [
   buyerStripeAPI,
   buyerLegalAPI,
   buyerBlogsAPI,
+  marketplaceCategoriesAPI,
+  marketplaceListingsAPI,
 ] as const;
 
 const logoutMiddleware: Middleware = (storeApi) => (next) => (action) => {
@@ -129,6 +135,8 @@ export const makeStore = () => {
         buyerStripeAPI.middleware,
         buyerLegalAPI.middleware,
         buyerBlogsAPI.middleware,
+        marketplaceCategoriesAPI.middleware,
+        marketplaceListingsAPI.middleware,
       ),
   });
 

@@ -19,6 +19,16 @@ export type BuyerConversationBooking = {
   favor: BuyerConversationFavor;
 };
 
+export type BuyerConversationType = 'booking' | 'listing';
+
+export type BuyerConversationListing = {
+  id: number;
+  title: string;
+  price: number;
+  status: string;
+  thumbnail: string | null;
+};
+
 export type BuyerConversationLastMessage = {
   at: string;
   preview: string;
@@ -27,13 +37,18 @@ export type BuyerConversationLastMessage = {
 
 export type BuyerConversation = {
   id: number;
-  favorBookingId: number;
+  type?: BuyerConversationType | string;
+  favorBookingId: number | null;
+  marketplaceListingId?: number | null;
+  listingId?: number | null;
   buyerUserId: number;
   sellerUserId: number;
   otherParticipant: BuyerConversationParticipant;
-  bookingStatus: string;
+  bookingStatus: string | null;
   canSend: boolean;
-  booking: BuyerConversationBooking;
+  booking: BuyerConversationBooking | null;
+  marketplaceListing?: BuyerConversationListing | null;
+  listing?: BuyerConversationListing | null;
   lastMessage: BuyerConversationLastMessage | null;
   myLastReadMessageId: number | null;
   unreadCount: number;
@@ -44,6 +59,7 @@ export type BuyerConversation = {
 export type GetBuyerConversationsParams = {
   page?: number;
   limit?: number;
+  type: BuyerConversationType;
 };
 
 export type GetBuyerConversationsResponse = {
@@ -67,6 +83,22 @@ export type StartBuyerConversationByBookingResponse = {
   data: {
     conversation: BuyerConversation;
   };
+};
+
+export type StartBuyerConversationRequest = {
+  type: BuyerConversationType;
+  id: number;
+  message: string;
+};
+
+export type StartBuyerConversationResponse = {
+  success: boolean;
+  status?: number;
+  message?: string;
+  data?: {
+    conversation?: BuyerConversation;
+    conversationId?: number;
+  } | null;
 };
 
 export type SendBuyerConversationMessageRequest = {
@@ -105,8 +137,8 @@ export type GetBuyerConversationMessagesResponse = {
   message?: string;
   data: {
     conversationId: number;
-    favorBookingId: number;
-    bookingStatus: string;
+    favorBookingId: number | null;
+    bookingStatus: string | null;
     otherParticipant: BuyerConversationMessagesParticipant;
     messages: BuyerConversationMessage[];
     hasMore: boolean;

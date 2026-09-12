@@ -1,10 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
-import {
-  BUYER_CONVERSATIONS_LIST_PARAMS,
-  useGetBuyerConversationsQuery,
-} from '@/app/buyer/store/buyerConversationsAPI';
+import { isListingConversation } from '@/app/buyer/store/buyerConversationsAPI';
 import type { BuyerConversation } from '@/app/buyer/store/buyerConversationsTypes';
 import { selectAuthToken, selectAuthUser } from '@/app/auth/store/authSlice';
 import { getBuyerSocket } from '@/lib/buyerSocket';
@@ -22,6 +19,7 @@ import {
 } from '@/lib/conversationSocketTypes';
 import { getChatConversationPath } from '@/lib/notificationRoutes';
 import { showToastOnce } from '@/lib/toast';
+import { useBuyerInboxConversations } from '@/lib/useBuyerInboxConversations';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
 export function useBuyerRealtime(): void {
@@ -32,22 +30,22 @@ export function useBuyerRealtime(): void {
   const conversationIdsRef = useRef<number[]>([]);
   const conversationsRef = useRef<BuyerConversation[]>([]);
 
-  const { data: conversationsResponse } = useGetBuyerConversationsQuery(
-    BUYER_CONVERSATIONS_LIST_PARAMS,
-    { skip: !token, pollingInterval: token ? 30000 : 0 },
-  );
+  const { conversations: inboxConversations } = useBuyerInboxConversations({
+    skip: !token,
+    pollingInterval: token ? 30000 : 0,
+  });
 
   const conversationIdKey = useMemo(() => {
-    return (conversationsResponse?.data?.conversations ?? [])
+    return inboxConversations
       .map((conversation) => conversation.id)
       .filter((id) => Number.isFinite(id) && id > 0)
       .sort((left, right) => left - right)
       .join(',');
-  }, [conversationsResponse]);
+  }, [inboxConversations]);
 
   useEffect(() => {
-    conversationsRef.current = conversationsResponse?.data?.conversations ?? [];
-  }, [conversationsResponse]);
+    conversationsRef.current = inboxConversations;
+  }, [inboxConversations]);
 
   useEffect(() => {
     conversationIdsRef.current = conversationIdKey
@@ -109,7 +107,10 @@ export function useBuyerRealtime(): void {
         'info',
         4000,
         senderName,
-        getChatConversationPath(message.conversationId),
+        getChatConversationPath(
+          message.conversationId,
+          conversation && isListingConversation(conversation) ? 'listing' : 'booking',
+        ),
       );
     };
 

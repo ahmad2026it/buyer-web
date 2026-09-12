@@ -9,17 +9,80 @@ import type {
   SendBuyerConversationMessageRequest,
   SendBuyerConversationMessageResponse,
   StartBuyerConversationByBookingResponse,
+  StartBuyerConversationRequest,
+  StartBuyerConversationResponse,
 } from "./buyerConversationsTypes";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
 
-export const BUYER_CONVERSATIONS_LIST_PARAMS: GetBuyerConversationsParams = {
+export const BUYER_CONVERSATION_LIST_LIMIT = 20;
+
+export const BUYER_BOOKING_CONVERSATIONS_LIST_PARAMS: GetBuyerConversationsParams = {
   page: 1,
-  limit: 50,
+  limit: BUYER_CONVERSATION_LIST_LIMIT,
+  type: "booking",
 };
+
+export const BUYER_LISTING_CONVERSATIONS_LIST_PARAMS: GetBuyerConversationsParams = {
+  page: 1,
+  limit: BUYER_CONVERSATION_LIST_LIMIT,
+  type: "listing",
+};
+
+export const BUYER_CONVERSATIONS_LIST_PARAMS = BUYER_BOOKING_CONVERSATIONS_LIST_PARAMS;
+
+export const BUYER_CONVERSATION_LIST_CACHE_ARGS: GetBuyerConversationsParams[] = [
+  BUYER_BOOKING_CONVERSATIONS_LIST_PARAMS,
+  BUYER_LISTING_CONVERSATIONS_LIST_PARAMS,
+];
 
 export const BUYER_CONVERSATION_MESSAGES_LIMIT = 50;
 
 export { createClientMsgId as newClientMsgId } from "@/lib/conversationSocketTypes";
+
+const asRecord = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+
+export function conversationIdFromResponse(response: unknown): number | null {
+  const payload = asRecord(response);
+  const nested = asRecord(payload?.data) ?? payload;
+  if (!nested) return null;
+
+  const conversation = asRecord(nested.conversation) ?? nested;
+  const raw = conversation.id ?? conversation.conversationId ?? nested.conversationId;
+  const id = Number(raw);
+  return Number.isFinite(id) && id > 0 ? Math.trunc(id) : null;
+}
+
+export function conversationListingId(conversation: {
+  listingId?: number | null;
+  marketplaceListingId?: number | null;
+  listing?: { id: number } | null;
+  marketplaceListing?: { id: number } | null;
+}): number | null {
+  const raw =
+    conversation.listingId ??
+    conversation.marketplaceListingId ??
+    conversation.listing?.id ??
+    conversation.marketplaceListing?.id;
+  const id = Number(raw);
+  return Number.isFinite(id) && id > 0 ? Math.trunc(id) : null;
+}
+
+export function isListingConversation(conversation: {
+  type?: string;
+  listingId?: number | null;
+  marketplaceListingId?: number | null;
+  listing?: { id: number } | null;
+  marketplaceListing?: { id: number } | null;
+}): boolean {
+  return (
+    conversation.type === "listing" ||
+    conversation.type === "marketplace" ||
+    conversationListingId(conversation) != null
+  );
+}
 
 export const buyerConversationsAPI = createApi({
   reducerPath: "buyerConversationsAPI",
@@ -28,14 +91,15 @@ export const buyerConversationsAPI = createApi({
   endpoints: (builder) => ({
     getBuyerConversations: builder.query<
       GetBuyerConversationsResponse,
-      GetBuyerConversationsParams | void
+      GetBuyerConversationsParams
     >({
       query: (params) => ({
         url: "/api/buyer/conversations",
         method: "GET",
         params: {
-          page: params?.page ?? BUYER_CONVERSATIONS_LIST_PARAMS.page,
-          limit: params?.limit ?? BUYER_CONVERSATIONS_LIST_PARAMS.limit,
+          page: params.page ?? BUYER_BOOKING_CONVERSATIONS_LIST_PARAMS.page,
+          limit: params.limit ?? BUYER_BOOKING_CONVERSATIONS_LIST_PARAMS.limit,
+          type: params.type,
         },
         skipErrorToast: true,
       }),
@@ -77,6 +141,17 @@ export const buyerConversationsAPI = createApi({
       }),
       invalidatesTags: [{ type: "BuyerConversations", id: "LIST" }],
     }),
+    startBuyerConversation: builder.mutation<
+      StartBuyerConversationResponse,
+      StartBuyerConversationRequest
+    >({
+      query: ({ type, id, message }) => ({
+        url: "/api/buyer/conversations",
+        method: "POST",
+        body: { type, id, message },
+      }),
+      invalidatesTags: [{ type: "BuyerConversations", id: "LIST" }],
+    }),
     sendBuyerConversationMessage: builder.mutation<
       SendBuyerConversationMessageResponse,
       SendBuyerConversationMessageRequest
@@ -105,24 +180,26 @@ export const buyerConversationsAPI = createApi({
         { conversationId, messageId },
         { dispatch, queryFulfilled },
       ) {
-        const patch = dispatch(
-          buyerConversationsAPI.util.updateQueryData(
-            "getBuyerConversations",
-            BUYER_CONVERSATIONS_LIST_PARAMS,
-            (draft) => {
-              const conv = draft.data?.conversations?.find(
-                (item) => item.id === conversationId,
-              );
-              if (!conv) return;
-              conv.unreadCount = 0;
-              conv.myLastReadMessageId = messageId;
-            },
+        const patches = BUYER_CONVERSATION_LIST_CACHE_ARGS.map((listParams) =>
+          dispatch(
+            buyerConversationsAPI.util.updateQueryData(
+              "getBuyerConversations",
+              listParams,
+              (draft) => {
+                const conv = draft.data?.conversations?.find(
+                  (item) => item.id === conversationId,
+                );
+                if (!conv) return;
+                conv.unreadCount = 0;
+                conv.myLastReadMessageId = messageId;
+              },
+            ),
           ),
         );
         try {
           await queryFulfilled;
         } catch {
-          patch.undo();
+          patches.forEach((patch) => patch.undo());
         }
       },
     }),
@@ -133,6 +210,7 @@ export const {
   useGetBuyerConversationsQuery,
   useGetBuyerConversationMessagesQuery,
   useStartBuyerConversationByBookingMutation,
+  useStartBuyerConversationMutation,
   useSendBuyerConversationMessageMutation,
   useMarkBuyerConversationReadMutation,
 } = buyerConversationsAPI;

@@ -1,3 +1,4 @@
+import { listingMatchesCategory } from './categories';
 import type {
   MarketplaceCategory,
   MarketplaceFilters,
@@ -5,13 +6,13 @@ import type {
 } from './types';
 
 export const MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
-  { id: 'all', label: 'All' },
-  { id: 'mobiles', label: 'Mobiles' },
-  { id: 'vehicles', label: 'Vehicles' },
-  { id: 'electronics', label: 'Electronics' },
-  { id: 'furniture', label: 'Furniture' },
-  { id: 'fashion', label: 'Fashion' },
-  { id: 'property', label: 'Property' },
+  { id: 'all', label: 'All', slug: 'all' },
+  { id: 'mobiles', label: 'Mobiles', slug: 'mobiles' },
+  { id: 'vehicles', label: 'Vehicles', slug: 'vehicles' },
+  { id: 'electronics', label: 'Electronics', slug: 'electronics' },
+  { id: 'furniture', label: 'Furniture', slug: 'furniture' },
+  { id: 'fashion', label: 'Fashion', slug: 'fashion' },
+  { id: 'property', label: 'Property', slug: 'property' },
 ];
 
 export const DEFAULT_MARKETPLACE_FILTERS: MarketplaceFilters = {
@@ -33,15 +34,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'iphone-14-pro-max',
     title: 'iPhone 14 Pro Max - 256GB Deep Purple, PTA approved',
     price: 285000,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: true,
     condition: 'Like New',
+    status: 'active',
     featured: true,
     categoryId: 'mobiles',
+    categoryName: 'Mobiles',
     location: 'Gulberg III, Lahore',
     postedAt: '2026-09-08T10:00:00.000Z',
     postedLabel: '2h ago',
     imageCount: 2,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=900&h=700&fit=crop&auto=format&q=80',
@@ -60,15 +64,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'macbook-air-m2',
     title: 'MacBook Air M2 - 256GB Midnight, barely used',
     price: 245000,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: true,
     condition: 'Like New',
+    status: 'active',
     featured: false,
     categoryId: 'electronics',
+    categoryName: 'Electronics',
     location: 'DHA Phase 5, Lahore',
     postedAt: '2026-09-08T07:00:00.000Z',
     postedLabel: '5h ago',
     imageCount: 4,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=900&h=700&fit=crop&auto=format&q=80',
@@ -87,15 +94,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'electric-motorcycle',
     title: 'Electric Motorcycle - 70km range, brand new',
     price: 185000,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: false,
     condition: 'Brand New',
+    status: 'active',
     featured: true,
     categoryId: 'vehicles',
+    categoryName: 'Vehicles',
     location: 'Model Town, Lahore',
     postedAt: '2026-09-07T12:00:00.000Z',
     postedLabel: '1d ago',
     imageCount: 3,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&h=700&fit=crop&auto=format&q=80',
@@ -114,15 +124,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'sony-wh1000xm5',
     title: 'Sony WH-1000XM5 Noise Cancelling Headphones',
     price: 18500,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: true,
     condition: 'Like New',
+    status: 'active',
     featured: false,
     categoryId: 'electronics',
+    categoryName: 'Electronics',
     location: 'Johar Town, Lahore',
     postedAt: '2026-09-08T09:00:00.000Z',
     postedLabel: '3h ago',
     imageCount: 2,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=900&h=700&fit=crop&auto=format&q=80',
@@ -141,15 +154,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'honda-civic-2021',
     title: 'Honda Civic 2021 Oriel - genuine mileage',
     price: 5850000,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: true,
     condition: 'Good',
+    status: 'active',
     featured: true,
     categoryId: 'vehicles',
+    categoryName: 'Vehicles',
     location: 'Bahria Town, Lahore',
     postedAt: '2026-09-06T15:00:00.000Z',
     postedLabel: '2d ago',
     imageCount: 8,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1606661953052-ed4b1a2d2d2b?w=900&h=700&fit=crop&auto=format&q=80',
@@ -168,15 +184,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'ipad-pro-12',
     title: 'iPad Pro 12.9" M2 with Magic Keyboard',
     price: 195000,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: true,
     condition: 'Like New',
+    status: 'active',
     featured: false,
     categoryId: 'electronics',
+    categoryName: 'Electronics',
     location: 'Faisal Town, Lahore',
     postedAt: '2026-09-07T18:00:00.000Z',
     postedLabel: '18h ago',
     imageCount: 3,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?w=900&h=700&fit=crop&auto=format&q=80',
@@ -195,15 +214,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'dining-table-oak',
     title: 'Solid oak dining table - seats 6',
     price: 42000,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: true,
     condition: 'Good',
+    status: 'active',
     featured: false,
     categoryId: 'furniture',
+    categoryName: 'Furniture',
     location: 'Cantt, Lahore',
     postedAt: '2026-09-05T11:00:00.000Z',
     postedLabel: '3d ago',
     imageCount: 4,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1604578762246-41134e37f9cc?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1617806118233-18e1de3d13f4?w=900&h=700&fit=crop&auto=format&q=80',
@@ -222,15 +244,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'samsung-qled-55',
     title: 'Samsung 55" QLED 4K Smart TV',
     price: 98000,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: true,
     condition: 'Like New',
+    status: 'active',
     featured: true,
     categoryId: 'electronics',
+    categoryName: 'Electronics',
     location: 'Wapda Town, Lahore',
     postedAt: '2026-09-08T08:30:00.000Z',
     postedLabel: '4h ago',
     imageCount: 3,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=900&h=700&fit=crop&auto=format&q=80',
@@ -249,15 +274,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'leather-jacket',
     title: 'Men’s genuine leather biker jacket - size L',
     price: 12500,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: true,
     condition: 'Good',
+    status: 'active',
     featured: false,
     categoryId: 'fashion',
+    categoryName: 'Fashion',
     location: 'Anarkali, Lahore',
     postedAt: '2026-09-07T09:00:00.000Z',
     postedLabel: '1d ago',
     imageCount: 2,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=900&h=700&fit=crop&auto=format&q=80',
@@ -276,15 +304,18 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
     id: 'studio-apartment',
     title: 'Furnished studio for rent - DHA Phase 6',
     price: 75000,
-    currency: 'PKR',
+    currency: 'USD',
     negotiable: false,
     condition: 'Brand New',
+    status: 'active',
     featured: true,
     categoryId: 'property',
+    categoryName: 'Property',
     location: 'DHA Phase 6, Lahore',
     postedAt: '2026-09-04T12:00:00.000Z',
     postedLabel: '4d ago',
     imageCount: 6,
+    viewCount: 0,
     images: [
       'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=900&h=700&fit=crop&auto=format&q=80',
       'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&h=700&fit=crop&auto=format&q=80',
@@ -301,10 +332,12 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
   },
 ];
 
-export function formatMarketplacePrice(price: number, currency: MarketplaceListing['currency'] = 'PKR'): string {
-  const formatted = new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 }).format(price);
-  if (currency === 'PKR') return `Rs ${formatted}`;
-  return `${currency} ${formatted}`;
+export function formatMarketplacePrice(price: number, currency: MarketplaceListing['currency'] = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  }).format(price);
 }
 
 export function getMarketplaceListing(id: string): MarketplaceListing | undefined {
@@ -314,6 +347,7 @@ export function getMarketplaceListing(id: string): MarketplaceListing | undefine
 export function filterMarketplaceListings(
   listings: MarketplaceListing[],
   filters: MarketplaceFilters,
+  categories: MarketplaceCategory[] = MARKETPLACE_CATEGORIES,
 ): MarketplaceListing[] {
   const query = filters.query.trim().toLowerCase();
   const minPrice = filters.minPrice.trim() === '' ? null : Number(filters.minPrice);
@@ -322,7 +356,7 @@ export function filterMarketplaceListings(
   const max = maxPrice != null && Number.isFinite(maxPrice) ? maxPrice : null;
 
   const filtered = listings.filter((listing) => {
-    if (filters.categoryId !== 'all' && listing.categoryId !== filters.categoryId) return false;
+    if (!listingMatchesCategory(listing.categoryId, filters.categoryId, categories)) return false;
     if (filters.condition !== 'all' && listing.condition !== filters.condition) return false;
     if (filters.featuredOnly && !listing.featured) return false;
     if (filters.negotiableOnly && !listing.negotiable) return false;

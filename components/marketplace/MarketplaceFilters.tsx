@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { MARKETPLACE_CATEGORIES } from '@/lib/marketplace/data';
-import type { MarketplaceCategoryId, MarketplaceFilters } from '@/lib/marketplace/types';
-import { MARKETPLACE_CONDITIONS } from '@/lib/marketplace/types';
-import { CATEGORY_ICONS } from './MarketplaceIcons';
+import { useMarketplaceCategories } from '@/app/buyer/store/marketplaceCategoriesAPI';
+import type { MarketplaceCategory, MarketplaceCategoryId, MarketplaceFilters } from '@/lib/marketplace/types';
+import { MARKETPLACE_LISTING_CONDITIONS } from '@/lib/marketplace/types';
+import { MarketplaceCategoryIcon } from './MarketplaceIcons';
 
 const FONT = 'Poppins, sans-serif';
-const BRAND = '#A54AFF';
 const GRAD = 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)';
 
 const SORT_OPTIONS: { value: MarketplaceFilters['sort']; label: string }[] = [
@@ -16,6 +15,64 @@ const SORT_OPTIONS: { value: MarketplaceFilters['sort']; label: string }[] = [
   { value: 'price_desc', label: 'Price: high to low' },
 ];
 
+function CategorySkeletons({ count, variant }: { count: number; variant: 'chip' | 'side' }) {
+  return (
+    <>
+      {Array.from({ length: count }, (_, index) => (
+        <div
+          key={index}
+          className={variant === 'chip' ? 'marketplace-chip-skel' : 'marketplace-side-cat-skel'}
+          aria-hidden="true"
+        />
+      ))}
+    </>
+  );
+}
+
+function CategoryButton({
+  category,
+  active,
+  variant,
+  onClick,
+}: {
+  category: MarketplaceCategory;
+  active: boolean;
+  variant: 'chip' | 'side';
+  onClick: () => void;
+}) {
+  const iconColor = variant === 'chip'
+    ? (active ? '#ffffff' : '#667085')
+    : (active ? '#ffffff' : '#A54AFF');
+
+  if (variant === 'chip') {
+    return (
+      <button
+        type="button"
+        role="tab"
+        aria-selected={active}
+        className={`marketplace-chip${active ? ' is-active' : ''}`}
+        onClick={onClick}
+      >
+        <MarketplaceCategoryIcon category={category} size={15} color={iconColor} />
+        {category.label}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={`marketplace-side-cat${active ? ' is-active' : ''}`}
+      onClick={onClick}
+    >
+      <span className="marketplace-side-cat-icon">
+        <MarketplaceCategoryIcon category={category} size={16} color={iconColor} />
+      </span>
+      {category.label}
+    </button>
+  );
+}
+
 export function MarketplaceCategoryChips({
   value,
   onChange,
@@ -23,25 +80,23 @@ export function MarketplaceCategoryChips({
   value: MarketplaceCategoryId;
   onChange: (id: MarketplaceCategoryId) => void;
 }) {
+  const { categories, isLoading } = useMarketplaceCategories();
+
   return (
     <div className="marketplace-chips" role="tablist" aria-label="Marketplace categories">
-      {MARKETPLACE_CATEGORIES.map((category) => {
-        const active = category.id === value;
-        const Icon = CATEGORY_ICONS[category.id];
-        return (
-          <button
+      {isLoading && categories.length === 0 ? (
+        <CategorySkeletons count={6} variant="chip" />
+      ) : (
+        categories.map((category) => (
+          <CategoryButton
             key={category.id}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            className={`marketplace-chip${active ? ' is-active' : ''}`}
+            category={category}
+            active={category.id === value}
+            variant="chip"
             onClick={() => onChange(category.id)}
-          >
-            <Icon size={15} color={active ? '#ffffff' : '#667085'} />
-            {category.label}
-          </button>
-        );
-      })}
+          />
+        ))
+      )}
     </div>
   );
 }
@@ -80,9 +135,9 @@ export function MarketplaceFilterFields({
           onChange={(event) => set('condition', event.target.value as MarketplaceFilters['condition'])}
         >
           <option value="all">Any condition</option>
-          {MARKETPLACE_CONDITIONS.map((condition) => (
-            <option key={condition} value={condition}>
-              {condition}
+          {MARKETPLACE_LISTING_CONDITIONS.map((condition) => (
+            <option key={condition.value} value={condition.value}>
+              {condition.label}
             </option>
           ))}
         </select>
@@ -90,22 +145,24 @@ export function MarketplaceFilterFields({
 
       <div className="marketplace-price-fields">
         <label className="marketplace-field">
-          <span>Min price</span>
+          <span>Min price ($)</span>
           <input
             type="number"
             min={0}
-            inputMode="numeric"
+            step="0.01"
+            inputMode="decimal"
             placeholder="0"
             value={filters.minPrice}
             onChange={(event) => set('minPrice', event.target.value)}
           />
         </label>
         <label className="marketplace-field">
-          <span>Max price</span>
+          <span>Max price ($)</span>
           <input
             type="number"
             min={0}
-            inputMode="numeric"
+            step="0.01"
+            inputMode="decimal"
             placeholder="Any"
             value={filters.maxPrice}
             onChange={(event) => set('maxPrice', event.target.value)}
@@ -142,28 +199,26 @@ export function MarketplaceSidebar({
   onChange: (next: MarketplaceFilters) => void;
   onReset: () => void;
 }) {
+  const { categories, isLoading } = useMarketplaceCategories();
+
   return (
     <aside className="marketplace-sidebar">
       <div className="marketplace-sidebar-card">
         <p className="marketplace-sidebar-title">Categories</p>
         <div className="marketplace-sidebar-cats">
-          {MARKETPLACE_CATEGORIES.map((category) => {
-            const active = category.id === filters.categoryId;
-            const Icon = CATEGORY_ICONS[category.id];
-            return (
-              <button
+          {isLoading && categories.length === 0 ? (
+            <CategorySkeletons count={7} variant="side" />
+          ) : (
+            categories.map((category) => (
+              <CategoryButton
                 key={category.id}
-                type="button"
-                className={`marketplace-side-cat${active ? ' is-active' : ''}`}
+                category={category}
+                active={category.id === filters.categoryId}
+                variant="side"
                 onClick={() => onChange({ ...filters, categoryId: category.id })}
-              >
-                <span className="marketplace-side-cat-icon">
-                  <Icon size={16} color={active ? '#ffffff' : BRAND} />
-                </span>
-                {category.label}
-              </button>
-            );
-          })}
+              />
+            ))
+          )}
         </div>
       </div>
 
