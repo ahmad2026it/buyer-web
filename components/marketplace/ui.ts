@@ -150,7 +150,10 @@ export const mpHeart =
 
 export const mpHeartOnMedia = `${mpHeart} absolute top-2.5 right-2.5`;
 
-export const mpHeartInline = `${mpHeart} relative ml-auto`;
+export const mpHeartInline = `${mpHeart} relative`;
+
+export const mpShareIconBtn =
+  'relative z-[1] inline-flex size-8 items-center justify-center rounded-full border-[1.5px] border-line bg-canvas text-[#667085] hover:border-[#D0D5DD] hover:bg-white';
 
 export const mpFeatured =
   'absolute bottom-2.5 left-2.5 z-[1] rounded-full bg-yellow-300 px-2 py-1 text-[10px] font-extrabold tracking-wide text-amber-900';
@@ -265,16 +268,16 @@ export const mpPostForm =
   'flex max-w-[640px] flex-col gap-3.5 rounded-[22px] border-[1.5px] border-line bg-white p-6';
 
 export const mpPhotoDrop =
-  'relative rounded-2xl border-[1.5px] border-dashed border-[#D0D5DD] bg-canvas px-4 py-7 text-center';
+  'relative flex flex-col items-center gap-2 rounded-2xl border-[1.5px] border-dashed border-[#D0D5DD] bg-canvas px-4 py-7 text-center';
 
 export const mpPhotoDropActive = 'border-brand-500 bg-[#F9F5FF]';
 
 export const mpPhotoDropTitle = 'text-sm font-bold text-ink';
 
-export const mpPhotoDropHint = 'text-[13px] text-ink-subtle';
+export const mpPhotoDropHint = 'block max-w-[28rem] text-[13px] text-ink-subtle';
 
 export const mpPhotoUpload =
-  'mt-3.5 rounded-full border-[1.5px] border-brand-500 bg-white px-4 py-2 text-[13px] font-semibold text-brand-500';
+  'mt-2 inline-flex rounded-full border-[1.5px] border-brand-500 bg-white px-4 py-2 text-[13px] font-semibold text-brand-500';
 
 export const mpPhotoInput = 'sr-only';
 

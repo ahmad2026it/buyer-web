@@ -70,7 +70,7 @@ function listingsQueryFromFilters(
     page,
     limit: MARKETPLACE_LISTINGS_LIST_PARAMS.limit,
     sort: filters.sort,
-    exclude_mine: false,
+    exclude_mine: true,
   };
 
   const search = filters.query.trim();

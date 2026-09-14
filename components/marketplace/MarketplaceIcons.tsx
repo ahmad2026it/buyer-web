@@ -166,6 +166,36 @@ export function HeartFilledIcon({ size = 16, color = '#F43F5E' }: IconProps) {
   );
 }
 
+export function ShareIcon({ size = 16, color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49"
+        stroke={color}
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <circle cx="18" cy="5" r="2.35" fill={color} />
+      <circle cx="6" cy="12" r="2.35" fill={color} />
+      <circle cx="18" cy="19" r="2.35" fill={color} />
+    </svg>
+  );
+}
+
+export function CheckIcon({ size = 16, color = '#059669' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M20 6L9 17l-5-5"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export const CATEGORY_ICONS: Record<string, (props: IconProps) => ReactNode> = {
   all: GridIcon,
   mobiles: PhoneIcon,

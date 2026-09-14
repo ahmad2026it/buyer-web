@@ -36,6 +36,7 @@ export type MarketplaceSeller = {
   name: string;
   avatar: string;
   memberSince: string;
+  phoneNumber?: string;
 };
 
 export type MarketplaceListing = {

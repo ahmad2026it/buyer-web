@@ -98,7 +98,17 @@ function asSeller(value: unknown): MarketplaceListing['seller'] {
   const record = asRecord(value);
   const nestedUser = asRecord(record?.user);
   const source = nestedUser ?? record;
-  const created = asString(source?.createdAt ?? source?.created_at ?? source?.memberSince);
+  const memberSinceRaw = asString(source?.memberSince ?? source?.member_since);
+  const created = asString(source?.createdAt ?? source?.created_at);
+  let memberSince = '';
+  if (memberSinceRaw) {
+    const parsed = new Date(memberSinceRaw);
+    memberSince = Number.isNaN(parsed.getTime())
+      ? memberSinceRaw
+      : parsed.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  } else if (created) {
+    memberSince = new Date(created).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  }
 
   return {
     id: asString(source?.id) ?? '',
@@ -112,10 +122,20 @@ function asSeller(value: unknown): MarketplaceListing['seller'] {
           source?.profileImageUrl ??
           source?.avatar,
       ) ?? '',
-    memberSince: created
-      ? new Date(created).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-      : '',
+    memberSince,
+    phoneNumber:
+      asString(source?.phoneNumber ?? source?.phone_number ?? source?.phone) ?? '',
   };
+}
+
+export function marketplaceSellerTelHref(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  const trimmed = phone.trim();
+  if (!trimmed) return null;
+  const href = trimmed.replace(/[^\d+]/g, '');
+  const digits = href.replace(/\D/g, '');
+  if (digits.length < 7) return null;
+  return `tel:${href}`;
 }
 
 export function normalizeMarketplaceListing(value: unknown): MarketplaceListing | null {
@@ -147,7 +167,14 @@ export function normalizeMarketplaceListing(value: unknown): MarketplaceListing 
         record.city_state,
     ) ?? [asString(record.city), asString(record.state)].filter(Boolean).join(', ');
 
-  const seller = asSeller(record.seller ?? record.user ?? record.buyer ?? record.owner);
+  const seller = asSeller(
+    record.created_by ??
+      record.createdBy ??
+      record.seller ??
+      record.user ??
+      record.buyer ??
+      record.owner,
+  );
 
   return {
     id,

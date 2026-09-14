@@ -11,6 +11,7 @@ import PersonAvatar from '@/components/PersonAvatar';
 import MarketplaceListingCard, {
   MarketplaceCardSkeleton,
 } from '@/components/marketplace/MarketplaceListingCard';
+import MarketplaceShareButton from '@/components/marketplace/MarketplaceShareButton';
 import {
   HeartFilledIcon,
   HeartOutlineIcon,
@@ -28,7 +29,7 @@ import {
   useStartBuyerConversationMutation,
 } from '@/app/buyer/store/buyerConversationsAPI';
 import { marketplaceCategoryLabel } from '@/lib/marketplace/categories';
-import { formatMarketplaceCondition, isOwnMarketplaceListing } from '@/lib/marketplace/listings';
+import { formatMarketplaceCondition, isOwnMarketplaceListing, marketplaceSellerTelHref } from '@/lib/marketplace/listings';
 import { formatMarketplacePrice } from '@/lib/marketplace/data';
 import type { MarketplaceListing } from '@/lib/marketplace/types';
 import { useSaveMarketplaceListing } from '@/lib/marketplace/useSaveMarketplaceListing';
@@ -116,14 +117,6 @@ export default function MarketplaceListingDetailPage() {
   const toggleLike = async (item: MarketplaceListing) => {
     const result = await toggleSave(item);
     if (result.needsAuth) setAuthOpen(true);
-  };
-
-  const requireAuth = (message: string) => {
-    if (!token) {
-      setAuthOpen(true);
-      return;
-    }
-    showToast(message, 'info', 'Coming next');
   };
 
   const existingConversationId = useMemo(() => {
@@ -239,6 +232,7 @@ export default function MarketplaceListingDetailPage() {
   const categoryLabel = marketplaceCategoryLabel(listing.categoryId, categories);
   const conditionLabel = formatMarketplaceCondition(listing.condition);
   const isOwner = isOwnMarketplaceListing(listing, userId);
+  const sellerTelHref = marketplaceSellerTelHref(listing.seller.phoneNumber);
 
   return (
     <>
@@ -298,19 +292,22 @@ export default function MarketplaceListingDetailPage() {
                   {formatMarketplacePrice(listing.price, listing.currency)}
                 </p>
                 {listing.negotiable ? <span className={mpNeg}>Negotiable</span> : null}
-                {isOwner ? null : (
-                  <button
-                    type="button"
-                    className={mpHeartInline}
-                    aria-label={liked ? 'Remove from saved ads' : 'Save this ad'}
-                    disabled={pendingIds.has(listing.id)}
-                    onClick={() => {
-                      void toggleLike(listing);
-                    }}
-                  >
-                    {liked ? <HeartFilledIcon size={16} /> : <HeartOutlineIcon size={16} />}
-                  </button>
-                )}
+                <div className="ml-auto flex shrink-0 items-center gap-2">
+                  {isOwner ? null : (
+                    <button
+                      type="button"
+                      className={mpHeartInline}
+                      aria-label={liked ? 'Remove from saved ads' : 'Save this ad'}
+                      disabled={pendingIds.has(listing.id)}
+                      onClick={() => {
+                        void toggleLike(listing);
+                      }}
+                    >
+                      {liked ? <HeartFilledIcon size={16} /> : <HeartOutlineIcon size={16} />}
+                    </button>
+                  )}
+                  <MarketplaceShareButton listing={listing} variant="icon" />
+                </div>
               </div>
 
               <h1 className={mpDetailTitle}>{listing.title}</h1>
@@ -370,11 +367,27 @@ export default function MarketplaceListingDetailPage() {
                     >
                       {isStartingChat ? 'Starting chat…' : 'Chat with seller'}
                     </button>
-                    <button type="button" className={mpOutlineBtn} onClick={() => requireAuth('Calling the seller will connect with the listing API.')}>
-                      Call
-                    </button>
+                    {sellerTelHref ? (
+                      <a
+                        href={sellerTelHref}
+                        className={mpOutlineBtn}
+                        aria-label={`Call ${listing.seller.name}`}
+                      >
+                        Call
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        className={mpOutlineBtn}
+                        disabled
+                        title="Phone number not available"
+                      >
+                        Call
+                      </button>
+                    )}
                   </>
                 )}
+                <MarketplaceShareButton listing={listing} variant="button" className="md:flex-none" />
               </div>
             </div>
           </div>

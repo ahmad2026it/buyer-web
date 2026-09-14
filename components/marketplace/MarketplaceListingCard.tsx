@@ -22,6 +22,7 @@ import {
   HeartOutlineIcon,
   PinIcon,
 } from './MarketplaceIcons';
+import MarketplaceShareButton from './MarketplaceShareButton';
 import {
   cx,
   mpCard,
@@ -111,6 +112,7 @@ function MineListingActions({ listing }: { listing: MarketplaceListing }) {
       >
         Edit
       </button>
+      <MarketplaceShareButton listing={listing} variant="chip" />
       {statusKey !== 'active' ? (
         <button
           type="button"

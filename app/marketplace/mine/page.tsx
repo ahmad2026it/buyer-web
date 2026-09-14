@@ -14,7 +14,6 @@ import {
   MARKETPLACE_MY_LISTINGS_PARAMS,
   useGetMyMarketplaceListingsQuery,
 } from '@/app/buyer/store/marketplaceListingsAPI';
-import { MARKETPLACE_MY_LISTING_STATUSES } from '@/lib/marketplace/types';
 import type { MarketplaceMyListingStatus } from '@/lib/marketplace/types';
 import { formatMarketplaceListingStatus } from '@/lib/marketplace/listings';
 import { useAppSelector } from '@/store/hooks';
@@ -48,7 +47,8 @@ import {
 
 const STATUS_FILTERS: Array<MarketplaceMyListingStatus | 'all'> = [
   'all',
-  ...MARKETPLACE_MY_LISTING_STATUSES,
+  'active',
+  'sold',
 ];
 
 export default function MyMarketplaceListingsPage() {
