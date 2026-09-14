@@ -56,9 +56,25 @@ export function formatMarketplaceListingStatus(status: string): string {
   if (normalized === 'active') return 'Active';
   if (normalized === 'sold') return 'Sold';
   if (normalized === 'inactive') return 'Inactive';
+  if (normalized === 'deleted') return 'Deleted';
+  if (normalized === 'expired') return 'Expired';
   return status
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+export function marketplaceListingMessagingUnavailableReason(
+  status: string | null | undefined,
+): string {
+  const key = (status ?? '').trim().toLowerCase();
+  if (key === 'deleted') return 'This listing has been deleted.';
+  if (key === 'sold') return 'This listing has been marked as sold.';
+  if (key === 'inactive') return 'This listing is no longer active.';
+  if (key === 'expired') return 'This listing has expired.';
+  if (key) {
+    return `This listing is ${formatMarketplaceListingStatus(key).toLowerCase()}. Messaging is unavailable.`;
+  }
+  return 'Messaging is unavailable for this listing.';
 }
 
 export function formatMarketplaceViewCount(count: number): string {

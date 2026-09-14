@@ -16,6 +16,10 @@ import type {
   BuyerConversation,
   BuyerConversationType,
 } from '@/app/buyer/store/buyerConversationsTypes';
+import {
+  formatMarketplaceListingStatus,
+  marketplaceListingMessagingUnavailableReason,
+} from '@/lib/marketplace/listings';
 import { useConversationRealtime } from '@/lib/useConversationRealtime';
 import { useBuyerInboxConversations } from '@/lib/useBuyerInboxConversations';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -40,9 +44,38 @@ function listingTitle(conv: BuyerConversation): string {
   return conv.listing?.title || conv.marketplaceListing?.title || 'Marketplace listing';
 }
 
+function conversationListingStatus(conv: BuyerConversation): string {
+  return (conv.listing?.status || conv.marketplaceListing?.status || '').trim();
+}
+
 function conversationSubtitle(conv: BuyerConversation): string {
   if (isListingConversation(conv)) return listingTitle(conv);
   return conv.booking?.favor?.title || 'Seller';
+}
+
+function messagingUnavailableCopy(conv: BuyerConversation): { banner: string; placeholder: string } {
+  if (isListingConversation(conv)) {
+    const status = conversationListingStatus(conv);
+    const label = status ? formatMarketplaceListingStatus(status) : '';
+    return {
+      banner: marketplaceListingMessagingUnavailableReason(status),
+      placeholder: label ? `Listing ${label.toLowerCase()}` : 'Messaging unavailable',
+    };
+  }
+
+  const bookingStatus = (conv.bookingStatus || conv.booking?.status || '').trim();
+  if (bookingStatus) {
+    const label = bookingStatus.replace(/_/g, ' ').toLowerCase();
+    return {
+      banner: `Messaging is unavailable because this booking is ${label}.`,
+      placeholder: 'Messaging unavailable',
+    };
+  }
+
+  return {
+    banner: 'Messaging is unavailable for this booking.',
+    placeholder: 'Messaging unavailable',
+  };
 }
 
 function startOfLocalDay(date: Date): number {
@@ -364,6 +397,14 @@ export default function BuyerChatCenter() {
   const threadSpecialty = active ? conversationSubtitle(active) : '';
   const firstName = threadName.split(' ')[0] || 'them';
   const canSend = Boolean(active?.canSend);
+  const unavailableCopy = active && !canSend ? messagingUnavailableCopy(active) : null;
+  const listingStatus = active && isListingConversation(active)
+    ? conversationListingStatus(active)
+    : '';
+  const listingStatusLabel = listingStatus ? formatMarketplaceListingStatus(listingStatus) : '';
+  const listingUnavailable = Boolean(
+    listingStatus && listingStatus.toLowerCase() !== 'active',
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden', background: '#F9FAFB' }} className="chat-page">
@@ -502,6 +543,11 @@ export default function BuyerChatCenter() {
                       </span>
                     </div>
                     <span style={{ fontFamily: F, fontSize: '11px', color: BRAND, fontWeight: 500, display: 'block', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{handle}</span>
+                    {isListingConversation(conv) && conversationListingStatus(conv) && conversationListingStatus(conv).toLowerCase() !== 'active' ? (
+                      <span style={{ fontFamily: F, fontSize: '11px', color: '#B42318', fontWeight: 600, display: 'block', marginBottom: '2px' }}>
+                        {formatMarketplaceListingStatus(conversationListingStatus(conv))}
+                      </span>
+                    ) : null}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
                       <span style={{ fontFamily: F, fontSize: '12px', color: unread > 0 ? '#344054' : '#667085', fontWeight: unread > 0 ? 500 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                         {conv.lastMessage?.preview || conversationSubtitle(conv)}
@@ -558,6 +604,11 @@ export default function BuyerChatCenter() {
                         · {threadSpecialty}
                       </span>
                     )}
+                    {listingUnavailable ? (
+                      <span style={{ fontFamily: F, fontSize: '11px', fontWeight: 700, color: '#B42318', background: '#FEF3F2', borderRadius: 9999, padding: '2px 8px', flexShrink: 0 }}>
+                        {listingStatusLabel}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 
@@ -659,9 +710,9 @@ export default function BuyerChatCenter() {
                 flexShrink: 0, background: '#ffffff', borderTop: '1px solid #EAECF0',
                 padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 8,
               }}>
-                {!canSend && (
-                  <p style={{ fontFamily: F, fontSize: 12, color: '#98A2B3', margin: 0, padding: '0 4px' }}>
-                    Messaging is unavailable for this {isListingConversation(active) ? 'listing' : 'booking'}.
+                {!canSend && unavailableCopy && (
+                  <p style={{ fontFamily: F, fontSize: 12, color: '#B42318', margin: 0, padding: '0 4px' }}>
+                    {unavailableCopy.banner}
                   </p>
                 )}
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
@@ -672,7 +723,7 @@ export default function BuyerChatCenter() {
                     <input
                       ref={inputRef}
                       type="text"
-                      placeholder={canSend ? `Message ${firstName}...` : 'Messaging unavailable'}
+                      placeholder={canSend ? `Message ${firstName}...` : (unavailableCopy?.placeholder ?? 'Messaging unavailable')}
                       value={input}
                       disabled={!canSend || sending}
                       onChange={e => {
