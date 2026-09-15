@@ -23,10 +23,44 @@ import {
 import { useConversationRealtime } from '@/lib/useConversationRealtime';
 import { useBuyerInboxConversations } from '@/lib/useBuyerInboxConversations';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { showToast } from '@/lib/toast';
 
 const BRAND = '#A54AFF';
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
 const F     = 'Poppins, sans-serif';
+const MAX_CHAT_ATTACHMENTS = 4;
+const MAX_CHAT_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+const CHAT_ATTACHMENT_ACCEPT = 'image/*,.pdf,.doc,.docx';
+const IMAGE_EXT = /\.(avif|bmp|gif|jpe?g|png|svg|webp)(?:$|\?)/i;
+
+type PendingChatAttachment = {
+  id: string;
+  file: File;
+  previewUrl: string;
+};
+
+function isImageFile(file: File): boolean {
+  return file.type.startsWith('image/');
+}
+
+function isImageAttachmentUrl(url: string): boolean {
+  if (url.startsWith('blob:') || url.startsWith('data:image/')) return true;
+  try {
+    return IMAGE_EXT.test(new URL(url).pathname);
+  } catch {
+    return IMAGE_EXT.test(url);
+  }
+}
+
+function fileNameFromUrl(url: string): string {
+  try {
+    const path = decodeURIComponent(new URL(url).pathname);
+    const base = path.split('/').pop() ?? '';
+    return base || 'Attachment';
+  } catch {
+    return 'Attachment';
+  }
+}
 
 function toHandle(name: string): string {
   const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
@@ -152,6 +186,65 @@ function DateDivider({ label }: { label: string }) {
   );
 }
 
+function ChatAttachment({ url, isMe }: { url: string; isMe: boolean }) {
+  const [failed, setFailed] = useState(false);
+  const radius = isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px';
+  const name = fileNameFromUrl(url);
+
+  if (isImageAttachmentUrl(url) && !failed) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Open image attachment"
+        style={{ display: 'block', maxWidth: '100%' }}
+      >
+        <img
+          src={url}
+          alt={name}
+          onError={() => setFailed(true)}
+          style={{
+            display: 'block',
+            maxWidth: '100%',
+            maxHeight: 260,
+            width: 'auto',
+            height: 'auto',
+            borderRadius: radius,
+            border: isMe ? 'none' : '1.5px solid #EAECF0',
+            background: '#F2F4F7',
+            objectFit: 'contain',
+          }}
+        />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '8px 12px',
+        borderRadius: radius,
+        background: isMe ? '#E4E6EA' : '#ffffff',
+        border: isMe ? 'none' : '1.5px solid #EAECF0',
+        fontFamily: F,
+        fontSize: 12,
+        fontWeight: 600,
+        color: BRAND,
+        wordBreak: 'break-all',
+      }}
+    >
+      {name}
+    </a>
+  );
+}
+
 function ConversationSkeleton() {
   return (
     <div>
@@ -187,10 +280,14 @@ export default function BuyerChatCenter() {
   const [threadOpen, setThreadOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [input, setInput] = useState('');
+  const [pending, setPending] = useState<PendingChatAttachment[]>([]);
   const [authOpen, setAuthOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingRef = useRef<PendingChatAttachment[]>([]);
   const markedReadRef = useRef<Set<string>>(new Set());
+  pendingRef.current = pending;
 
   const {
     bookingQuery,
@@ -323,7 +420,21 @@ export default function BuyerChatCenter() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeId, messages.length, otherUserTyping]);
+  }, [activeId, messages.length, otherUserTyping, pending.length]);
+
+  useEffect(() => {
+    setPending((current) => {
+      current.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+      return [];
+    });
+    setInput('');
+  }, [activeId]);
+
+  useEffect(() => {
+    return () => {
+      pendingRef.current.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+    };
+  }, []);
 
   useEffect(() => {
     if (!token || activeId == null) return;
@@ -374,7 +485,8 @@ export default function BuyerChatCenter() {
 
   const sendMsg = async () => {
     const text = input.trim();
-    if (!text || !active || sending) return;
+    const filesToSend = pending;
+    if ((!text && filesToSend.length === 0) || !active || sending) return;
     if (!token) {
       setAuthOpen(true);
       return;
@@ -383,12 +495,67 @@ export default function BuyerChatCenter() {
 
     stopTyping();
     setInput('');
+    setPending([]);
     inputRef.current?.focus();
 
-    const result = await sendTextMessage(text);
+    const result = await sendTextMessage(
+      text,
+      filesToSend.map((item) => item.file),
+    );
     if (!result.ok) {
       setInput(text);
+      setPending(filesToSend);
+      return;
     }
+    filesToSend.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+  };
+
+  const addFiles = (list: FileList | File[] | null) => {
+    if (!list || !active?.canSend || sending) return;
+    const incoming = Array.from(list);
+    const next: PendingChatAttachment[] = [...pending];
+    let skippedSize = 0;
+    let skippedLimit = 0;
+
+    for (const file of incoming) {
+      if (next.length >= MAX_CHAT_ATTACHMENTS) {
+        skippedLimit += 1;
+        continue;
+      }
+      if (file.size > MAX_CHAT_ATTACHMENT_BYTES) {
+        skippedSize += 1;
+        continue;
+      }
+      const duplicate = next.some(
+        (item) =>
+          item.file.name === file.name &&
+          item.file.size === file.size &&
+          item.file.lastModified === file.lastModified,
+      );
+      if (duplicate) continue;
+      next.push({
+        id: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2, 8)}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      });
+    }
+
+    if (skippedSize) {
+      showToast('Each attachment must be 10 MB or smaller.', 'warning');
+    } else if (skippedLimit) {
+      showToast(`You can attach up to ${MAX_CHAT_ATTACHMENTS} files.`, 'warning');
+    }
+
+    setPending(next);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removePending = (id: string) => {
+    setPending((current) => {
+      const item = current.find((entry) => entry.id === id);
+      if (item) URL.revokeObjectURL(item.previewUrl);
+      return current.filter((entry) => entry.id !== id);
+    });
   };
 
   const threadName = messagesResponse?.data?.otherParticipant?.name || active?.otherParticipant?.fullName || '';
@@ -513,6 +680,11 @@ export default function BuyerChatCenter() {
               const handle = isListingConversation(conv)
                 ? conversationSubtitle(conv)
                 : toHandle(name);
+              const listingStatus = conversationListingStatus(conv);
+              const listingStatusLabel =
+                listingStatus && listingStatus.toLowerCase() !== 'active'
+                  ? formatMarketplaceListingStatus(listingStatus)
+                  : '';
               const unread = conv.unreadCount || 0;
               const avatarSrc =
                 conv.otherParticipant?.profileImage ||
@@ -543,9 +715,9 @@ export default function BuyerChatCenter() {
                       </span>
                     </div>
                     <span style={{ fontFamily: F, fontSize: '11px', color: BRAND, fontWeight: 500, display: 'block', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{handle}</span>
-                    {isListingConversation(conv) && conversationListingStatus(conv) && conversationListingStatus(conv).toLowerCase() !== 'active' ? (
+                    {listingStatusLabel ? (
                       <span style={{ fontFamily: F, fontSize: '11px', color: '#B42318', fontWeight: 600, display: 'block', marginBottom: '2px' }}>
-                        {formatMarketplaceListingStatus(conversationListingStatus(conv))}
+                        {listingStatusLabel}
                       </span>
                     ) : null}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
@@ -669,20 +841,33 @@ export default function BuyerChatCenter() {
                         )}
 
                         <div style={{ maxWidth: '66%', display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', gap: '4px' }}>
-                          <div style={{
-                            padding: '10px 14px',
-                            borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                            background: isMe ? '#E4E6EA' : '#ffffff',
-                            border: isMe ? 'none' : '1.5px solid #EAECF0',
-                            boxShadow: isMe ? '0 1px 4px rgba(16,24,40,0.08)' : '0 1px 4px rgba(16,24,40,0.06)',
-                            color: isMe ? '#344054' : '#101828',
-                            fontFamily: F,
-                            fontSize: '14px',
-                            lineHeight: '1.55',
-                            wordBreak: 'break-word' as const,
-                          }}>
-                            {msg.body}
-                          </div>
+                          {msg.body ? (
+                            <div style={{
+                              padding: '10px 14px',
+                              borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                              background: isMe ? '#E4E6EA' : '#ffffff',
+                              border: isMe ? 'none' : '1.5px solid #EAECF0',
+                              boxShadow: isMe ? '0 1px 4px rgba(16,24,40,0.08)' : '0 1px 4px rgba(16,24,40,0.06)',
+                              color: isMe ? '#344054' : '#101828',
+                              fontFamily: F,
+                              fontSize: '14px',
+                              lineHeight: '1.55',
+                              wordBreak: 'break-word' as const,
+                            }}>
+                              {msg.body}
+                            </div>
+                          ) : null}
+                          {msg.attachments?.length ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
+                              {msg.attachments.map((url, attachmentIndex) => (
+                                <ChatAttachment
+                                  key={`${url}-${attachmentIndex}`}
+                                  url={url}
+                                  isMe={isMe}
+                                />
+                              ))}
+                            </div>
+                          ) : null}
                           <span suppressHydrationWarning style={{ fontFamily: F, fontSize: '10px', color: '#98A2B3', paddingLeft: isMe ? 0 : '4px', paddingRight: isMe ? '4px' : 0 }}>
                             {formatMessageTime(msg.createdAt)}
                           </span>
@@ -715,7 +900,112 @@ export default function BuyerChatCenter() {
                     {unavailableCopy.banner}
                   </p>
                 )}
+                {pending.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '0 2px' }}>
+                    {pending.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          maxWidth: '100%',
+                          padding: isImageFile(item.file) ? 0 : '6px 10px 6px 8px',
+                          background: '#F9FAFB',
+                          border: '1.5px solid #EAECF0',
+                          borderRadius: 12,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {isImageFile(item.file) ? (
+                          <img
+                            src={item.previewUrl}
+                            alt={item.file.name}
+                            style={{ width: 56, height: 56, objectFit: 'cover', display: 'block' }}
+                          />
+                        ) : (
+                          <span style={{
+                            fontFamily: F,
+                            fontSize: 12,
+                            fontWeight: 500,
+                            color: '#344054',
+                            maxWidth: 160,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {item.file.name}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          aria-label={`Remove ${item.file.name}`}
+                          onClick={() => removePending(item.id)}
+                          disabled={sending}
+                          style={{
+                            position: isImageFile(item.file) ? 'absolute' : 'static',
+                            top: 4,
+                            right: 4,
+                            width: 20,
+                            height: 20,
+                            borderRadius: '50%',
+                            background: isImageFile(item.file) ? 'rgba(16,24,40,0.72)' : '#E4E6EA',
+                            color: isImageFile(item.file) ? '#fff' : '#344054',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            cursor: sending ? 'default' : 'pointer',
+                          }}
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={CHAT_ATTACHMENT_ACCEPT}
+                    multiple
+                    hidden
+                    disabled={!canSend || sending}
+                    onChange={(event) => addFiles(event.target.files)}
+                  />
+                  <button
+                    type="button"
+                    aria-label="Attach a file"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!canSend || sending || pending.length >= MAX_CHAT_ATTACHMENTS}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      border: '1.5px solid #EAECF0',
+                      background: '#F9FAFB',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      opacity: canSend && !sending ? 1 : 0.5,
+                      cursor: canSend && !sending ? 'pointer' : 'default',
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 1 1-2.83-2.83l8.49-8.48"
+                        stroke="#667085"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#F9FAFB', border: '1.5px solid #EAECF0', borderRadius: '9999px', padding: '10px 16px', gap: '8px', transition: 'border-color 0.15s, box-shadow 0.15s' }}
                     onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = BRAND; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 3px rgba(165,74,255,0.1)'; (e.currentTarget as HTMLElement).style.background = '#fff'; }}
                     onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = '#EAECF0'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
@@ -736,21 +1026,23 @@ export default function BuyerChatCenter() {
                   </div>
 
                   <button
+                    type="button"
+                    aria-label="Send message"
                     onClick={() => { void sendMsg(); }}
-                    disabled={!input.trim() || !canSend || sending}
+                    disabled={(!input.trim() && pending.length === 0) || !canSend || sending}
                     style={{
-                      width: 40, height: 40, borderRadius: '50%', border: 'none', cursor: input.trim() && canSend && !sending ? 'pointer' : 'default',
-                      background: input.trim() && canSend ? GRAD : '#F2F4F7',
+                      width: 40, height: 40, borderRadius: '50%', border: 'none', cursor: (input.trim() || pending.length) && canSend && !sending ? 'pointer' : 'default',
+                      background: (input.trim() || pending.length) && canSend ? GRAD : '#F2F4F7',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       transition: 'background 0.2s, opacity 0.2s, transform 0.15s',
-                      opacity: input.trim() && canSend ? 1 : 0.5,
-                      boxShadow: input.trim() && canSend ? '0 2px 12px rgba(165,74,255,0.35)' : 'none',
+                      opacity: (input.trim() || pending.length) && canSend ? 1 : 0.5,
+                      boxShadow: (input.trim() || pending.length) && canSend ? '0 2px 12px rgba(165,74,255,0.35)' : 'none',
                     }}
-                    onMouseEnter={e => { if (input.trim() && canSend) { (e.currentTarget as HTMLElement).style.transform = 'scale(1.08)'; } }}
+                    onMouseEnter={e => { if ((input.trim() || pending.length) && canSend) { (e.currentTarget as HTMLElement).style.transform = 'scale(1.08)'; } }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke={input.trim() && canSend ? '#fff' : '#667085'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke={(input.trim() || pending.length) && canSend ? '#fff' : '#667085'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
                 </div>

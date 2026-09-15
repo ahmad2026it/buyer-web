@@ -93,7 +93,7 @@ export function useConversationRealtime({
       const isOwn = myUserIdRef.current != null && message.senderUserId === myUserIdRef.current;
       touchBuyerConversationPreview(dispatch, {
         conversationId: message.conversationId,
-        preview: message.body,
+        preview: message.body || (message.attachments.length > 0 ? 'Attachment' : ''),
         at: message.createdAt,
         senderUserId: message.senderUserId,
         incrementUnread: !isOwn,
@@ -208,26 +208,28 @@ export function useConversationRealtime({
   }, [stopTyping, token]);
 
   const sendTextMessage = useCallback(
-    async (body: string): Promise<SendResult> => {
+    async (body: string, files: File[] = []): Promise<SendResult> => {
       const activeConversationId = conversationIdRef.current;
       if (!activeConversationId || !token) {
         return { ok: false, error: 'Not ready to send' };
       }
 
       const trimmed = body.trim();
-      if (!trimmed) return { ok: false, error: 'Message is empty' };
+      if (!trimmed && files.length === 0) return { ok: false, error: 'Message is empty' };
 
       stopTyping();
       setSending(true);
 
       const clientMsgId = createClientMsgId();
       const now = new Date().toISOString();
+      const blobUrls = files.map((file) => URL.createObjectURL(file));
+      const preview = trimmed || (files.some((file) => file.type.startsWith('image/')) ? 'Photo' : 'Attachment');
       const optimistic: BuyerConversationMessage = {
         id: -Date.now(),
         conversationId: activeConversationId,
         senderUserId: myUserIdRef.current ?? 0,
         body: trimmed,
-        attachments: [],
+        attachments: blobUrls,
         clientMsgId,
         createdAt: now,
         updatedAt: now,
@@ -236,16 +238,21 @@ export function useConversationRealtime({
       upsertBuyerConversationMessage(dispatch, optimistic);
       touchBuyerConversationPreview(dispatch, {
         conversationId: activeConversationId,
-        preview: trimmed,
+        preview,
         at: now,
         senderUserId: optimistic.senderUserId,
       });
+
+      const revokeBlobs = () => {
+        blobUrls.forEach((url) => URL.revokeObjectURL(url));
+      };
 
       try {
         const response = await sendBuyerMessage({
           conversationId: activeConversationId,
           body: trimmed,
           clientMsgId,
+          files,
         }).unwrap();
 
         const message =
@@ -253,13 +260,20 @@ export function useConversationRealtime({
           normalizeIncomingMessage(response.data);
 
         if (message) {
-          upsertBuyerConversationMessage(dispatch, message);
+          const resolved =
+            message.attachments.length > 0 || files.length === 0
+              ? message
+              : { ...message, attachments: blobUrls };
+          upsertBuyerConversationMessage(dispatch, resolved);
           touchBuyerConversationPreview(dispatch, {
-            conversationId: message.conversationId,
-            preview: message.body,
-            at: message.createdAt,
-            senderUserId: message.senderUserId,
+            conversationId: resolved.conversationId,
+            preview: resolved.body || preview,
+            at: resolved.createdAt,
+            senderUserId: resolved.senderUserId,
           });
+          if (message.attachments.length > 0 || files.length === 0) {
+            revokeBlobs();
+          }
         } else {
           void dispatch(
             buyerConversationsAPI.endpoints.getBuyerConversationMessages.initiate(
@@ -275,6 +289,7 @@ export function useConversationRealtime({
         return { ok: true, message: message ?? optimistic };
       } catch (error) {
         removeOptimisticBuyerMessage(dispatch, activeConversationId, clientMsgId);
+        revokeBlobs();
         return {
           ok: false,
           error: getAxiosErrorMessage(error) || 'Failed to send message',

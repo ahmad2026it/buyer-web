@@ -19,6 +19,7 @@ export type CreateMarketplaceListingRequest = {
   zipCode: string;
   locationLabel: string;
   images: File[];
+  showPhoneNumber: boolean;
 };
 
 export type UpdateMarketplaceListingRequest = {
@@ -36,6 +37,7 @@ export type UpdateMarketplaceListingRequest = {
   locationLabel: string;
   keepImages: string[];
   images: File[];
+  showPhoneNumber: boolean;
 };
 
 export type CreatedMarketplaceListing = {

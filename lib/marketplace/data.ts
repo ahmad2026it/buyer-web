@@ -59,6 +59,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'Mar 2023',
     },
     isFavorite: false,
+    showPhoneNumber: true,
   },
   {
     id: 'macbook-air-m2',
@@ -89,6 +90,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'Jan 2024',
     },
     isFavorite: true,
+    showPhoneNumber: true,
   },
   {
     id: 'electric-motorcycle',
@@ -119,6 +121,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'Aug 2022',
     },
     isFavorite: false,
+    showPhoneNumber: true,
   },
   {
     id: 'sony-wh1000xm5',
@@ -149,6 +152,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'Nov 2023',
     },
     isFavorite: false,
+    showPhoneNumber: true,
   },
   {
     id: 'honda-civic-2021',
@@ -179,6 +183,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'Feb 2021',
     },
     isFavorite: false,
+    showPhoneNumber: true,
   },
   {
     id: 'ipad-pro-12',
@@ -209,6 +214,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'May 2024',
     },
     isFavorite: false,
+    showPhoneNumber: true,
   },
   {
     id: 'dining-table-oak',
@@ -239,6 +245,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'Jul 2022',
     },
     isFavorite: false,
+    showPhoneNumber: true,
   },
   {
     id: 'samsung-qled-55',
@@ -269,6 +276,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'Oct 2023',
     },
     isFavorite: false,
+    showPhoneNumber: true,
   },
   {
     id: 'leather-jacket',
@@ -299,6 +307,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'Apr 2025',
     },
     isFavorite: false,
+    showPhoneNumber: true,
   },
   {
     id: 'studio-apartment',
@@ -329,6 +338,7 @@ export const MOCK_MARKETPLACE_LISTINGS: MarketplaceListing[] = [
       memberSince: 'Jun 2021',
     },
     isFavorite: false,
+    showPhoneNumber: true,
   },
 ];
 

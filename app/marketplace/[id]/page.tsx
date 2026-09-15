@@ -232,7 +232,9 @@ export default function MarketplaceListingDetailPage() {
   const categoryLabel = marketplaceCategoryLabel(listing.categoryId, categories);
   const conditionLabel = formatMarketplaceCondition(listing.condition);
   const isOwner = isOwnMarketplaceListing(listing, userId);
-  const sellerTelHref = marketplaceSellerTelHref(listing.seller.phoneNumber);
+  const sellerTelHref = listing.showPhoneNumber
+    ? marketplaceSellerTelHref(listing.seller.phoneNumber)
+    : null;
 
   return (
     <>
@@ -367,24 +369,26 @@ export default function MarketplaceListingDetailPage() {
                     >
                       {isStartingChat ? 'Starting chat…' : 'Chat with seller'}
                     </button>
-                    {sellerTelHref ? (
-                      <a
-                        href={sellerTelHref}
-                        className={mpOutlineBtn}
-                        aria-label={`Call ${listing.seller.name}`}
-                      >
-                        Call
-                      </a>
-                    ) : (
-                      <button
-                        type="button"
-                        className={mpOutlineBtn}
-                        disabled
-                        title="Phone number not available"
-                      >
-                        Call
-                      </button>
-                    )}
+                    {listing.showPhoneNumber ? (
+                      sellerTelHref ? (
+                        <a
+                          href={sellerTelHref}
+                          className={mpOutlineBtn}
+                          aria-label={`Call ${listing.seller.name}`}
+                        >
+                          Call
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          className={mpOutlineBtn}
+                          disabled
+                          title="Phone number not available"
+                        >
+                          Call
+                        </button>
+                      )
+                    ) : null}
                   </>
                 )}
                 <MarketplaceShareButton listing={listing} variant="button" className="md:flex-none" />

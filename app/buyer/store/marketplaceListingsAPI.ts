@@ -72,6 +72,7 @@ const buildCreateListingFormData = (payload: CreateMarketplaceListingRequest): F
   formData.append('state', payload.state);
   formData.append('zipCode', payload.zipCode);
   formData.append('locationLabel', payload.locationLabel);
+  formData.append('showPhoneNumber', payload.showPhoneNumber ? 'true' : 'false');
   payload.images.forEach((file) => formData.append('images', file));
   return formData;
 };
@@ -90,6 +91,7 @@ const buildUpdateListingFormData = (payload: UpdateMarketplaceListingRequest): F
   formData.append('zipCode', payload.zipCode);
   formData.append('locationLabel', payload.locationLabel);
   formData.append('keepImages', JSON.stringify(payload.keepImages));
+  formData.append('showPhoneNumber', payload.showPhoneNumber ? 'true' : 'false');
   payload.images.forEach((file) => formData.append('images', file));
   return formData;
 };

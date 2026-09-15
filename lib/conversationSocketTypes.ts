@@ -78,6 +78,8 @@ type IncomingMessageRaw = Partial<BuyerConversationMessage> & {
   client_msg_id?: string;
   created_at?: string;
   updated_at?: string;
+  files?: unknown;
+  media?: unknown;
 };
 
 let activeBuyerConversationId: number | null = null;
@@ -106,6 +108,23 @@ export function toNumericId(value: unknown): number | null {
   return null;
 }
 
+export function normalizeConversationAttachments(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  const urls: string[] = [];
+  for (const item of value) {
+    if (typeof item === 'string' && item.trim()) {
+      urls.push(item.trim());
+      continue;
+    }
+    if (!item || typeof item !== 'object') continue;
+    const record = item as Record<string, unknown>;
+    const url = record.url ?? record.src ?? record.path ?? record.fileUrl ?? record.file_url;
+    if (typeof url === 'string' && url.trim()) urls.push(url.trim());
+  }
+  return urls;
+}
+
 export function normalizeIncomingMessage(raw: unknown): BuyerConversationMessage | null {
   if (!raw || typeof raw !== 'object') return null;
   const msg = raw as IncomingMessageRaw;
@@ -126,7 +145,7 @@ export function normalizeIncomingMessage(raw: unknown): BuyerConversationMessage
     conversationId,
     senderUserId,
     body: typeof msg.body === 'string' ? msg.body : '',
-    attachments: Array.isArray(msg.attachments) ? msg.attachments : [],
+    attachments: normalizeConversationAttachments(msg.attachments ?? msg.files ?? msg.media),
     clientMsgId: msg.clientMsgId ?? msg.client_msg_id ?? '',
     createdAt,
     updatedAt: msg.updatedAt ?? msg.updated_at ?? createdAt,

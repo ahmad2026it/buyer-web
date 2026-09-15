@@ -65,6 +65,7 @@ export type MarketplaceListing = {
   state?: string;
   zipCode?: string;
   ownerId?: string;
+  showPhoneNumber: boolean;
 };
 
 export type MarketplaceFilters = {

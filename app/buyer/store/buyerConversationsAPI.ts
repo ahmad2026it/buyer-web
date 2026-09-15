@@ -13,6 +13,7 @@ import type {
   StartBuyerConversationResponse,
 } from "./buyerConversationsTypes";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
+import { normalizeConversationAttachments } from "@/lib/conversationSocketTypes";
 
 export const BUYER_CONVERSATION_LIST_LIMIT = 20;
 
@@ -127,6 +128,19 @@ export const buyerConversationsAPI = createApi({
         },
         skipErrorToast: true,
       }),
+      transformResponse: (response: GetBuyerConversationMessagesResponse) => {
+        if (!Array.isArray(response?.data?.messages)) return response;
+        return {
+          ...response,
+          data: {
+            ...response.data,
+            messages: response.data.messages.map((message) => ({
+              ...message,
+              attachments: normalizeConversationAttachments(message.attachments),
+            })),
+          },
+        };
+      },
       providesTags: (_result, _error, arg) => [
         { type: "BuyerConversationMessages", id: arg.conversationId },
       ],
@@ -156,11 +170,29 @@ export const buyerConversationsAPI = createApi({
       SendBuyerConversationMessageResponse,
       SendBuyerConversationMessageRequest
     >({
-      query: ({ conversationId, body, clientMsgId }) => ({
-        url: `/api/buyer/conversations/${conversationId}/messages`,
-        method: "POST",
-        body: { body, clientMsgId },
-      }),
+      query: ({ conversationId, body, clientMsgId, files }) => {
+        const hasFiles = Boolean(files?.length);
+        if (!hasFiles) {
+          return {
+            url: `/api/buyer/conversations/${conversationId}/messages`,
+            method: "POST",
+            body: { body, clientMsgId },
+          };
+        }
+
+        const formData = new FormData();
+        formData.append("body", body);
+        formData.append("clientMsgId", clientMsgId);
+        formData.append("client_msg_id", clientMsgId);
+        files?.forEach((file) => {
+          formData.append("attachments", file);
+        });
+        return {
+          url: `/api/buyer/conversations/${conversationId}/messages`,
+          method: "POST",
+          body: formData,
+        };
+      },
       invalidatesTags: (_result, _error, arg) => [
         { type: "BuyerConversations", id: "LIST" },
         { type: "BuyerConversations", id: arg.conversationId },

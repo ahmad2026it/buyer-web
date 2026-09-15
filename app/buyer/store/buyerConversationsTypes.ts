@@ -105,6 +105,7 @@ export type SendBuyerConversationMessageRequest = {
   conversationId: number;
   body: string;
   clientMsgId: string;
+  files?: File[];
 };
 
 export type BuyerConversationMessage = {

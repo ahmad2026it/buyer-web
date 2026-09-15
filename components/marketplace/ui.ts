@@ -298,4 +298,37 @@ export const mpMapWrap = 'overflow-hidden rounded-2xl border-[1.5px] border-line
 
 export const mpMapSkel = 'flex h-[220px] items-center justify-center text-[13px] text-ink-muted';
 
+export const mpPhoneCard =
+  'flex items-center gap-3 rounded-2xl border-[1.5px] border-[#E9D7FE] bg-[#F9F5FF] px-3.5 py-3.5';
+
+export const mpPhoneIcon =
+  'inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-[#EEE4FF] text-brand-500';
+
+export const mpPhoneCopy = 'min-w-0 flex-1';
+
+export const mpPhoneNumber = 'm-0 text-[15px] font-bold tabular-nums tracking-tight text-ink';
+
+export const mpPhoneCardHint = 'mt-0.5 m-0 text-[13px] font-normal leading-snug text-ink-muted';
+
+export const mpPhoneBadge =
+  'shrink-0 rounded-full border border-[#E9D7FE] bg-white px-2.5 py-1 text-[11px] font-semibold text-brand-500';
+
+export const mpPhoneToggleRow = 'mt-4 flex items-center justify-between gap-4';
+
+export const mpPhoneToggleCopy = 'min-w-0 flex-1';
+
+export const mpPhoneToggleTitle = 'block text-sm font-bold text-ink';
+
+export const mpPhoneToggleHint = 'mt-0.5 block text-[13px] font-normal leading-snug text-ink-muted';
+
+export const mpPhoneSwitch =
+  'relative h-7 w-[52px] shrink-0 rounded-full p-0 transition-colors duration-150';
+
+export const mpPhoneSwitchOn = 'bg-brand-500';
+
+export const mpPhoneSwitchOff = 'bg-[#D0D5DD]';
+
+export const mpPhoneSwitchThumb =
+  'absolute top-[3px] left-[3px] block size-[22px] rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.2)] transition-transform duration-150';
+
 export const mpSkelBar = 'rounded bg-[#F2F4F7]';

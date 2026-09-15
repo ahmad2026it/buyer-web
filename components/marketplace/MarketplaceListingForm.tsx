@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   useCreateMarketplaceListingMutation,
@@ -34,6 +35,20 @@ import {
   mpPhotoGrid,
   mpPhotoInput,
   mpPhotoRemove,
+  mpPhoneBadge,
+  mpPhoneCard,
+  mpPhoneCardHint,
+  mpPhoneCopy,
+  mpPhoneIcon,
+  mpPhoneNumber,
+  mpPhoneSwitch,
+  mpPhoneSwitchOff,
+  mpPhoneSwitchOn,
+  mpPhoneSwitchThumb,
+  mpPhoneToggleCopy,
+  mpPhoneToggleHint,
+  mpPhoneToggleRow,
+  mpPhoneToggleTitle,
   mpPhotoThumb,
   mpPhotoUpload,
   mpPost,
@@ -132,10 +147,12 @@ export default function MarketplaceListingForm({
   const router = useRouter();
   const isEdit = mode === 'edit';
   const token = useAppSelector((state) => state.auth.token);
+  const profilePhone = useAppSelector((state) => state.auth.user?.phoneNumber?.trim() ?? '');
   const { postableCategories, isLoading: categoriesLoading } = useMarketplaceCategories();
   const [createListing, { isLoading: isCreating }] = useCreateMarketplaceListingMutation();
   const [updateListing, { isLoading: isUpdating }] = useUpdateMarketplaceListingMutation();
   const [form, setForm] = useState<PostForm>(EMPTY_FORM);
+  const [showPhoneNumber, setShowPhoneNumber] = useState(true);
   const [picked, setPicked] = useState<PickedLocation | null>(null);
   const [photos, setPhotos] = useState<ListingPhoto[]>([]);
   const photosRef = useRef<ListingPhoto[]>([]);
@@ -161,6 +178,7 @@ export default function MarketplaceListingForm({
     hydratedIdRef.current = listing.id;
     setForm(listingToForm(listing));
     setPicked(listingToPicked(listing));
+    setShowPhoneNumber(listing.showPhoneNumber);
     setPhotos(listing.images.map((url) => ({ id: url, kind: 'existing' as const, url })));
     setErrors({});
   }, [isEdit, listing]);
@@ -290,6 +308,7 @@ export default function MarketplaceListingForm({
       zipCode: form.zipCode.trim(),
       locationLabel: form.locationLabel.trim(),
       images: photos.filter((photo) => photo.kind === 'new').map((photo) => photo.file),
+      showPhoneNumber,
     };
 
     try {
@@ -596,6 +615,63 @@ export default function MarketplaceListingForm({
               ))}
             </ul>
           ) : null}
+        </div>
+
+        <div className={mpField}>
+          <span>Contact Phone Number</span>
+          <div className={mpPhoneCard}>
+            <span className={mpPhoneIcon} aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M6.6 10.8c1.4 2.7 3.9 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.2 2.2Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
+            <div className={mpPhoneCopy}>
+              <p className={mpPhoneNumber}>{profilePhone || 'No phone on your profile'}</p>
+              <p className={mpPhoneCardHint}>
+                {!profilePhone ? (
+                  <>
+                    Add a phone number in{' '}
+                    <Link href="/profile/edit" className="font-semibold text-brand-500">
+                      your profile
+                    </Link>{' '}
+                    so buyers can call you.
+                  </>
+                ) : showPhoneNumber ? (
+                  'Buyers will see and contact you via your profile phone number.'
+                ) : (
+                  'Your number stays private. Buyers can still chat with you.'
+                )}
+              </p>
+            </div>
+            {profilePhone ? <span className={mpPhoneBadge}>Profile Phone</span> : null}
+          </div>
+          <div className={mpPhoneToggleRow}>
+            <div className={mpPhoneToggleCopy}>
+              <span id="listing-show-phone-label" className={mpPhoneToggleTitle}>
+                Show your mobile number
+              </span>
+              <span id="listing-show-phone-hint" className={mpPhoneToggleHint}>
+                Allow buyers to see and call your mobile number
+              </span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showPhoneNumber}
+              aria-labelledby="listing-show-phone-label"
+              aria-describedby="listing-show-phone-hint"
+              className={cx(mpPhoneSwitch, showPhoneNumber ? mpPhoneSwitchOn : mpPhoneSwitchOff)}
+              onClick={() => setShowPhoneNumber((current) => !current)}
+            >
+              <span
+                className={cx(mpPhoneSwitchThumb, showPhoneNumber && 'translate-x-6')}
+                aria-hidden="true"
+              />
+            </button>
+          </div>
         </div>
 
         <button

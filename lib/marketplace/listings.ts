@@ -219,6 +219,10 @@ export function normalizeMarketplaceListing(value: unknown): MarketplaceListing 
     city: asString(record.city) ?? '',
     state: asString(record.state) ?? '',
     zipCode: asString(record.zipCode ?? record.zip_code) ?? '',
+    showPhoneNumber:
+      record.showPhoneNumber == null && record.show_phone_number == null
+        ? true
+        : asBoolean(record.showPhoneNumber ?? record.show_phone_number),
     ownerId:
       asString(
         record.buyerId ??
