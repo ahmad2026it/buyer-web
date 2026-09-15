@@ -29,7 +29,7 @@ import {
   useStartBuyerConversationMutation,
 } from '@/app/buyer/store/buyerConversationsAPI';
 import { marketplaceCategoryLabel } from '@/lib/marketplace/categories';
-import { formatMarketplaceCondition, isOwnMarketplaceListing, marketplaceSellerTelHref } from '@/lib/marketplace/listings';
+import { formatMarketplaceCondition, isOwnMarketplaceListing, marketplaceListingCallHref } from '@/lib/marketplace/listings';
 import { formatMarketplacePrice } from '@/lib/marketplace/data';
 import type { MarketplaceListing } from '@/lib/marketplace/types';
 import { useSaveMarketplaceListing } from '@/lib/marketplace/useSaveMarketplaceListing';
@@ -65,6 +65,7 @@ import {
   mpSellerCard,
   mpSellerMeta,
   mpSellerName,
+  mpSellerPhone,
   mpThumb,
   mpThumbActive,
   mpThumbs,
@@ -232,9 +233,8 @@ export default function MarketplaceListingDetailPage() {
   const categoryLabel = marketplaceCategoryLabel(listing.categoryId, categories);
   const conditionLabel = formatMarketplaceCondition(listing.condition);
   const isOwner = isOwnMarketplaceListing(listing, userId);
-  const sellerTelHref = listing.showPhoneNumber
-    ? marketplaceSellerTelHref(listing.seller.phoneNumber)
-    : null;
+  const sellerTelHref = marketplaceListingCallHref(listing);
+  const sellerPhone = listing.showPhoneNumber ? listing.seller.phoneNumber?.trim() || '' : '';
 
   return (
     <>
@@ -346,6 +346,15 @@ export default function MarketplaceListingDetailPage() {
                   {listing.seller.memberSince ? (
                     <p className={mpSellerMeta}>Member since {listing.seller.memberSince}</p>
                   ) : null}
+                  {sellerPhone ? (
+                    sellerTelHref ? (
+                      <a href={sellerTelHref} className={mpSellerPhone}>
+                        {sellerPhone}
+                      </a>
+                    ) : (
+                      <p className={mpSellerPhone}>{sellerPhone}</p>
+                    )
+                  ) : null}
                 </div>
               </div>
 
@@ -369,25 +378,14 @@ export default function MarketplaceListingDetailPage() {
                     >
                       {isStartingChat ? 'Starting chat…' : 'Chat with seller'}
                     </button>
-                    {listing.showPhoneNumber ? (
-                      sellerTelHref ? (
-                        <a
-                          href={sellerTelHref}
-                          className={mpOutlineBtn}
-                          aria-label={`Call ${listing.seller.name}`}
-                        >
-                          Call
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          className={mpOutlineBtn}
-                          disabled
-                          title="Phone number not available"
-                        >
-                          Call
-                        </button>
-                      )
+                    {sellerTelHref ? (
+                      <a
+                        href={sellerTelHref}
+                        className={mpOutlineBtn}
+                        aria-label={`Call ${listing.seller.name}`}
+                      >
+                        Call
+                      </a>
                     ) : null}
                   </>
                 )}

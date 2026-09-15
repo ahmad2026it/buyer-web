@@ -24,6 +24,12 @@ const asNumber = (value: unknown): number | null => {
 const asBoolean = (value: unknown): boolean =>
   value === true || value === 1 || value === '1' || value === 'true';
 
+function asShowPhoneNumber(record: Record<string, unknown>): boolean {
+  const raw = record.showPhoneNumber ?? record.show_phone_number ?? record.showPhone;
+  if (raw == null) return false;
+  return asBoolean(raw);
+}
+
 export function formatMarketplacePostedAt(dateStr: string): string {
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) return '';
@@ -110,7 +116,7 @@ function asImages(value: unknown): string[] {
     .filter((item): item is string => Boolean(item));
 }
 
-function asSeller(value: unknown): MarketplaceListing['seller'] {
+function asSeller(value: unknown, showPhoneNumber: boolean): MarketplaceListing['seller'] {
   const record = asRecord(value);
   const nestedUser = asRecord(record?.user);
   const source = nestedUser ?? record;
@@ -139,8 +145,9 @@ function asSeller(value: unknown): MarketplaceListing['seller'] {
           source?.avatar,
       ) ?? '',
     memberSince,
-    phoneNumber:
-      asString(source?.phoneNumber ?? source?.phone_number ?? source?.phone) ?? '',
+    phoneNumber: showPhoneNumber
+      ? asString(source?.phoneNumber ?? source?.phone_number ?? source?.phone) ?? ''
+      : '',
   };
 }
 
@@ -152,6 +159,11 @@ export function marketplaceSellerTelHref(phone: string | null | undefined): stri
   const digits = href.replace(/\D/g, '');
   if (digits.length < 7) return null;
   return `tel:${href}`;
+}
+
+export function marketplaceListingCallHref(listing: MarketplaceListing): string | null {
+  if (!listing.showPhoneNumber) return null;
+  return marketplaceSellerTelHref(listing.seller.phoneNumber);
 }
 
 export function normalizeMarketplaceListing(value: unknown): MarketplaceListing | null {
@@ -183,6 +195,7 @@ export function normalizeMarketplaceListing(value: unknown): MarketplaceListing 
         record.city_state,
     ) ?? [asString(record.city), asString(record.state)].filter(Boolean).join(', ');
 
+  const showPhoneNumber = asShowPhoneNumber(record);
   const seller = asSeller(
     record.created_by ??
       record.createdBy ??
@@ -190,7 +203,12 @@ export function normalizeMarketplaceListing(value: unknown): MarketplaceListing 
       record.user ??
       record.buyer ??
       record.owner,
+    showPhoneNumber,
   );
+  if (showPhoneNumber && !seller.phoneNumber) {
+    seller.phoneNumber =
+      asString(record.phoneNumber ?? record.phone_number ?? record.phone) ?? '';
+  }
 
   return {
     id,
@@ -219,10 +237,7 @@ export function normalizeMarketplaceListing(value: unknown): MarketplaceListing 
     city: asString(record.city) ?? '',
     state: asString(record.state) ?? '',
     zipCode: asString(record.zipCode ?? record.zip_code) ?? '',
-    showPhoneNumber:
-      record.showPhoneNumber == null && record.show_phone_number == null
-        ? true
-        : asBoolean(record.showPhoneNumber ?? record.show_phone_number),
+    showPhoneNumber,
     ownerId:
       asString(
         record.buyerId ??

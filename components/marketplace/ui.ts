@@ -256,6 +256,9 @@ export const mpSellerName = 'text-sm font-bold text-ink';
 
 export const mpSellerMeta = 'text-xs text-ink-muted';
 
+export const mpSellerPhone =
+  'mt-1 inline-block text-xs font-semibold tabular-nums text-brand-500';
+
 export const mpDetailActions = 'flex flex-col gap-2.5 md:flex-row';
 
 export const mpPost = 'mx-auto w-full max-w-[1200px] px-3.5 pt-24 pb-20 md:px-6 md:pt-[112px] md:pb-20';
