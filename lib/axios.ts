@@ -52,7 +52,12 @@ const getFieldErrorsFromBody = (body: unknown): Record<string, string> => {
 };
 
 const getMessageFromBody = (body: unknown, fallback: string): string => {
-  if (typeof body === 'string' && body.trim()) return body;
+  if (typeof body === 'string' && body.trim()) {
+    const trimmed = body.trim();
+    if (trimmed.startsWith('<')) return fallback;
+    if (/^request failed with status code \d+/i.test(trimmed)) return fallback;
+    return trimmed;
+  }
 
   const fieldErrors = getFieldErrorsFromBody(body);
   const fieldMessages = Object.values(fieldErrors);
@@ -90,21 +95,51 @@ export const getAxiosErrorDetails = (error: unknown): AxiosErrorDetails => {
     };
   }
 
+  const status = axios.isAxiosError(error)
+    ? error.response?.status
+    : error && typeof error === 'object' && 'status' in error && typeof error.status === 'number'
+      ? error.status
+      : undefined;
+  const isUpload =
+    typeof FormData !== 'undefined' &&
+    axios.isAxiosError(error) &&
+    error.config?.data instanceof FormData;
+
   if (axios.isAxiosError(error) && !error.response) {
     return {
-      message: 'Unable to connect. Please try again.',
+      message: isUpload
+        ? "Couldn't send the attachment. Check your connection and try again."
+        : 'Unable to connect. Please try again.',
       fieldErrors: {},
     };
   }
 
+  const friendlyStatusMessage = (): string | null => {
+    if (status === 413) {
+      return 'That file is too large to send. Try a smaller photo.';
+    }
+    if (status === 502 || status === 503 || status === 504) {
+      return isUpload
+        ? "Couldn't send the attachment. Try a smaller photo or try again."
+        : 'The server is temporarily unavailable. Please try again.';
+    }
+    return null;
+  };
+
   const body = getErrorBody(error);
   const fallback =
-    axios.isAxiosError(error)
+    friendlyStatusMessage() ||
+    (axios.isAxiosError(error)
       ? error.message || 'Something went wrong. Please try again.'
-      : 'Something went wrong. Please try again.';
+      : 'Something went wrong. Please try again.');
+
+  const parsed = getMessageFromBody(body, fallback);
+  const parsedLooksGeneric =
+    /^request failed with status code \d+/i.test(parsed) ||
+    parsed.trim().startsWith('<');
 
   return {
-    message: getMessageFromBody(body, fallback),
+    message: parsedLooksGeneric ? fallback : parsed,
     fieldErrors: getFieldErrorsFromBody(body),
   };
 };
@@ -190,6 +225,7 @@ api.interceptors.request.use((config) => {
     if (typeof config.headers.delete === 'function') {
       config.headers.delete('Content-Type');
     }
+    config.timeout = Math.max(config.timeout ?? 0, 120000);
   }
 
   return config;

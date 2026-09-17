@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import type { AppDispatch } from "@/store";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
 import { createClientMsgId, toNumericId } from "@/lib/conversationSocketTypes";
+import { appendChatAttachments } from "@/lib/prepareChatAttachment";
 import type {
   GetBuyerDisputeSupportMessagesParams,
   GetBuyerDisputeSupportMessagesResponse,
@@ -229,9 +230,7 @@ function buildSendMessageFormData(body: string, clientMsgId: string, files: File
   const formData = new FormData();
   formData.append("body", body);
   formData.append("client_msg_id", clientMsgId);
-  files.forEach((file) => {
-    formData.append("attachments", file);
-  });
+  appendChatAttachments(formData, files);
   return formData;
 }
 

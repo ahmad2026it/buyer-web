@@ -14,6 +14,7 @@ import type {
 } from "./buyerConversationsTypes";
 import { axiosBaseQuery } from "@/lib/axiosBaseQuery";
 import { normalizeConversationAttachments } from "@/lib/conversationSocketTypes";
+import { appendChatAttachments } from "@/lib/prepareChatAttachment";
 
 export const BUYER_CONVERSATION_LIST_LIMIT = 20;
 
@@ -184,9 +185,7 @@ export const buyerConversationsAPI = createApi({
         formData.append("body", body);
         formData.append("clientMsgId", clientMsgId);
         formData.append("client_msg_id", clientMsgId);
-        files?.forEach((file) => {
-          formData.append("attachments", file);
-        });
+        appendChatAttachments(formData, files ?? []);
         return {
           url: `/api/buyer/conversations/${conversationId}/messages`,
           method: "POST",

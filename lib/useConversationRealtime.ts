@@ -9,6 +9,8 @@ import {
 import type { BuyerConversationMessage } from '@/app/buyer/store/buyerConversationsTypes';
 import { selectAuthToken } from '@/app/auth/store/authSlice';
 import { getAxiosErrorMessage } from '@/lib/axios';
+import { prepareOutgoingChatFiles } from '@/lib/prepareChatAttachment';
+import { showToast } from '@/lib/toast';
 import { getBuyerSocket } from '@/lib/buyerSocket';
 import {
   removeOptimisticBuyerMessage,
@@ -220,10 +222,18 @@ export function useConversationRealtime({
       stopTyping();
       setSending(true);
 
+      const outgoing = files.length ? await prepareOutgoingChatFiles(files) : { ok: true as const, files };
+      if (!outgoing.ok) {
+        setSending(false);
+        showToast(outgoing.error, 'error');
+        return { ok: false, error: outgoing.error };
+      }
+      const filesToSend = outgoing.files;
+
       const clientMsgId = createClientMsgId();
       const now = new Date().toISOString();
-      const blobUrls = files.map((file) => URL.createObjectURL(file));
-      const preview = trimmed || (files.some((file) => file.type.startsWith('image/')) ? 'Photo' : 'Attachment');
+      const blobUrls = filesToSend.map((file) => URL.createObjectURL(file));
+      const preview = trimmed || (filesToSend.some((file) => file.type.startsWith('image/')) ? 'Photo' : 'Attachment');
       const optimistic: BuyerConversationMessage = {
         id: -Date.now(),
         conversationId: activeConversationId,
@@ -252,7 +262,7 @@ export function useConversationRealtime({
           conversationId: activeConversationId,
           body: trimmed,
           clientMsgId,
-          files,
+          files: filesToSend,
         }).unwrap();
 
         const message =
@@ -261,7 +271,7 @@ export function useConversationRealtime({
 
         if (message) {
           const resolved =
-            message.attachments.length > 0 || files.length === 0
+            message.attachments.length > 0 || filesToSend.length === 0
               ? message
               : { ...message, attachments: blobUrls };
           upsertBuyerConversationMessage(dispatch, resolved);
@@ -271,7 +281,7 @@ export function useConversationRealtime({
             at: resolved.createdAt,
             senderUserId: resolved.senderUserId,
           });
-          if (message.attachments.length > 0 || files.length === 0) {
+          if (message.attachments.length > 0 || filesToSend.length === 0) {
             revokeBlobs();
           }
         } else {

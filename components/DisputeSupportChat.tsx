@@ -16,6 +16,7 @@ import type {
   DisputeSupportAttachment,
 } from '@/app/buyer/store/buyerDisputeSupportTypes';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { prepareOutgoingChatFiles } from '@/lib/prepareChatAttachment';
 import { showToast } from '@/lib/toast';
 
 const BRAND = '#A54AFF';
@@ -315,6 +316,17 @@ export default function DisputeSupportChat({
     setPending([]);
     inputRef.current?.focus();
 
+    const outgoing = filesToSend.length
+      ? await prepareOutgoingChatFiles(filesToSend.map((item) => item.file))
+      : { ok: true as const, files: [] as File[] };
+    if (!outgoing.ok) {
+      setSending(false);
+      setInput(text);
+      setPending(filesToSend);
+      showToast(outgoing.error, 'error');
+      return;
+    }
+
     const clientMsgId = newDisputeSupportClientMsgId();
     const now = new Date().toISOString();
     const optimisticAttachments = filesToSend.map(attachmentFromPending);
@@ -341,7 +353,7 @@ export default function DisputeSupportChat({
         disputeId,
         body: text,
         clientMsgId,
-        files: filesToSend.map((item) => item.file),
+        files: outgoing.files,
       }).unwrap();
 
       if (response.data?.message) {
