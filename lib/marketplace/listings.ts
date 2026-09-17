@@ -92,6 +92,7 @@ export function isOwnMarketplaceListing(
   listing: MarketplaceListing,
   userId?: number | string | null,
 ): boolean {
+  if (typeof listing.isOwner === 'boolean') return listing.isOwner;
   if (userId == null || userId === '') return false;
   const id = String(userId);
   return listing.ownerId === id || listing.seller.id === id;
@@ -116,21 +117,24 @@ function asImages(value: unknown): string[] {
     .filter((item): item is string => Boolean(item));
 }
 
+function asMemberSince(value: unknown): string {
+  const raw = asString(value);
+  if (!raw) return '';
+  if (/^[A-Za-z]{3,9}\s+\d{4}$/.test(raw)) return raw;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return raw;
+  return parsed.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+function asOptionalBoolean(value: unknown): boolean | undefined {
+  if (value == null) return undefined;
+  return asBoolean(value);
+}
+
 function asSeller(value: unknown, showPhoneNumber: boolean): MarketplaceListing['seller'] {
   const record = asRecord(value);
   const nestedUser = asRecord(record?.user);
   const source = nestedUser ?? record;
-  const memberSinceRaw = asString(source?.memberSince ?? source?.member_since);
-  const created = asString(source?.createdAt ?? source?.created_at);
-  let memberSince = '';
-  if (memberSinceRaw) {
-    const parsed = new Date(memberSinceRaw);
-    memberSince = Number.isNaN(parsed.getTime())
-      ? memberSinceRaw
-      : parsed.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  } else if (created) {
-    memberSince = new Date(created).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  }
 
   return {
     id: asString(source?.id) ?? '',
@@ -144,7 +148,9 @@ function asSeller(value: unknown, showPhoneNumber: boolean): MarketplaceListing[
           source?.profileImageUrl ??
           source?.avatar,
       ) ?? '',
-    memberSince,
+    memberSince: asMemberSince(
+      source?.memberSince ?? source?.member_since ?? source?.createdAt ?? source?.created_at,
+    ),
     phoneNumber: showPhoneNumber
       ? asString(source?.phoneNumber ?? source?.phone_number ?? source?.phone) ?? ''
       : '',
@@ -197,9 +203,9 @@ export function normalizeMarketplaceListing(value: unknown): MarketplaceListing 
 
   const showPhoneNumber = asShowPhoneNumber(record);
   const seller = asSeller(
-    record.created_by ??
+    record.seller ??
+      record.created_by ??
       record.createdBy ??
-      record.seller ??
       record.user ??
       record.buyer ??
       record.owner,
@@ -209,6 +215,8 @@ export function normalizeMarketplaceListing(value: unknown): MarketplaceListing 
     seller.phoneNumber =
       asString(record.phoneNumber ?? record.phone_number ?? record.phone) ?? '';
   }
+
+  const createdBy = asRecord(record.created_by ?? record.createdBy);
 
   return {
     id,
@@ -238,6 +246,9 @@ export function normalizeMarketplaceListing(value: unknown): MarketplaceListing 
     state: asString(record.state) ?? '',
     zipCode: asString(record.zipCode ?? record.zip_code) ?? '',
     showPhoneNumber,
+    shareUrl: asString(record.share_url ?? record.shareUrl) ?? undefined,
+    isOwner: asOptionalBoolean(record.is_owner ?? record.isOwner),
+    distanceMiles: asNumber(record.distance_miles ?? record.distanceMiles),
     ownerId:
       asString(
         record.buyerId ??
@@ -246,6 +257,7 @@ export function normalizeMarketplaceListing(value: unknown): MarketplaceListing 
           record.user_id ??
           record.ownerId ??
           record.owner_id ??
+          createdBy?.id ??
           seller.id,
       ) ?? '',
   };

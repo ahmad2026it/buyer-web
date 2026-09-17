@@ -66,6 +66,9 @@ export type MarketplaceListing = {
   zipCode?: string;
   ownerId?: string;
   showPhoneNumber: boolean;
+  shareUrl?: string;
+  isOwner?: boolean;
+  distanceMiles?: number | null;
 };
 
 export type MarketplaceFilters = {

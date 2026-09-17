@@ -5,7 +5,9 @@ import type { MarketplaceListing } from '@/lib/marketplace/types';
 export type ShareableMarketplaceListing = Pick<
   MarketplaceListing,
   'id' | 'title' | 'price' | 'currency'
->;
+> & {
+  shareUrl?: string | null;
+};
 
 export function marketplaceListingPath(id: string): string {
   return `/marketplace/${id}`;
@@ -20,7 +22,8 @@ export function marketplaceListingUrl(id: string): string {
 export async function shareMarketplaceListing(
   listing: ShareableMarketplaceListing,
 ): Promise<'shared' | 'copied' | 'cancelled' | 'failed'> {
-  const url = marketplaceListingUrl(listing.id);
+  const shareUrl = listing.shareUrl?.trim();
+  const url = shareUrl || marketplaceListingUrl(listing.id);
   const title = listing.title.trim() || 'WhoCan listing';
   const price = formatMarketplacePrice(listing.price, listing.currency);
   const text = `Check out this listing on WhoCan: ${title} — ${price}`;

@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 
-type FooterLink = { label: string; href: string };
+type FooterLink = { label: string; href: string; detail?: string };
+
+const CONTACT_EMAIL = 'contactus@whocan-app.com';
+const CONTACT_HREF = `mailto:${CONTACT_EMAIL}`;
 
 const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
   {
@@ -28,6 +31,7 @@ const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
     links: [
       { label: 'Privacy Policy', href: '/privacy-policy' },
       { label: 'Terms and Conditions', href: '/terms-and-conditions' },
+      { label: 'Contact Us', href: CONTACT_HREF, detail: CONTACT_EMAIL },
     ],
   },
 ];
@@ -35,6 +39,7 @@ const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
 const BOTTOM_LINKS: FooterLink[] = [
   { label: 'Privacy', href: '/privacy-policy' },
   { label: 'Terms', href: '/terms-and-conditions' },
+  { label: CONTACT_EMAIL, href: CONTACT_HREF },
 ];
 
 const SOCIAL_LINKS = [
@@ -152,7 +157,7 @@ export default function Footer() {
               </h4>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {links.map((link) => (
-                  <li key={link.href}>
+                  <li key={`${link.label}-${link.href}`}>
                     <Link
                       href={link.href}
                       style={{
@@ -169,6 +174,19 @@ export default function Footer() {
                       }}
                     >
                       {link.label}
+                      {link.detail ? (
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: '13px',
+                            lineHeight: 1.4,
+                            marginTop: '2px',
+                            wordBreak: 'break-word',
+                          }}
+                        >
+                          {link.detail}
+                        </span>
+                      ) : null}
                     </Link>
                   </li>
                 ))}
@@ -215,6 +233,7 @@ export default function Footer() {
                   fontSize: '13px',
                   color: 'rgba(255,255,255,0.3)',
                   transition: 'color 0.2s ease',
+                  wordBreak: 'break-word',
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.color =

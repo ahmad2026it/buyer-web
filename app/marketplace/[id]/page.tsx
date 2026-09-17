@@ -17,7 +17,6 @@ import {
   HeartOutlineIcon,
   PinIcon,
 } from '@/components/marketplace/MarketplaceIcons';
-import { useMarketplaceCategories } from '@/app/buyer/store/marketplaceCategoriesAPI';
 import {
   useGetMarketplaceListingQuery,
   useGetMarketplaceListingsQuery,
@@ -28,7 +27,6 @@ import {
   useGetBuyerConversationsQuery,
   useStartBuyerConversationMutation,
 } from '@/app/buyer/store/buyerConversationsAPI';
-import { marketplaceCategoryLabel } from '@/lib/marketplace/categories';
 import { formatMarketplaceCondition, isOwnMarketplaceListing, marketplaceListingCallHref } from '@/lib/marketplace/listings';
 import { formatMarketplacePrice } from '@/lib/marketplace/data';
 import type { MarketplaceListing } from '@/lib/marketplace/types';
@@ -78,7 +76,6 @@ export default function MarketplaceListingDetailPage() {
   const router = useRouter();
   const token = useAppSelector((state) => state.auth.token);
   const userId = useAppSelector((state) => state.auth.user?.id);
-  const { categories } = useMarketplaceCategories();
   const listingId = Array.isArray(params.id) ? params.id[0] : params.id;
   const [activeImage, setActiveImage] = useState(0);
   const [authOpen, setAuthOpen] = useState(false);
@@ -96,6 +93,7 @@ export default function MarketplaceListingDetailPage() {
 
   const { data, isLoading, isError, refetch } = useGetMarketplaceListingQuery(listingId ?? '', {
     skip: !token || !listingId,
+    refetchOnMountOrArgChange: true,
   });
   const listing = data?.data ?? null;
 
@@ -230,7 +228,7 @@ export default function MarketplaceListingDetailPage() {
 
   const liked = listing.isFavorite;
   const image = listing.images[activeImage] ?? listing.images[0];
-  const categoryLabel = marketplaceCategoryLabel(listing.categoryId, categories);
+  const categoryLabel = listing.categoryName || '—';
   const conditionLabel = formatMarketplaceCondition(listing.condition);
   const isOwner = isOwnMarketplaceListing(listing, userId);
   const sellerTelHref = marketplaceListingCallHref(listing);
@@ -270,7 +268,7 @@ export default function MarketplaceListingDetailPage() {
                   <span className={mpCondition}>{conditionLabel}</span>
                   {listing.featured ? <span className={mpFeatured}>FEATURED</span> : null}
                 </div>
-                {listing.images.length > 1 ? (
+                {listing.images.length > 0 ? (
                   <div className={mpThumbs}>
                     {listing.images.map((src, index) => (
                       <button
@@ -279,6 +277,7 @@ export default function MarketplaceListingDetailPage() {
                         className={cx(mpThumb, index === activeImage && mpThumbActive)}
                         onClick={() => setActiveImage(index)}
                         aria-label={`Photo ${index + 1}`}
+                        aria-current={index === activeImage ? 'true' : undefined}
                       >
                         <FavorImage src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </button>

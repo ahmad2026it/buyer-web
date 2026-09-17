@@ -226,11 +226,12 @@ export const mpDetailGrid =
   'grid grid-cols-1 items-start gap-7 min-[961px]:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]';
 
 export const mpGalleryMain =
-  'relative h-[min(58vw,320px)] overflow-hidden rounded-[18px] bg-[#F2F4F7] md:h-[280px] min-[961px]:h-[420px] min-[961px]:rounded-[22px]';
+  'relative h-[min(58vw,320px)] overflow-hidden rounded-[18px] border-[1.5px] border-[#D0D5DD] bg-[#F2F4F7] md:h-[280px] min-[961px]:h-[420px] min-[961px]:rounded-[22px]';
 
 export const mpThumbs = 'mt-2.5 flex gap-2';
 
-export const mpThumb = 'size-[72px] overflow-hidden rounded-xl border-2 border-transparent p-0';
+export const mpThumb =
+  'size-[72px] overflow-hidden rounded-xl border-2 border-[#D0D5DD] bg-[#F2F4F7] p-0';
 
 export const mpThumbActive = 'border-brand-500';
 

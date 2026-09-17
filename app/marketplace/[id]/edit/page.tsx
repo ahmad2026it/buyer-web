@@ -30,6 +30,7 @@ export default function MarketplaceEditListingPage() {
 
   const { data, isLoading, isError, refetch } = useGetMarketplaceListingQuery(listingId ?? '', {
     skip: !token || !listingId,
+    refetchOnMountOrArgChange: true,
   });
   const listing = data?.data ?? null;
 
