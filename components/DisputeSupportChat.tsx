@@ -574,6 +574,7 @@ export default function DisputeSupportChat({
         </div>
 
         <footer
+          className="chat-composer"
           style={{
             flexShrink: 0,
             background: '#ffffff',
@@ -591,6 +592,7 @@ export default function DisputeSupportChat({
           )}
           {pending.length > 0 && (
             <div
+              className="chat-composer-previews"
               style={{
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -665,7 +667,7 @@ export default function DisputeSupportChat({
               ))}
             </div>
           )}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+          <div className="chat-composer-row">
             <input
               ref={fileInputRef}
               type="file"
@@ -705,8 +707,8 @@ export default function DisputeSupportChat({
               </svg>
             </button>
             <div
+              className="chat-composer-field"
               style={{
-                flex: 1,
                 display: 'flex',
                 alignItems: 'center',
                 background: '#F9FAFB',
@@ -718,6 +720,7 @@ export default function DisputeSupportChat({
               <input
                 ref={inputRef}
                 type="text"
+                size={1}
                 placeholder={canSend ? 'Message support...' : 'Messaging unavailable'}
                 value={input}
                 disabled={!canSend || sending}
@@ -737,6 +740,7 @@ export default function DisputeSupportChat({
                 }}
                 style={{
                   flex: 1,
+                  minWidth: 0,
                   border: 'none',
                   outline: 'none',
                   fontFamily: FONT,

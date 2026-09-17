@@ -901,7 +901,7 @@ export default function BuyerChatCenter() {
                   </p>
                 )}
                 {pending.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '0 2px' }}>
+                  <div className="chat-composer-previews" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '0 2px' }}>
                     {pending.map((item) => (
                       <div
                         key={item.id}
@@ -967,7 +967,7 @@ export default function BuyerChatCenter() {
                     ))}
                   </div>
                 )}
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+                <div className="chat-composer-row">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1006,13 +1006,16 @@ export default function BuyerChatCenter() {
                       />
                     </svg>
                   </button>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#F9FAFB', border: '1.5px solid #EAECF0', borderRadius: '9999px', padding: '10px 16px', gap: '8px', transition: 'border-color 0.15s, box-shadow 0.15s' }}
+                  <div
+                    className="chat-composer-field"
+                    style={{ display: 'flex', alignItems: 'center', background: '#F9FAFB', border: '1.5px solid #EAECF0', borderRadius: '9999px', padding: '10px 16px', gap: '8px', transition: 'border-color 0.15s, box-shadow 0.15s' }}
                     onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = BRAND; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 3px rgba(165,74,255,0.1)'; (e.currentTarget as HTMLElement).style.background = '#fff'; }}
                     onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = '#EAECF0'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; (e.currentTarget as HTMLElement).style.background = '#F9FAFB'; }}
                   >
                     <input
                       ref={inputRef}
                       type="text"
+                      size={1}
                       placeholder={canSend ? `Message ${firstName}...` : (unavailableCopy?.placeholder ?? 'Messaging unavailable')}
                       value={input}
                       disabled={!canSend || sending}
@@ -1021,7 +1024,7 @@ export default function BuyerChatCenter() {
                         if (e.target.value.trim()) notifyTyping();
                       }}
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void sendMsg(); } }}
-                      style={{ flex: 1, border: 'none', outline: 'none', fontFamily: F, fontSize: '14px', color: '#101828', background: 'transparent' }}
+                      style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', fontFamily: F, fontSize: '14px', color: '#101828', background: 'transparent' }}
                     />
                   </div>
 
