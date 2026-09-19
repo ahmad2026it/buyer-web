@@ -23,7 +23,6 @@ const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
     links: [
       { label: 'Blog', href: '/blog' },
       { label: 'How it works', href: '/articles/how-it-works' },
-      { label: 'Trusted providers', href: '/articles/trusted-local-providers' },
     ],
   },
   {
@@ -45,7 +44,7 @@ const BOTTOM_LINKS: FooterLink[] = [
 const SOCIAL_LINKS = [
   {
     label: 'Instagram',
-    href: 'https://www.instagram.com/who_can_online?utm_source=qr',
+    href: 'https://www.instagram.com/whocan.app',
     icon: InstagramIcon,
   },
   {

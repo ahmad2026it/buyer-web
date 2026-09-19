@@ -2,11 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import FavorImage from '@/components/FavorImage';
+import WhoCanMark from '@/components/WhoCanMark';
 import type { PublicBlog } from '@/app/buyer/store/buyerBlogsTypes';
 import {
   blogHref,
   formatBlogDate,
-  getBlogAuthorInitials,
   getBlogAuthorName,
 } from '@/lib/publicBlogs';
 
@@ -152,17 +152,14 @@ export default function BlogListingCard({ blog }: { blog: PublicBlog }) {
                 height: 28,
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)',
-                color: '#fff',
-                fontFamily: FONT,
-                fontSize: 10,
-                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
               }}
+              aria-hidden
             >
-              {getBlogAuthorInitials(blog)}
+              <WhoCanMark width={15} fill="#fff" />
             </div>
             <div style={{ minWidth: 0 }}>
               <p

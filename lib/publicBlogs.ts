@@ -91,15 +91,6 @@ export const getBlogAuthorName = (blog: PublicBlog): string => {
   return name || "WhoCan Team";
 };
 
-export const getBlogAuthorInitials = (blog: PublicBlog): string => {
-  const parts = getBlogAuthorName(blog)
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
-  const initials = parts.map((part) => part[0]?.toUpperCase() ?? "").join("");
-  return initials || "WC";
-};
-
 export const formatBlogDate = (value: string | null | undefined): string => {
   if (!value) return "";
   const date = new Date(value);

@@ -291,7 +291,7 @@ export default function MarketplacePage() {
               </div>
             ) : listings.length === 0 ? (
               <div className={mpEmpty}>
-                <h3 className={mpEmptyTitle}>No listings match</h3>
+                <h3 className={mpEmptyTitle}>No listing found</h3>
                 <p className={mpEmptyText}>Try another category, search, or reset your filters.</p>
                 <button type="button" className={mpSoftBtn} onClick={resetFilters}>
                   Clear filters

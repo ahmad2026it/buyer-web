@@ -6,13 +6,13 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavorImage from '@/components/FavorImage';
 import BlogListingCard, { BlogCardSkeleton } from '@/components/BlogListingCard';
+import WhoCanMark from '@/components/WhoCanMark';
 import {
   useGetPublicBlogBySlugQuery,
   useGetPublicBlogsQuery,
 } from '@/app/buyer/store/buyerBlogsAPI';
 import {
   formatBlogDate,
-  getBlogAuthorInitials,
   getBlogAuthorName,
   sanitizeBlogHtml,
 } from '@/lib/publicBlogs';
@@ -308,13 +308,10 @@ export default function BlogArticle({ slug }: { slug: string }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  color: '#fff',
-                  fontFamily: FONT,
-                  fontWeight: 700,
-                  fontSize: 12,
                 }}
+                aria-hidden
               >
-                {getBlogAuthorInitials(blog)}
+                <WhoCanMark width={20} fill="#fff" />
               </div>
               <div>
                 <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#101828', lineHeight: 1.2 }}>
