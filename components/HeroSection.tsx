@@ -183,8 +183,8 @@ export default function HeroSection() {
               </svg>
             </a>
 
-            {/* H1 */}
-            <h1
+            {/* Display headline (H1 lives in server-rendered HomeSeoContent) */}
+            <p
               className="hero-text-2 rs-display"
               style={{
                 fontFamily: 'Poppins, sans-serif',
@@ -209,7 +209,7 @@ export default function HeroSection() {
                 handymen
               </span>{' '}
               at your doorstep!
-            </h1>
+            </p>
 
             {/* Subtitle */}
             <p
@@ -224,7 +224,7 @@ export default function HeroSection() {
                 maxWidth: '460px',
               }}
             >
-              From cleaning to grass cutting, easily connect with trusted service
+              From cleaning to grass cutting, easily connect with local service
               providers for all your home needs.
             </p>
 

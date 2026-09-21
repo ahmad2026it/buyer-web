@@ -250,7 +250,7 @@ export default function WhyChooseUsSection() {
         >
           <div data-animate>
             <h2 className="rs-h2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '44px', lineHeight: '1.15', color: '#101828', letterSpacing: '-0.02em' }}>
-              Find trusted{' '}
+              Find local{' '}
               <span
                 style={{
                   display: 'inline-flex',

@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "All Favors",
-  description: "Browse every favor on WhoCan, from cleaning to repairs and more.",
-  path: "/explore/favors",
+  title: "Become a Seller",
+  description:
+    "Join WhoCan as a seller, reach local customers, and grow your home-service business.",
+  path: "/sellers",
 });
 
-export default function ExploreFavorsLayout({
+export default function SellersLayout({
   children,
 }: {
   children: React.ReactNode;

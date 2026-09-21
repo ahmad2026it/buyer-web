@@ -14,7 +14,7 @@ import {
 const PHONE_IMAGE = '/image.png';
 
 const APP_PITCH =
-  'Struggling to find reliable professionals for your everyday tasks, or looking to grow your service business? WhoCan connects you with trusted local experts for everything from home cleaning and moving to repairs and tutoring. Whether you need a job done quickly or want to reach more customers in your area, our platform makes it fast, safe, and hassle-free. Download WhoCan today and get things done wherever you are!';
+  'Struggling to find reliable professionals for your everyday tasks, or looking to grow your service business? WhoCan connects you with local experts for everything from home cleaning and moving to repairs and tutoring. Whether you need a job done quickly or want to reach more customers in your area, our platform makes it fast, safe, and hassle-free. Download WhoCan today and get things done wherever you are!';
 
 interface AppDownload {
   audience: string;
@@ -29,7 +29,7 @@ interface AppDownload {
 const APP_DOWNLOADS: AppDownload[] = [
   {
     audience: 'Buyers',
-    description: 'Hire trusted local experts for everyday tasks.',
+    description: 'Hire local experts for everyday tasks.',
     icon: SearchIcon,
     iconColor: '#1570EF',
     iconBg: '#EFF6FF',
@@ -52,7 +52,7 @@ const FEATURES = [
     icon: SearchIcon,
     iconColor: '#1570EF',
     iconBg: '#EFF6FF',
-    title: 'Find Trusted Services Locally, Instantly',
+    title: 'Find Local Services Instantly',
     desc: 'Search from hundreds of verified service providers in your neighbourhood.',
   },
   {

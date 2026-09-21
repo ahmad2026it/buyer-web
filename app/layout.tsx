@@ -1,16 +1,66 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import ScrollAnimator from "@/components/ScrollAnimator";
 import Providers from "@/components/Providers";
 import AuthProvider from "@/components/AuthProvider";
+import {
+  SITE_DEFAULT_DESCRIPTION,
+  SITE_DEFAULT_TITLE,
+  SITE_NAME,
+  SITE_OG_IMAGE_PATH,
+  absoluteUrl,
+  getSiteUrl,
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "WhoCan — Find Handymen at Your Doorstep",
-  description:
-    "From cleaning to grass cutting, easily connect with trusted service providers for all your home needs.",
-  keywords: "handyman, home services, cleaning, repairs, plumbing, electrician",
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: SITE_DEFAULT_TITLE,
+    template: `%s — ${SITE_NAME}`,
+  },
+  description: SITE_DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "handyman",
+    "home services",
+    "cleaning",
+    "repairs",
+    "plumbing",
+    "electrician",
+    "local services",
+    "WhoCan",
+  ],
   manifest: "/manifest.json",
-  applicationName: "WhoCan",
+  alternates: {
+    canonical: absoluteUrl("/"),
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: absoluteUrl("/"),
+    siteName: SITE_NAME,
+    title: SITE_DEFAULT_TITLE,
+    description: SITE_DEFAULT_DESCRIPTION,
+    images: [
+      {
+        url: absoluteUrl(SITE_OG_IMAGE_PATH),
+        width: 1200,
+        height: 630,
+        alt: SITE_NAME,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_DEFAULT_TITLE,
+    description: SITE_DEFAULT_DESCRIPTION,
+    images: [absoluteUrl(SITE_OG_IMAGE_PATH)],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport: Viewport = {
@@ -43,7 +93,7 @@ export default function RootLayout({
         <Providers>
           <AuthProvider>
             <ScrollAnimator />
-            {children}
+            <Suspense fallback={null}>{children}</Suspense>
           </AuthProvider>
         </Providers>
       </body>

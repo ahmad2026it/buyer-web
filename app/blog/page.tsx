@@ -91,7 +91,7 @@ export default function BlogIndexPage() {
                 </p>
                 <h1 className="listing-page-title">WhoCan Blog</h1>
                 <p style={{ fontFamily: FONT, fontSize: '15px', color: '#667085' }}>
-                  Tips, how-tos, and stories to help you book trusted help with confidence.
+                  Tips, how-tos, and stories to help you book local help with confidence.
                 </p>
               </div>
 

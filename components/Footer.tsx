@@ -29,15 +29,17 @@ const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
     group: 'Legal',
     links: [
       { label: 'Privacy Policy', href: '/privacy-policy' },
-      { label: 'Terms and Conditions', href: '/terms-and-conditions' },
+      { label: 'Terms & Conditions', href: '/terms-and-conditions' },
+      { label: 'Account Deletion', href: '/account-deletion' },
       { label: 'Contact Us', href: CONTACT_HREF, detail: CONTACT_EMAIL },
     ],
   },
 ];
 
 const BOTTOM_LINKS: FooterLink[] = [
-  { label: 'Privacy', href: '/privacy-policy' },
-  { label: 'Terms', href: '/terms-and-conditions' },
+  { label: 'Privacy Policy', href: '/privacy-policy' },
+  { label: 'Terms & Conditions', href: '/terms-and-conditions' },
+  { label: 'Account Deletion', href: '/account-deletion' },
   { label: CONTACT_EMAIL, href: CONTACT_HREF },
 ];
 
@@ -132,7 +134,7 @@ export default function Footer() {
                 maxWidth: '220px',
               }}
             >
-              Your trusted marketplace for home services — find skilled
+              Your marketplace for local home services — find skilled
               handymen in your neighbourhood, fast.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import BlogArticle from '@/components/BlogArticle';
 import { fetchPublicBlogBySlug } from '@/lib/fetchPublicBlog';
+import { buildPageMetadata } from '@/lib/seo';
 
 type BlogDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -20,16 +21,13 @@ export async function generateMetadata({
     blog.excerpt?.trim() ||
     'Read this guide on WhoCan.';
 
-  return {
-    title: `${title} — WhoCan`,
+  return buildPageMetadata({
+    title,
     description,
-    openGraph: {
-      title,
-      description,
-      type: 'article',
-      images: blog.cover_image_url ? [{ url: blog.cover_image_url }] : undefined,
-    },
-  };
+    path: `/blog/${slug}`,
+    ogType: 'article',
+    images: blog.cover_image_url ? [blog.cover_image_url] : undefined,
+  });
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {

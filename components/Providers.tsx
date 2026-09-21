@@ -2,7 +2,6 @@
 
 import { useRef } from 'react';
 import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
 import { makeStore } from '@/store';
@@ -21,19 +20,20 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     injectPersistor(storeRef.current.persistor);
   }
 
-  const { store, persistor } = storeRef.current;
+  const { store } = storeRef.current;
 
+  // Do not wrap with PersistGate(loading=null): that omits children from SSR HTML
+  // and leaves crawlers with an empty body. redux-persist still rehydrates in the
+  // background via makeStore()/persistStore.
   return (
     <AppRouterCacheProvider>
       <ThemeProvider theme={muiTheme}>
         <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
-            <MuiToastProvider>
-              <PushNotificationListener />
-              <AuthHistoryGuard />
-              {children}
-            </MuiToastProvider>
-          </PersistGate>
+          <MuiToastProvider>
+            <PushNotificationListener />
+            <AuthHistoryGuard />
+            {children}
+          </MuiToastProvider>
         </Provider>
       </ThemeProvider>
     </AppRouterCacheProvider>
