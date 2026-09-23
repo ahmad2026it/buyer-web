@@ -8,7 +8,6 @@ const INTERNAL_LINKS = [
   { href: "/marketplace", label: "Marketplace" },
   { href: "/categories", label: "Service categories" },
   { href: "/blog", label: "WhoCan blog" },
-  { href: "/articles/how-it-works", label: "How WhoCan works" },
   { href: "/sellers", label: "Become a seller" },
   { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/terms-and-conditions", label: "Terms & Conditions" },
@@ -69,8 +68,7 @@ export default function HomeSeoContent() {
           }}
         >
           Prefer to buy or sell goods nearby? Use the marketplace. Looking for
-          tips before you book? Read guides on the blog, or start with how WhoCan
-          works.
+          tips before you book? Read guides on the blog.
         </p>
         <nav aria-label="Important pages">
           <ul

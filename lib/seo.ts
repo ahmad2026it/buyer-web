@@ -106,17 +106,6 @@ export const PUBLIC_SITEMAP_PATHS: {
   { path: "/categories", changeFrequency: "weekly", priority: 0.8 },
   { path: "/blog", changeFrequency: "daily", priority: 0.8 },
   { path: "/sellers", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/articles/how-it-works", changeFrequency: "monthly", priority: 0.7 },
-  {
-    path: "/articles/deep-home-cleaning",
-    changeFrequency: "monthly",
-    priority: 0.6,
-  },
-  {
-    path: "/articles/trusted-local-providers",
-    changeFrequency: "monthly",
-    priority: 0.6,
-  },
   { path: "/privacy-policy", changeFrequency: "yearly", priority: 0.4 },
   { path: "/terms-and-conditions", changeFrequency: "yearly", priority: 0.4 },
   { path: "/account-deletion", changeFrequency: "yearly", priority: 0.4 },
