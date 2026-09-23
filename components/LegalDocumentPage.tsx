@@ -4,6 +4,10 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getAxiosErrorMessage } from '@/lib/axios';
 import type { BuyerLegalDocument } from '@/app/buyer/store/buyerLegalTypes';
+import {
+  useGetBuyerPrivacyPolicyQuery,
+  useGetBuyerTermsAndConditionsQuery,
+} from '@/app/buyer/store/buyerLegalAPI';
 
 const BRAND = '#A54AFF';
 const GRAD = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
@@ -124,25 +128,35 @@ function LegalContent({ content }: { content: string }) {
   );
 }
 
+type LegalDocumentKind = 'privacy' | 'terms';
+
 type LegalDocumentPageProps = {
   fallbackTitle: string;
   loadErrorMessage: string;
-  legalDocument?: BuyerLegalDocument;
-  isLoading: boolean;
-  isError: boolean;
-  error: unknown;
-  onRetry: () => void;
+  initialDocument: BuyerLegalDocument | null;
+  kind: LegalDocumentKind;
 };
 
 export default function LegalDocumentPage({
   fallbackTitle,
   loadErrorMessage,
-  legalDocument,
-  isLoading,
-  isError,
-  error,
-  onRetry,
+  initialDocument,
+  kind,
 }: LegalDocumentPageProps) {
+  const privacyQuery = useGetBuyerPrivacyPolicyQuery(undefined, {
+    skip: kind !== 'privacy' || Boolean(initialDocument),
+  });
+  const termsQuery = useGetBuyerTermsAndConditionsQuery(undefined, {
+    skip: kind !== 'terms' || Boolean(initialDocument),
+  });
+  const activeQuery = kind === 'privacy' ? privacyQuery : termsQuery;
+  const legalDocument = initialDocument ?? activeQuery.data?.data;
+  const isLoading =
+    !initialDocument && (activeQuery.isLoading || activeQuery.isUninitialized);
+  const isError =
+    !initialDocument &&
+    !isLoading &&
+    (activeQuery.isError || !legalDocument?.content);
   const title = legalDocument?.title || fallbackTitle;
 
   return (
@@ -219,11 +233,13 @@ export default function LegalDocumentPage({
               }}
             >
               <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 20 }}>
-                {getAxiosErrorMessage(error) || loadErrorMessage}
+                {getAxiosErrorMessage(activeQuery.error) || loadErrorMessage}
               </p>
               <button
                 type="button"
-                onClick={onRetry}
+                onClick={() => {
+                  void activeQuery.refetch();
+                }}
                 style={{
                   fontFamily: FONT,
                   fontWeight: 700,

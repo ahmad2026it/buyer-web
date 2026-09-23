@@ -4,10 +4,17 @@ import type { Metadata } from "next";
 export const SITE_NAME = "WhoCan";
 
 export const SITE_DEFAULT_TITLE =
-  "WhoCan — Find Local Handymen & Home Services Near You";
+  "WhoCan — Local Services, Favors, and a Nearby Marketplace";
 
 export const SITE_DEFAULT_DESCRIPTION =
-  "Book local home services on WhoCan — cleaning, repairs, assembly, electrical, and more. Compare providers, schedule favors, and get help at your doorstep.";
+  "Find local help, post a favor, or buy and sell nearby on WhoCan. Browse services and goods, compare profiles, and connect with people in your area.";
+
+/** Canonical profile URLs for Organization schema. Share and short links are omitted. */
+export const ORGANIZATION_SAME_AS = [
+  "https://www.instagram.com/whocan.app",
+  "https://www.facebook.com/WhoCanApp",
+  "https://www.pinterest.com/whocan_online/",
+] as const;
 
 export const SITE_OG_IMAGE_PATH = "/hero.png";
 

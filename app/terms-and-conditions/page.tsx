@@ -1,21 +1,15 @@
-'use client';
 import LegalDocumentPage from '@/components/LegalDocumentPage';
-import { useGetBuyerTermsAndConditionsQuery } from '@/app/buyer/store/buyerLegalAPI';
+import { fetchPublicTermsAndConditions } from '@/lib/fetchPublicLegal';
 
-export default function TermsAndConditionsPage() {
-  const { data, isLoading, isError, error, refetch } = useGetBuyerTermsAndConditionsQuery();
+export default async function TermsAndConditionsPage() {
+  const initialDocument = await fetchPublicTermsAndConditions();
 
   return (
     <LegalDocumentPage
       fallbackTitle="Terms and Conditions"
       loadErrorMessage="Unable to load the terms and conditions. Please try again."
-      legalDocument={data?.data}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      onRetry={() => {
-        void refetch();
-      }}
+      initialDocument={initialDocument}
+      kind="terms"
     />
   );
 }

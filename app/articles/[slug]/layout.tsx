@@ -16,9 +16,9 @@ const ARTICLE_SEO: Record<
       "Learn how WhoCan connects you with local handymen and service providers for home tasks.",
   },
   "trusted-local-providers": {
-    title: "How WhoCan Reviews Local Providers",
+    title: "How to Choose a Local Provider",
     description:
-      "Learn how WhoCan reviews local service providers before they appear on the platform.",
+      "What you can review on a WhoCan provider profile before you book, and how to contact support if a job needs help.",
   },
 };
 

@@ -1,21 +1,15 @@
-'use client';
 import LegalDocumentPage from '@/components/LegalDocumentPage';
-import { useGetBuyerPrivacyPolicyQuery } from '@/app/buyer/store/buyerLegalAPI';
+import { fetchPublicPrivacyPolicy } from '@/lib/fetchPublicLegal';
 
-export default function PrivacyPolicyPage() {
-  const { data, isLoading, isError, error, refetch } = useGetBuyerPrivacyPolicyQuery();
+export default async function PrivacyPolicyPage() {
+  const initialDocument = await fetchPublicPrivacyPolicy();
 
   return (
     <LegalDocumentPage
       fallbackTitle="Privacy Policy"
       loadErrorMessage="Unable to load the privacy policy. Please try again."
-      legalDocument={data?.data}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      onRetry={() => {
-        void refetch();
-      }}
+      initialDocument={initialDocument}
+      kind="privacy"
     />
   );
 }

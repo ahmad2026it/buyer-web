@@ -3,6 +3,7 @@ import HomePageClient from "@/components/HomePageClient";
 import HomeSeoContent from "@/components/HomeSeoContent";
 import JsonLd from "@/components/JsonLd";
 import {
+  ORGANIZATION_SAME_AS,
   SITE_DEFAULT_DESCRIPTION,
   SITE_DEFAULT_TITLE,
   SITE_NAME,
@@ -31,11 +32,7 @@ export default function HomePage() {
     name: SITE_NAME,
     url: siteUrl,
     logo: absoluteUrl("/icon.svg"),
-    sameAs: [
-      "https://www.instagram.com/whocan.app",
-      "https://www.facebook.com/share/1Da83HhRLV/",
-      "https://pin.it/2ofsRSv1R",
-    ],
+    sameAs: [...ORGANIZATION_SAME_AS],
     contactPoint: {
       "@type": "ContactPoint",
       email: "contactus@whocan-app.com",

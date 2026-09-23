@@ -46,8 +46,8 @@ const META: Record<string, ArticleMeta> = {
     readTime: '5 min read',
   },
   'trusted-local-providers': {
-    title: 'Trusted Local Providers: How WhoCan Verifies Every Professional',
-    category: 'Trust & Safety',
+    title: 'How to Choose a Local Provider on WhoCan',
+    category: 'Guides',
     bannerImg: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1400&h=580&fit=crop&auto=format&q=80',
     bannerAlt: 'Trusted local service provider',
     date: 'July 15, 2025',
@@ -174,57 +174,46 @@ function Content3() {
   return (
     <>
       <p style={pS}>
-        Bringing a stranger into your home to do repair or maintenance work requires trust. At WhoCan, we take that responsibility seriously. Our provider verification process is one of the most thorough in the local services industry — because your safety and satisfaction aren't optional extras, they're the product.
+        WhoCan is a place to find people who offer local services. A profile is information the provider chose to share. It is not a promise about their identity, qualifications, or the outcome of a job.
       </p>
 
-      <h2 style={h2S}>Step 1: Identity and Background Verification</h2>
-      <p style={pS}>
-        Every service provider on WhoCan submits a government-issued identity document before their profile goes live. Our team verifies the identity and runs a background check to screen for any history of fraud, theft, or violent offences.
-      </p>
-      <p style={pS}>
-        Providers with flags in their background history are not approved for the platform. This is a hard filter — no exceptions.
-      </p>
-
-      <h2 style={h2S}>Step 2: Skills Assessment and Portfolio Review</h2>
+      <h2 style={h2S}>What you can look at before you book</h2>
       <ArticleImage
         src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=900&h=400&fit=crop&auto=format"
-        alt="Professional reviewing work portfolio"
+        alt="Person reviewing photos of completed work"
       />
-      <p style={pS}>
-        For skilled trades — electrical work, plumbing, carpentry, and HVAC — providers are required to submit relevant certifications or licensing where applicable. For general handyman services, we review their work portfolio and, in many cases, conduct a skills interview.
-      </p>
-      <p style={pS}>
-        This ensures that the person arriving at your door has the knowledge to do the job properly — not just the confidence to say they can.
-      </p>
-
-      <blockquote style={bqS}>
-        "I've had providers from two other platforms let me down badly. With WhoCan, the quality has been consistently high because they actually screen the people they send."
-        <br /><span style={{ fontStyle: 'normal', fontSize: '13px', color: '#7C3AED', marginTop: '8px', display: 'block' }}>— Ahsan K., Islamabad</span>
-      </blockquote>
-
-      <h2 style={h2S}>Step 3: Ongoing Performance Monitoring</h2>
-      <p style={pS}>
-        Verification doesn't end when a provider joins the platform. Every completed job generates a customer rating. Providers who fall below a 4.0 rating threshold receive a performance warning and a support review. Those who remain consistently below standard are removed from the platform.
-      </p>
-      <p style={pS}>
-        Our customer support team also reviews any dispute or complaint filed against a provider, with a target resolution time of 24 hours.
-      </p>
-
-      <h2 style={h2S}>What Happens If You're Not Satisfied?</h2>
-      <ArticleImage
-        src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=900&h=400&fit=crop&auto=format"
-        alt="Customer support team"
-      />
-      <p style={pS}>
-        WhoCan's payment system holds funds in escrow until you confirm the job is complete. If the work doesn't meet your expectations:
-      </p>
+      <p style={pS}>On a provider profile you can usually review:</p>
       <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
-        {['Flag the issue through the app before confirming payment release', 'Our support team reviews the case within 24 hours', 'You may be eligible for a partial or full refund depending on the circumstances', 'The provider is given the opportunity to return and rectify the issue at no extra cost'].map(item => (
+        {[
+          'The services they say they offer',
+          'Their description and any photos of past work',
+          'The area they work in',
+          'Comments other customers chose to leave after a job',
+        ].map(item => (
           <li key={item} style={liS}>{item}</li>
         ))}
       </ul>
       <p style={pS}>
-        We hold every booking to a high standard — because when you choose WhoCan, you deserve the job done right the first time.
+        Read that information and decide for yourself whether the person is a fit. WhoCan does not check identity or licenses, and it does not promise how the work will turn out.
+      </p>
+
+      <h2 style={h2S}>How booking works</h2>
+      <p style={pS}>
+        Describe the job, choose a provider, and message them in the app. Agree on the scope and timing with the provider before the work starts. Payment arrangements are between you and the provider unless the app shows a specific checkout step for that booking.
+      </p>
+
+      <h2 style={h2S}>Reviews are opinions</h2>
+      <p style={pS}>
+        After a job, a customer can leave a comment about their own experience. Those comments can help you compare profiles. They are not a score WhoCan uses to approve or remove providers, and they do not predict the next job.
+      </p>
+
+      <h2 style={h2S}>If a job needs help</h2>
+      <ArticleImage
+        src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=900&h=400&fit=crop&auto=format"
+        alt="Person contacting support from a laptop"
+      />
+      <p style={pS}>
+        If something about a booking needs follow-up, contact WhoCan at contactus@whocan-app.com and include the booking details you have. Support can look into the request. That is not a promise of a refund, a repair, or a particular response time.
       </p>
     </>
   );
@@ -354,7 +343,7 @@ export default function ArticlePage() {
           <div style={{ marginTop: '56px', borderRadius: '20px', background: 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)', padding: '40px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '24px' }}>
             <div>
               <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: '22px', color: '#fff', marginBottom: '8px' }}>Ready to book a service?</h3>
-              <p style={{ fontFamily: FONT, fontSize: '14px', color: 'rgba(255,255,255,0.82)', lineHeight: '1.6' }}>Find verified providers near you and get the job done right, the first time.</p>
+              <p style={{ fontFamily: FONT, fontSize: '14px', color: 'rgba(255,255,255,0.82)', lineHeight: '1.6' }}>Browse local services and compare profiles before you book.</p>
             </div>
             <button
               onClick={() => router.push('/explore/search')}

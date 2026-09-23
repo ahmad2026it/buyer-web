@@ -7,13 +7,6 @@ import { SellerStoreLinks } from '@/components/StoreBadge';
 const BRAND = '#A54AFF';
 const BRAND_GRAD = 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)';
 
-const STATS = [
-  { value: '12,000+', label: 'Active sellers' },
-  { value: '$3,200', label: 'Avg. monthly earnings' },
-  { value: '48 hrs', label: 'To first booking' },
-  { value: '4.8★', label: 'Platform rating' },
-];
-
 const BENEFITS = [
   {
     icon: (
@@ -21,8 +14,8 @@ const BENEFITS = [
         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: 'Minimal commission',
-    desc: 'Keep more of what you earn. Our platform fee is among the lowest in the market.',
+    title: 'Set your own rates',
+    desc: 'You decide what to charge. WhoCan does not set your prices.',
   },
   {
     icon: (
@@ -40,8 +33,8 @@ const BENEFITS = [
         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: 'Instant payouts',
-    desc: 'Get paid within 24 hours of job completion — no waiting, no paperwork.',
+    title: 'Your own profile',
+    desc: 'List your skills, describe your work, and add photos so people can see what you offer.',
   },
   {
     icon: (
@@ -50,8 +43,8 @@ const BENEFITS = [
         <path d="M12 8v4l3 3" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: 'Fast onboarding',
-    desc: 'Complete your profile in 15 minutes and receive your first lead within 48 hours.',
+    title: 'Start when you are ready',
+    desc: 'Create a profile, then accept the requests that fit your schedule.',
   },
   {
     icon: (
@@ -61,8 +54,8 @@ const BENEFITS = [
         <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: '750,000+ buyers',
-    desc: 'Access an existing pool of verified customers actively looking for your skills.',
+    title: 'People nearby',
+    desc: 'Your profile can be shown to people in your area who are looking for the services you offer.',
   },
   {
     icon: (
@@ -70,8 +63,8 @@ const BENEFITS = [
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
-    title: 'Seller protection',
-    desc: 'Dispute resolution, verified reviews, and a dedicated support team on your side.',
+    title: 'Support when you need it',
+    desc: 'Contact the WhoCan team if a booking needs help. We can look into the request with you.',
   },
 ];
 
@@ -79,41 +72,17 @@ const STEPS = [
   {
     num: '01',
     title: 'Create your profile',
-    desc: 'List your skills, set your rates, and upload photos of past work. Takes about 15 minutes.',
+    desc: 'List your skills, set your rates, and add photos of past work.',
   },
   {
     num: '02',
-    title: 'Get matched with buyers',
-    desc: 'WhoCan surfaces your profile to buyers in your area searching for your services.',
+    title: 'Get found nearby',
+    desc: 'WhoCan can show your profile to people in your area who are looking for your services.',
   },
   {
     num: '03',
-    title: 'Complete the job & get paid',
-    desc: 'Deliver great work, collect your 5-star review, and receive payment within 24 hours.',
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    name: 'James Thornton',
-    role: 'Electrician · 4 yrs on WhoCan',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=72&h=72&fit=crop&auto=format&q=80',
-    quote: 'I went from occasional side jobs to a full-time business. WhoCan filled my calendar within the first month.',
-    rating: 5,
-  },
-  {
-    name: 'Maria Santos',
-    role: 'Cleaning Pro · 2 yrs on WhoCan',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=72&h=72&fit=crop&auto=format&q=80',
-    quote: 'The instant payout feature is what sold me. No waiting two weeks to get paid for work I already did.',
-    rating: 5,
-  },
-  {
-    name: 'Alfonzo Schuessler',
-    role: 'Plumber · 3 yrs on WhoCan',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=72&h=72&fit=crop&auto=format&q=80',
-    quote: "The platform handles all the admin so I can focus on the work. Best decision I made for my business.",
-    rating: 5,
+    title: 'Complete the job',
+    desc: 'Do the work and keep in touch with the customer in the Provider app.',
   },
 ];
 
@@ -331,18 +300,6 @@ function SellerNav() {
   );
 }
 
-function StarIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16">
-      <polygon
-        fill={filled ? '#F79009' : '#EAECF0'}
-        stroke="none"
-        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-      />
-    </svg>
-  );
-}
-
 function useAnimateOnScroll() {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -363,10 +320,8 @@ function useAnimateOnScroll() {
 
 export default function SellersPage() {
   const heroAnim = useAnimateOnScroll();
-  const statsAnim = useAnimateOnScroll();
   const benefitsAnim = useAnimateOnScroll();
   const stepsAnim = useAnimateOnScroll();
-  const testimonialsAnim = useAnimateOnScroll();
   const categoriesAnim = useAnimateOnScroll();
   const ctaAnim = useAnimateOnScroll();
 
@@ -417,7 +372,7 @@ export default function SellersPage() {
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#A54AFF" stroke="none"/>
             </svg>
             <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', fontWeight: 600, color: '#BF75FF', letterSpacing: '0.04em' }}>
-              Join 12,000+ sellers on WhoCan
+              Offer your services on WhoCan
             </span>
           </div>
 
@@ -443,7 +398,7 @@ export default function SellersPage() {
                 backgroundClip: 'text',
               }}
             >
-              steady income
+              local work
             </span>
           </h1>
 
@@ -461,8 +416,8 @@ export default function SellersPage() {
               textWrap: 'pretty',
             }}
           >
-            WhoCan connects skilled professionals with verified buyers in their neighbourhood.
-            Set your own rates, work your own hours, and get paid fast.
+            WhoCan connects people who offer services with people nearby who need them.
+            Set your own rates and choose the jobs that fit your schedule.
           </p>
 
           <div className="seller-hero-cta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
@@ -476,47 +431,10 @@ export default function SellersPage() {
                 textAlign: 'center',
               }}
             >
-              Register as a Seller — it&apos;s free
+              Register in the Provider app
             </p>
             <SellerStoreLinks onDark justify="center" className="seller-store-row" />
           </div>
-        </div>
-      </section>
-
-      {/* ── Stats bar ─────────────────────────────────────── */}
-      <section className="seller-stats" style={{ background: '#F9F5FF', borderTop: '1px solid #EDE9FE', borderBottom: '1px solid #EDE9FE', padding: '48px 0' }}>
-        <div
-          ref={statsAnim.ref}
-          className="container seller-stats-grid"
-          style={{
-            textAlign: 'center',
-            opacity: statsAnim.visible ? 1 : 0,
-            transform: statsAnim.visible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'opacity 0.55s ease, transform 0.55s ease',
-          }}
-        >
-          {STATS.map((stat) => (
-            <div key={stat.label}>
-              <div
-                style={{
-                  fontFamily: 'Poppins, sans-serif',
-                  fontWeight: 800,
-                  fontSize: 'clamp(24px, 6vw, 32px)',
-                  color: '#101828',
-                  letterSpacing: '-0.02em',
-                  background: BRAND_GRAD,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                {stat.value}
-              </div>
-              <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#667085', marginTop: '4px', fontWeight: 500 }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -550,7 +468,7 @@ export default function SellersPage() {
               Everything you need to grow
             </h2>
             <p className="seller-section-lead" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', textAlign: 'center', marginBottom: '56px', maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
-              We handle discovery, payments, and reviews — so you can focus on doing great work.
+              List what you do so people nearby can find you and request your help.
             </p>
 
             <div
@@ -685,75 +603,6 @@ export default function SellersPage() {
         </div>
       </section>
 
-      {/* ── Testimonials ──────────────────────────────────── */}
-      <section className="seller-section" style={{ padding: '96px 0', background: '#F9F5FF' }}>
-        <div
-          ref={testimonialsAnim.ref}
-          className="container"
-          style={{
-            opacity: testimonialsAnim.visible ? 1 : 0,
-            transform: testimonialsAnim.visible ? 'translateY(0)' : 'translateY(28px)',
-            transition: 'opacity 0.6s ease, transform 0.6s ease',
-          }}
-        >
-          <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: BRAND, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', textAlign: 'center' }}>
-            Seller stories
-          </p>
-          <h2
-            className="seller-section-title"
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 700,
-              fontSize: 'clamp(26px, 6vw, 40px)',
-              color: '#101828',
-              letterSpacing: '-0.01em',
-              textAlign: 'center',
-              marginBottom: '56px',
-              textWrap: 'balance',
-            }}
-          >
-            Real sellers, real results
-          </h2>
-
-          <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-            {TESTIMONIALS.map((t) => (
-              <div
-                key={t.name}
-                style={{
-                  background: '#ffffff',
-                  border: '1.5px solid #EDE9FE',
-                  borderRadius: '20px',
-                  padding: '28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '20px',
-                }}
-              >
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <StarIcon key={i} filled={i < t.rating} />
-                  ))}
-                </div>
-                <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '15px', color: '#344054', lineHeight: '1.65', margin: 0, flex: 1 }}>
-                  "{t.quote}"
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <img
-                    src={t.avatar}
-                    alt={t.name}
-                    style={{ width: '44px', height: '44px', borderRadius: '9999px', objectFit: 'cover', objectPosition: 'top', border: '2px solid #EDE9FE' }}
-                  />
-                  <div>
-                    <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '14px', color: '#101828' }}>{t.name}</div>
-                    <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085', marginTop: '2px' }}>{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── Categories ────────────────────────────────────── */}
       <section className="seller-categories" style={{ padding: '80px 0', background: '#ffffff' }}>
         <div
@@ -766,7 +615,7 @@ export default function SellersPage() {
           }}
         >
           <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '15px', color: '#667085', textAlign: 'center', marginBottom: '28px' }}>
-            Buyers are searching for these services right now
+            Services people look for on WhoCan
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
             {CATEGORIES.map((cat) => (
@@ -826,16 +675,12 @@ export default function SellersPage() {
               textWrap: 'balance',
             }}
           >
-            Ready to start earning?
+            Ready to offer your services?
           </h2>
           <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: 'rgba(255,255,255,0.55)', marginBottom: '40px', lineHeight: '1.65' }}>
-            Join thousands of skilled professionals already growing their business on WhoCan.
-            Registration is free — no subscription, no upfront cost.
+            Create a profile in the WhoCan Provider app and list the services you offer.
           </p>
           <SellerStoreLinks onDark justify="center" className="seller-store-row" />
-          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.35)', marginTop: '16px' }}>
-            No credit card required · Set up in 15 minutes
-          </p>
         </div>
       </section>
 
