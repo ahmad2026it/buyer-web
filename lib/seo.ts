@@ -16,7 +16,7 @@ export const ORGANIZATION_SAME_AS = [
   "https://www.pinterest.com/whocan_online/",
 ] as const;
 
-export const SITE_OG_IMAGE_PATH = "/hero.png";
+export const SITE_OG_IMAGE_PATH = "/hero.webp";
 
 export function getSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -69,8 +69,6 @@ export function buildPageMetadata({
       locale: "en_US",
       images: ogImages.map((image) => ({
         url: image,
-        width: 1200,
-        height: 630,
         alt: title,
       })),
     },

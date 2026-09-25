@@ -58,6 +58,13 @@ export default function HomePage() {
 
   return (
     <>
+      <link
+        rel="preload"
+        href="/hero.webp"
+        as="image"
+        type="image/webp"
+        fetchPriority="high"
+      />
       <JsonLd data={[organizationLd, websiteLd]} />
       <HomePageClient seoSlot={<HomeSeoContent />} />
     </>

@@ -11,7 +11,7 @@ const CATEGORIES = [
   { icon: ZapIcon,      label: 'Electrical' },
 ];
 
-const HERO_IMAGE = '/hero.png';
+const HERO_IMAGE = '/hero.webp';
 
 const POPULAR_SEARCHES = [
   'Clean house interior',
@@ -463,6 +463,10 @@ export default function HeroSection() {
             <img
               src={HERO_IMAGE}
               alt="Professional handymen ready to help"
+              width={800}
+              height={800}
+              fetchPriority="high"
+              decoding="async"
               className="animate-float hero-image"
               style={{
                 width: '100%',

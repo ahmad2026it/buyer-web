@@ -123,7 +123,7 @@ self.addEventListener("push", (event) => {
         payload.notification?.title || data.title || "WhoCan",
         {
           body: payload.notification?.body || data.body || "",
-          icon: "/hero.png",
+          icon: "/hero-icon.png",
           data: { ...data, path: resolveTargetPath(data) },
         },
       );
