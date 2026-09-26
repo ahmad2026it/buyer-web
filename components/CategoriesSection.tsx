@@ -40,6 +40,10 @@ function PillEl({ category, onClick }: { category: BuyerCategory; onClick?: () =
         <img
           src={category.icon}
           alt=""
+          width={30}
+          height={30}
+          loading="lazy"
+          decoding="async"
           style={{ width: 30, height: 30, objectFit: 'contain' }}
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />

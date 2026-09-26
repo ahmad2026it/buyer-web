@@ -249,11 +249,19 @@ body.animate-ready [data-animate="scale"].in-view {
   animation: blobPulse 5s ease-in-out infinite;
 }
 
-.hero-text-1 { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
-.hero-text-2 { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
-.hero-text-3 { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both; }
-.hero-text-4 { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.46s both; }
-.hero-image  { animation: slideInRight 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+@keyframes heroRise {
+  from { transform: translateY(12px); }
+  to   { transform: translateY(0); }
+}
+@keyframes heroSettle {
+  from { transform: translateX(16px); }
+  to   { transform: translateX(0); }
+}
+.hero-text-1 { animation: heroRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.hero-text-2 { animation: heroRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+.hero-text-3 { animation: heroRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both; }
+.hero-text-4 { animation: heroRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.46s both; }
+.hero-image  { animation: heroSettle 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .hero-nav    { animation: fadeIn 0.5s ease 0s both; }
 
 /* ── Utility ──────────────────────────────────────────────────────────── */

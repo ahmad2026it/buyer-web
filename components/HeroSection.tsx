@@ -457,7 +457,6 @@ export default function HeroSection() {
                 background:
                   'radial-gradient(circle, rgba(165, 74, 255, 0.3) 0%, transparent 70%)',
                 borderRadius: '50%',
-                filter: 'blur(40px)',
               }}
             />
             <img
@@ -466,8 +465,7 @@ export default function HeroSection() {
               width={800}
               height={800}
               fetchPriority="high"
-              decoding="async"
-              className="animate-float hero-image"
+              className="hero-image"
               style={{
                 width: '100%',
                 maxWidth: '540px',
@@ -475,7 +473,6 @@ export default function HeroSection() {
                 objectFit: 'contain',
                 position: 'relative',
                 zIndex: 1,
-                filter: 'drop-shadow(0 24px 40px rgba(0,0,0,0.35))',
                 borderRadius: '24px',
               }}
             />
