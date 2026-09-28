@@ -12,6 +12,8 @@ import {
   getSiteUrl,
 } from "@/lib/seo";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   ...buildPageMetadata({
     title: SITE_DEFAULT_TITLE,
@@ -60,9 +62,18 @@ export default function HomePage() {
     <>
       <link
         rel="preload"
+        href="/hero-sm.webp"
+        as="image"
+        type="image/webp"
+        media="(max-width: 900px)"
+        fetchPriority="high"
+      />
+      <link
+        rel="preload"
         href="/hero.webp"
         as="image"
         type="image/webp"
+        media="(min-width: 901px)"
         fetchPriority="high"
       />
       <JsonLd data={[organizationLd, websiteLd]} />

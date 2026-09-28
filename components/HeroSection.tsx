@@ -11,8 +11,6 @@ const CATEGORIES = [
   { icon: ZapIcon,      label: 'Electrical' },
 ];
 
-const HERO_IMAGE = '/hero.webp';
-
 const POPULAR_SEARCHES = [
   'Clean house interior',
   'Assemble Furniture',
@@ -460,7 +458,9 @@ export default function HeroSection() {
               }}
             />
             <img
-              src={HERO_IMAGE}
+              src="/hero-sm.webp"
+              srcSet="/hero-sm.webp 480w, /hero.webp 800w"
+              sizes="(max-width: 900px) 280px, 540px"
               alt="Professional handymen ready to help"
               width={800}
               height={800}

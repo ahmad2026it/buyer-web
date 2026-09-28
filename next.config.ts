@@ -27,6 +27,15 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: '/hero-sm.webp',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
         source: '/hero.webp',
         headers: [
           {
