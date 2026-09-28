@@ -62,7 +62,7 @@ export default function HomePage() {
     <>
       <link
         rel="preload"
-        href="/hero-sm.webp"
+        href="/hero-md.webp"
         as="image"
         type="image/webp"
         media="(max-width: 900px)"

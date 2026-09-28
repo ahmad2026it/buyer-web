@@ -963,7 +963,7 @@ export default function Navbar({ solid = false }: { solid?: boolean } = {}) {
         <nav className="site-nav" style={{ maxWidth: '1200px', margin: '0 auto', background: scrolled ? '#ffffff' : 'rgba(26,10,46,0.75)', backdropFilter: scrolled ? 'none' : 'blur(20px)', WebkitBackdropFilter: scrolled ? 'none' : 'blur(20px)', borderRadius: '9999px', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: scrolled ? '0px 4px 24px rgba(165,74,255,0.12)' : '0px 4px 24px rgba(0,0,0,0.2)', border: scrolled ? '1px solid rgba(165,74,255,0.15)' : '1px solid rgba(255,255,255,0.1)', transition: 'all 0.35s ease' }}>
 
           {/* Logo */}
-          <a href="/" style={{ display: 'flex', alignItems: 'center', lineHeight: 0 }}>
+            <a href="/" aria-label="WhoCan home" style={{ display: 'flex', alignItems: 'center', lineHeight: 0 }}>
             <WhoCanLogo markColor={markColor} textColor={textColor} />
           </a>
 

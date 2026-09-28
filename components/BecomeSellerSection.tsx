@@ -181,7 +181,7 @@ export default function BecomeSellerSection() {
                   el.style.color = 'rgba(255,255,255,0.8)';
                 }}
               >
-                Learn More
+                Learn more about becoming a seller
               </a>
             </div>
 

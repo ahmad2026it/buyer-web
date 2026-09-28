@@ -458,8 +458,8 @@ export default function HeroSection() {
               }}
             />
             <img
-              src="/hero-sm.webp"
-              srcSet="/hero-sm.webp 480w, /hero.webp 800w"
+              src="/hero-md.webp"
+              srcSet="/hero-md.webp 640w, /hero.webp 800w"
               sizes="(max-width: 900px) 280px, 540px"
               alt="Professional handymen ready to help"
               width={800}

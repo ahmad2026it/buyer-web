@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/hero-sm.webp',
+        source: '/hero-md.webp',
         headers: [
           {
             key: 'Cache-Control',

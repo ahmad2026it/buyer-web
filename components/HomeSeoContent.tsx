@@ -89,7 +89,7 @@ export default function HomeSeoContent() {
                     fontFamily: FONT,
                     fontSize: 14,
                     fontWeight: 600,
-                    color: "#A54AFF",
+                    color: "#6D28D9",
                     textDecoration: "underline",
                     textUnderlineOffset: 3,
                   }}

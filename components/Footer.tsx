@@ -128,7 +128,7 @@ export default function Footer() {
                 fontFamily: 'Poppins, sans-serif',
                 fontSize: '14px',
                 lineHeight: '1.65',
-                color: 'rgba(255,255,255,0.45)',
+                color: 'rgba(255,255,255,0.55)',
                 marginBottom: '24px',
                 maxWidth: '220px',
               }}
@@ -155,7 +155,7 @@ export default function Footer() {
           {/* Link columns */}
           {FOOTER_GROUPS.map(({ group, links }) => (
             <div key={group}>
-              <h4
+              <h3
                 style={{
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 600,
@@ -167,7 +167,7 @@ export default function Footer() {
                 }}
               >
                 {group}
-              </h4>
+              </h3>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {links.map((link) => (
                   <li key={`${link.label}-${link.href}`}>
@@ -176,14 +176,14 @@ export default function Footer() {
                       style={{
                         fontFamily: 'Poppins, sans-serif',
                         fontSize: '14px',
-                        color: 'rgba(255,255,255,0.45)',
+                        color: 'rgba(255,255,255,0.55)',
                         transition: 'color 0.2s ease',
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.color = '#CA90FF';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.color = 'rgba(255,255,255,0.45)';
+                        e.currentTarget.style.color = 'rgba(255,255,255,0.55)';
                       }}
                     >
                       {link.label}
@@ -231,7 +231,7 @@ export default function Footer() {
             style={{
               fontFamily: 'Poppins, sans-serif',
               fontSize: '13px',
-              color: 'rgba(255,255,255,0.3)',
+              color: 'rgba(255,255,255,0.55)',
             }}
           >
             © {new Date().getFullYear()} WhoCan. All rights reserved.
@@ -244,7 +244,7 @@ export default function Footer() {
                 style={{
                   fontFamily: 'Poppins, sans-serif',
                   fontSize: '13px',
-                  color: 'rgba(255,255,255,0.3)',
+                  color: 'rgba(255,255,255,0.55)',
                   transition: 'color 0.2s ease',
                   wordBreak: 'break-word',
                 }}
@@ -254,7 +254,7 @@ export default function Footer() {
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.color =
-                    'rgba(255,255,255,0.3)';
+                    'rgba(255,255,255,0.55)';
                 }}
               >
                 {item.label}

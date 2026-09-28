@@ -247,7 +247,7 @@ export default function AppDownloadSection() {
                     <feature.icon size={22} color={feature.iconColor} />
                   </div>
                   <div>
-                    <h4
+                    <h3
                       style={{
                         fontFamily: 'Poppins, sans-serif',
                         fontWeight: 600,
@@ -257,7 +257,7 @@ export default function AppDownloadSection() {
                       }}
                     >
                       {feature.title}
-                    </h4>
+                    </h3>
                     <p
                       style={{
                         fontFamily: 'Poppins, sans-serif',
@@ -304,6 +304,7 @@ export default function AppDownloadSection() {
                 height={1127}
                 loading="lazy"
                 decoding="async"
+                fetchPriority="low"
                 className="animate-float"
                 style={{
                   width: '260px',
