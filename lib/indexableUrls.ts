@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import { normalizePublicBlog } from "@/lib/publicBlogs";
 import { MARYLAND_GUIDES } from "@/lib/marylandGuides";
 import {
@@ -51,14 +50,15 @@ function publicApiOrigin(): string {
   ).replace(/\/$/, "");
 }
 
-export function staticContentHash(): string {
+export async function staticContentHash(): Promise<string> {
   const payload = JSON.stringify({
     title: SITE_DEFAULT_TITLE,
     description: SITE_DEFAULT_DESCRIPTION,
     paths: PUBLIC_SITEMAP_PATHS.map((entry) => entry.path),
     guides: MARYLAND_GUIDES,
   });
-  return createHash("sha256").update(payload).digest("hex");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 export function isCanonicalProductionUrl(value: string): boolean {
@@ -128,7 +128,7 @@ export async function loadIndexableUrls(options?: { fresh?: boolean }): Promise<
   const staticUrls = PUBLIC_SITEMAP_PATHS.map((entry) => absoluteUrl(entry.path));
   const published = await fetchPublishedBlogs(options?.fresh === true);
   return {
-    contentHash: staticContentHash(),
+    contentHash: await staticContentHash(),
     staticUrls,
     blogs: published.blogs,
     blogsOk: published.ok,

@@ -1,3 +1,4 @@
+import path from 'path';
 import type { NextConfig } from 'next';
 
 const apiOrigin =
@@ -9,6 +10,16 @@ const nextConfig: NextConfig = {
   // Trailing slashes are normalized in middleware so legacy URLs can 301
   // straight to their canonical path instead of a 308-then-301 chain.
   skipTrailingSlashRedirect: true,
+  webpack: (config, { nextRuntime }) => {
+    if (nextRuntime === 'edge') {
+      config.resolve = config.resolve ?? {};
+      config.resolve.alias = {
+        ...(config.resolve.alias ?? {}),
+        '@/lib/indexnowSync': path.resolve(process.cwd(), 'lib/indexnowSync.stub.ts'),
+      };
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {
