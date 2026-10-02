@@ -3,6 +3,8 @@ import HomePageClient from "@/components/HomePageClient";
 import HomeSeoContent from "@/components/HomeSeoContent";
 import JsonLd from "@/components/JsonLd";
 import {
+  ORGANIZATION_ALTERNATE_NAME,
+  ORGANIZATION_LOGO_PATH,
   ORGANIZATION_SAME_AS,
   SITE_DEFAULT_DESCRIPTION,
   SITE_DEFAULT_TITLE,
@@ -32,8 +34,13 @@ export default function HomePage() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: SITE_NAME,
-    url: siteUrl,
-    logo: absoluteUrl("/icon.svg"),
+    alternateName: ORGANIZATION_ALTERNATE_NAME,
+    url: absoluteUrl("/"),
+    logo: {
+      "@type": "ImageObject",
+      url: absoluteUrl(ORGANIZATION_LOGO_PATH),
+    },
+    description: SITE_DEFAULT_DESCRIPTION,
     sameAs: [...ORGANIZATION_SAME_AS],
     contactPoint: {
       "@type": "ContactPoint",
@@ -46,7 +53,7 @@ export default function HomePage() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_NAME,
-    url: siteUrl,
+    url: absoluteUrl("/"),
     description: SITE_DEFAULT_DESCRIPTION,
     potentialAction: {
       "@type": "SearchAction",

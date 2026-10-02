@@ -26,6 +26,7 @@ export default function robots(): MetadataRoute.Robots {
           "/marketplace/*/edit",
           "/explore/search",
           "/register",
+          "/gone",
         ],
       },
     ],

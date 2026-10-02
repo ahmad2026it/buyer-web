@@ -181,8 +181,7 @@ export default function HeroSection() {
               </svg>
             </a>
 
-            {/* Display headline (H1 lives in server-rendered HomeSeoContent) */}
-            <p
+            <h1
               className="hero-text-2 rs-display"
               style={{
                 fontFamily: 'Poppins, sans-serif',
@@ -191,10 +190,10 @@ export default function HeroSection() {
                 lineHeight: '1.1',
                 letterSpacing: '-0.02em',
                 color: '#ffffff',
-                marginBottom: '20px',
+                margin: '0 0 20px',
               }}
             >
-              Find{' '}
+              Local services for{' '}
               <span
                 style={{
                   background:
@@ -204,12 +203,10 @@ export default function HeroSection() {
                   backgroundClip: 'text',
                 }}
               >
-                handymen
-              </span>{' '}
-              at your doorstep!
-            </p>
+                Buyers and Providers
+              </span>
+            </h1>
 
-            {/* Subtitle */}
             <p
               className="hero-text-3"
               style={{
@@ -218,12 +215,13 @@ export default function HeroSection() {
                 fontSize: '17px',
                 lineHeight: '1.7',
                 color: 'rgba(255,255,255,0.65)',
-                marginBottom: '36px',
-                maxWidth: '460px',
+                margin: '0 0 36px',
+                maxWidth: '480px',
               }}
             >
-              From cleaning to grass cutting, easily connect with local service
-              providers for all your home needs.
+              WhoCan connects Buyers with Providers for local services, starting
+              in Maryland. Book cleaning, handyman work, lawn care, and car
+              detailing, or offer your own services.
             </p>
 
             {/* Search bar */}

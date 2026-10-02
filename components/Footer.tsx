@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ORGANIZATION_PROFILES } from '@/lib/seo';
 
 type FooterLink = { label: string; href: string; detail?: string };
 
@@ -22,6 +23,7 @@ const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
     group: 'Resources',
     links: [
       { label: 'Blog', href: '/blog' },
+      { label: 'Local services in Maryland', href: '/maryland' },
     ],
   },
   {
@@ -45,17 +47,17 @@ const BOTTOM_LINKS: FooterLink[] = [
 const SOCIAL_LINKS = [
   {
     label: 'Instagram',
-    href: 'https://www.instagram.com/whocan.app',
+    href: ORGANIZATION_PROFILES.instagram,
     icon: InstagramIcon,
   },
   {
     label: 'Facebook',
-    href: 'https://www.facebook.com/share/1Da83HhRLV/',
+    href: ORGANIZATION_PROFILES.facebook,
     icon: FacebookIcon,
   },
   {
     label: 'Pinterest',
-    href: 'https://pin.it/2ofsRSv1R',
+    href: ORGANIZATION_PROFILES.pinterest,
     icon: PinterestIcon,
   },
 ] as const;

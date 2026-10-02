@@ -4,17 +4,28 @@ import type { Metadata } from "next";
 export const SITE_NAME = "WhoCan";
 
 export const SITE_DEFAULT_TITLE =
-  "WhoCan — Local Services, Favors, and a Nearby Marketplace";
+  "WhoCan — Local Services Marketplace in Maryland";
 
 export const SITE_DEFAULT_DESCRIPTION =
-  "Find local help, post a favor, or buy and sell nearby on WhoCan. Browse services and goods, compare profiles, and connect with people in your area.";
+  "WhoCan connects Buyers with Providers on a local services marketplace, starting in Maryland. Find cleaning, handyman help, lawn care, and car detailing.";
 
-/** Canonical profile URLs for Organization schema. Share and short links are omitted. */
+export const ORGANIZATION_ALTERNATE_NAME = "WhoCan App";
+
+/** Official profile URLs. Share links and short links are omitted. */
+export const ORGANIZATION_PROFILES = {
+  instagram: "https://www.instagram.com/whocan.app",
+  facebook: "https://www.facebook.com/WhoCanApp",
+  pinterest: "https://www.pinterest.com/whocan_online/",
+} as const;
+
 export const ORGANIZATION_SAME_AS = [
-  "https://www.instagram.com/whocan.app",
-  "https://www.facebook.com/WhoCanApp",
-  "https://www.pinterest.com/whocan_online/",
+  ORGANIZATION_PROFILES.instagram,
+  ORGANIZATION_PROFILES.facebook,
+  ORGANIZATION_PROFILES.pinterest,
 ] as const;
+
+/** Official WhoCan mark, served from a stable public path. */
+export const ORGANIZATION_LOGO_PATH = "/logo.svg";
 
 export const SITE_OG_IMAGE_PATH = "/hero.webp";
 
@@ -104,6 +115,12 @@ export const PUBLIC_SITEMAP_PATHS: {
   { path: "/categories", changeFrequency: "weekly", priority: 0.8 },
   { path: "/blog", changeFrequency: "daily", priority: 0.8 },
   { path: "/sellers", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/maryland", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/maryland/offer-services", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/maryland/cleaning", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/maryland/handyman", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/maryland/lawn-care", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/maryland/car-detailing", changeFrequency: "monthly", priority: 0.6 },
   { path: "/privacy-policy", changeFrequency: "yearly", priority: 0.4 },
   { path: "/terms-and-conditions", changeFrequency: "yearly", priority: 0.4 },
   { path: "/account-deletion", changeFrequency: "yearly", priority: 0.4 },

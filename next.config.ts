@@ -6,6 +6,9 @@ const apiOrigin =
   'https://stage.whocan-app.com';
 
 const nextConfig: NextConfig = {
+  // Trailing slashes are normalized in middleware so legacy URLs can 301
+  // straight to their canonical path instead of a 308-then-301 chain.
+  skipTrailingSlashRedirect: true,
   images: {
     remotePatterns: [
       {

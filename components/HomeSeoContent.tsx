@@ -1,22 +1,28 @@
 import Link from "next/link";
+import { MARYLAND_GUIDES, MARYLAND_HUB_PATH, marylandGuidePath } from "@/lib/marylandGuides";
 
 const FONT = "Poppins, sans-serif";
 
 const INTERNAL_LINKS = [
+  { href: MARYLAND_HUB_PATH, label: "Local services in Maryland" },
   { href: "/explore/favors", label: "Browse favors" },
-  { href: "/explore/sellers", label: "Find sellers" },
+  { href: "/explore/sellers", label: "Find Providers" },
+  { href: "/sellers", label: "Offer your services" },
   { href: "/marketplace", label: "Marketplace" },
   { href: "/categories", label: "Service categories" },
   { href: "/blog", label: "WhoCan blog" },
-  { href: "/sellers", label: "Become a seller" },
   { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/terms-and-conditions", label: "Terms & Conditions" },
   { href: "/account-deletion", label: "Account deletion" },
+  ...MARYLAND_GUIDES.map((guide) => ({
+    href: marylandGuidePath(guide.slug),
+    label: guide.heading,
+  })),
 ] as const;
 
 /**
  * Server-rendered homepage copy and internal links for crawlers and users.
- * Includes the page H1 so it is always present in the initial HTML.
+ * The visible H1 is the hero headline above this section.
  */
 export default function HomeSeoContent() {
   return (
@@ -30,7 +36,7 @@ export default function HomeSeoContent() {
       }}
     >
       <div className="container" style={{ maxWidth: 720 }}>
-        <h1
+        <h2
           id="home-seo-heading"
           style={{
             fontFamily: FONT,
@@ -42,8 +48,8 @@ export default function HomeSeoContent() {
             letterSpacing: "-0.02em",
           }}
         >
-          Find local handymen and home services near you
-        </h1>
+          A local services marketplace, starting in Maryland
+        </h2>
         <p
           style={{
             fontFamily: FONT,
@@ -53,10 +59,10 @@ export default function HomeSeoContent() {
             margin: "0 0 16px",
           }}
         >
-          WhoCan helps you find and book local handymen and service providers for
-          cleaning, repairs, furniture assembly, electrical work, gardening, and
-          more. Browse available favors, compare profiles, and schedule help when
-          you need it.
+          WhoCan connects Buyers with Providers for local services. Buyers
+          search favors, compare what is included, and request a time.
+          Providers publish the work they do and the area they cover, starting
+          in Maryland.
         </p>
         <p
           style={{
@@ -67,8 +73,9 @@ export default function HomeSeoContent() {
             margin: "0 0 28px",
           }}
         >
-          Prefer to buy or sell goods nearby? Use the marketplace. Looking for
-          tips before you book? Read guides on the blog.
+          Start with cleaning, handyman tasks, lawn care, or car detailing.
+          If you are selling an item rather than booking a person, use the
+          marketplace.
         </p>
         <nav aria-label="Important pages">
           <ul
