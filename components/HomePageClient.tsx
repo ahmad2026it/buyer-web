@@ -25,6 +25,8 @@ import PersonAvatar from '@/components/PersonAvatar';
 
 type HomePageClientProps = {
   seoSlot?: ReactNode;
+  faqSlot?: ReactNode;
+  howItWorksSlot?: ReactNode;
 };
 
 const GRAD  = 'linear-gradient(135deg,#BF75FF 0%,#A54AFF 50%,#8430E0 100%)';
@@ -108,7 +110,7 @@ function HomeBookingSkeleton() {
   );
 }
 
-export default function HomePageClient({ seoSlot }: HomePageClientProps) {
+export default function HomePageClient({ seoSlot, faqSlot, howItWorksSlot }: HomePageClientProps) {
   const router = useRouter();
   const token = useAppSelector((state) => state.auth.token);
   const user = useAppSelector((state) => state.auth.user);
@@ -385,10 +387,12 @@ export default function HomePageClient({ seoSlot }: HomePageClientProps) {
 
         {/* ── Shared sections (both logged-in and guest) ─────── */}
         <CategoriesSection />
-        {seoSlot}
+        {howItWorksSlot}
         <WhyChooseUsSection />
         <TopFavorsSection />
         <TopSellersSection />
+        {faqSlot}
+        {seoSlot}
         <AppDownloadSection />
         <BecomeSellerSection />
       </main>

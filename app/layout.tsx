@@ -70,6 +70,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const PRELOADED_FONT_WEIGHTS = [400, 500, 600, 700, 800] as const;
+
 export default function RootLayout({
   children,
 }: {
@@ -77,11 +79,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Hero text uses all five weights above the fold; preloading avoids the swap shift. */}
+        {PRELOADED_FONT_WEIGHTS.map((weight) => (
+          <link
+            key={weight}
+            rel="preload"
+            href={`/fonts/poppins-latin-${weight}.woff2`}
+            as="font"
+            type="font/woff2"
+            crossOrigin="anonymous"
+          />
+        ))}
+      </head>
       <body>
         <Providers>
           <AuthProvider>
-            <ScrollAnimator />
-            <Suspense fallback={null}>{children}</Suspense>
+            <Suspense fallback={null}>
+              {children}
+              {/* Last child of the page boundary: its effect only runs once the whole page has
+                  hydrated, so adding "in-view" classes can't cause a hydration mismatch. */}
+              <ScrollAnimator />
+            </Suspense>
           </AuthProvider>
         </Providers>
       </body>

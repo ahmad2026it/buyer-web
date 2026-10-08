@@ -1,257 +1,39 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { WrenchIcon, ArrowUpRightIcon } from './Icons';
+import Link from 'next/link';
+import { WrenchIcon } from './Icons';
+import BlogListingCard, { BlogCardSkeleton } from '@/components/BlogListingCard';
 import { useGetPublicBlogsQuery } from '@/app/buyer/store/buyerBlogsAPI';
-import type { PublicBlog } from '@/app/buyer/store/buyerBlogsTypes';
-import { blogHref, getBlogAuthorName } from '@/lib/publicBlogs';
 
-const SERVICE_IMAGE =
-  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&h=300&fit=crop&auto=format'; // deep home cleaning
-const SELLER_AVATAR =
-  'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=60&h=60&fit=crop&auto=format'; // professional provider portrait
-
-// Amber matches the navbar "Get App" CTA — #FEC84B
-const AMBER = '#FEC84B';
-
-function LearnMoreRow({ light = false, href }: { light?: boolean; href?: string }) {
-  const router = useRouter();
-  return (
-    <div
-      onClick={(event) => {
-        event.stopPropagation();
-        if (href) router.push(href);
-      }}
-      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: href ? 'pointer' : 'default' }}
-    >
-      <span
-        style={{
-          fontFamily: 'Poppins, sans-serif',
-          fontSize: '14px',
-          fontWeight: 500,
-          color: light ? '#5B21B6' : '#344054',
-        }}
-      >
-        Learn More
-      </span>
-      <div
-        style={{
-          width: '36px',
-          height: '36px',
-          borderRadius: '50%',
-          background: light ? 'rgba(124,58,237,0.18)' : AMBER,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        <ArrowUpRightIcon size={16} color={light ? '#5B21B6' : '#1D2939'} />
-      </div>
-    </div>
-  );
-}
-
-type ArticleCard = {
-  id: number;
-  title: string;
-  excerpt: string;
-  href: string;
-  image: string;
-  imageAlt: string;
-  author: string;
-};
-
-function cardFromBlog(blog: PublicBlog): ArticleCard {
-  return {
-    id: blog.id,
-    title: blog.title,
-    excerpt: blog.excerpt ?? '',
-    href: blogHref(blog.slug),
-    image: blog.cover_image_url || SERVICE_IMAGE,
-    imageAlt: blog.title,
-    author: getBlogAuthorName(blog),
-  };
-}
-
-function SideArticleCard({ card, delay }: { card: ArticleCard; delay?: number }) {
-  const router = useRouter();
-  return (
-    <div
-      data-animate
-      data-delay={delay}
-      onClick={() => router.push(card.href)}
-      style={{
-        background: '#F7F7F7',
-        borderRadius: '20px',
-        border: '1.5px solid #EAECF0',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        cursor: 'pointer',
-        transition: 'box-shadow 0.25s ease, transform 0.25s ease',
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = '0 8px 32px rgba(165,74,255,0.14)';
-        el.style.transform = 'translateY(-2px)';
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = 'none';
-        el.style.transform = 'none';
-      }}
-    >
-      <div style={{ overflow: 'hidden', flexShrink: 0 }}>
-        <img
-          src={card.image}
-          alt={card.imageAlt}
-          style={{
-            width: '100%',
-            height: '220px',
-            objectFit: 'cover',
-            objectPosition: 'center center',
-            display: 'block',
-            transition: 'transform 0.4s ease',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)';
-          }}
-        />
-      </div>
-      <div style={{ padding: '22px 24px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#101828', marginBottom: '10px', lineHeight: '1.3' }}>
-          {card.title}
-        </h3>
-        {card.excerpt ? (
-          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', lineHeight: '1.65', flex: 1, marginBottom: '20px' }}>
-            {card.excerpt}
-          </p>
-        ) : (
-          <div style={{ flex: 1, marginBottom: '20px' }} />
-        )}
-        <LearnMoreRow href={card.href} />
-      </div>
-    </div>
-  );
-}
-
-function FeaturedArticleCard({ card, delay }: { card: ArticleCard; delay?: number }) {
-  const router = useRouter();
-  return (
-    <div
-      data-animate
-      data-delay={delay}
-      onClick={() => router.push(card.href)}
-      style={{
-        background: '#EDE9FE',
-        borderRadius: '20px',
-        border: '1.5px solid #DDD6FE',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        transition: 'box-shadow 0.25s ease, transform 0.25s ease',
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = '0 8px 32px rgba(124,58,237,0.18)';
-        el.style.transform = 'translateY(-2px)';
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = 'none';
-        el.style.transform = 'none';
-      }}
-    >
-      <div style={{ padding: '22px 24px 0' }}>
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: '#ffffff',
-            borderRadius: '9999px',
-            padding: '6px 14px 6px 6px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-          }}
-        >
-          <img
-            src={SELLER_AVATAR}
-            alt={card.author}
-            style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }}
-          />
-          <div>
-            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '10px', fontWeight: 500, color: '#98A2B3', letterSpacing: '0.05em', textTransform: 'uppercase', lineHeight: '1.2' }}>
-              Author
-            </p>
-            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', fontWeight: 600, color: '#101828', lineHeight: '1.2' }}>
-              {card.author}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '14px 0' }}>
-        <svg
-          viewBox="0 0 340 155"
-          fill="none"
-          style={{ width: '100%', height: 'auto', display: 'block' }}
-          aria-hidden="true"
-        >
-          <path
-            d="M -10 138 C 40 138, 55 17, 120 17 C 185 17, 195 142, 250 142 C 305 142, 320 72, 360 62"
-            stroke={AMBER}
-            strokeWidth="22"
-            strokeLinecap="round"
-            fill="none"
-          />
-        </svg>
-      </div>
-
-      <div style={{ padding: '0 24px 24px' }}>
-        <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '22px', color: '#1E1B4B', marginBottom: '8px', lineHeight: '1.3' }}>
-          {card.title}
-        </h3>
-        {card.excerpt ? (
-          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', color: '#4C1D95', lineHeight: '1.6', marginBottom: '20px', opacity: 0.72 }}>
-            {card.excerpt}
-          </p>
-        ) : null}
-        <LearnMoreRow light href={card.href} />
-      </div>
-    </div>
-  );
-}
+const FONT = 'Poppins, sans-serif';
+const MAX_BLOGS = 3;
 
 export default function WhyChooseUsSection() {
-  const router = useRouter();
-  const { data, isLoading } = useGetPublicBlogsQuery({ page: 1, limit: 3 });
-  const cards = (data?.data?.blogs ?? []).slice(0, 3).map(cardFromBlog);
-  const showCards = !isLoading && cards.length > 0;
+  const { data, isLoading } = useGetPublicBlogsQuery({ page: 1, limit: MAX_BLOGS });
+  const blogs = (data?.data?.blogs ?? []).slice(0, MAX_BLOGS);
+  const showCards = isLoading || blogs.length > 0;
 
   return (
     <section className="rs-section" style={{ padding: '96px 0', background: '#ffffff' }}>
       <div className="container">
-
-        {/* ── SECTION HEADING ───────────────────────────────────────────── */}
         <div
           className="rs-split"
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '48px',
-            alignItems: 'center',
-            marginBottom: '40px',
+            alignItems: 'end',
+            marginBottom: '48px',
           }}
         >
-          <div data-animate>
-            <h2 className="rs-h2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '44px', lineHeight: '1.15', color: '#101828', letterSpacing: '-0.02em' }}>
+          <div>
+            <p style={{ fontFamily: FONT, fontWeight: 600, fontSize: '13px', color: '#7C3AED', letterSpacing: '0.06em', textTransform: 'uppercase', margin: '0 0 8px' }}>
+              From our blog
+            </p>
+            <h2 className="rs-h2" style={{ fontFamily: FONT, fontWeight: 700, fontSize: '44px', lineHeight: '1.15', color: '#101828', letterSpacing: '-0.02em', margin: 0 }}>
               Find local{' '}
               <span
+                aria-hidden="true"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -271,53 +53,49 @@ export default function WhyChooseUsSection() {
             </h2>
           </div>
 
-          <div data-animate data-delay="1">
-            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', lineHeight: '1.7', marginBottom: showCards ? '16px' : 0 }}>
+          <div>
+            <p style={{ fontFamily: FONT, fontSize: '16px', color: '#475467', lineHeight: '1.7', margin: showCards ? '0 0 20px' : 0 }}>
               Our platform connects you with verified, background-checked local
               service providers — so you can book with confidence, every time.
               Quality guaranteed or your money back.
             </p>
             {showCards && (
-              <button
-                type="button"
-                onClick={() => router.push('/blog')}
+              <Link
+                href="/blog"
                 style={{
-                  fontFamily: 'Poppins, sans-serif',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontFamily: FONT,
                   fontWeight: 600,
                   fontSize: '14px',
-                  color: '#A54AFF',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 0,
+                  color: '#7C3AED',
+                  padding: '10px 20px',
+                  borderRadius: '9999px',
+                  border: '1.5px solid #7C3AED',
+                  background: '#ffffff',
+                  textDecoration: 'none',
                 }}
               >
-                See all articles →
-              </button>
+                See all articles
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
             )}
           </div>
         </div>
 
         {showCards && (
           <div
-            className="rs-why-cards"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))`,
-              gap: '16px',
-              alignItems: 'stretch',
-            }}
+            className="rs-grid-3"
+            style={{ display: 'grid', gridTemplateColumns: `repeat(${isLoading ? MAX_BLOGS : blogs.length}, minmax(0, 1fr))`, gap: '20px' }}
           >
-            {cards.map((card, index) =>
-              index === 1 ? (
-                <FeaturedArticleCard key={card.id} card={card} delay={index + 1} />
-              ) : (
-                <SideArticleCard key={card.id} card={card} delay={index + 1} />
-              ),
-            )}
+            {isLoading
+              ? Array.from({ length: MAX_BLOGS }, (_, i) => <BlogCardSkeleton key={i} />)
+              : blogs.map((blog) => <BlogListingCard key={blog.id} blog={blog} />)}
           </div>
         )}
-
       </div>
     </section>
   );

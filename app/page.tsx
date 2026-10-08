@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import FaqSection from "@/components/FaqSection";
 import HomePageClient from "@/components/HomePageClient";
+import HowItWorksSection from "@/components/HowItWorksSection";
 import HomeSeoContent from "@/components/HomeSeoContent";
 import JsonLd from "@/components/JsonLd";
+import { fetchPublicFaqs } from "@/lib/fetchPublicFaqs";
 import {
   ORGANIZATION_ALTERNATE_NAME,
   ORGANIZATION_LOGO_PATH,
@@ -27,8 +30,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
   const siteUrl = getSiteUrl();
+  const faqs = await fetchPublicFaqs();
+
+  const faqLd =
+    faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((faq) => ({
+            "@type": "Question",
+            name: faq.question,
+            acceptedAnswer: { "@type": "Answer", text: faq.answer },
+          })),
+        }
+      : null;
 
   const organizationLd = {
     "@context": "https://schema.org",
@@ -83,8 +100,10 @@ export default function HomePage() {
         media="(min-width: 901px)"
         fetchPriority="high"
       />
-      <JsonLd data={[organizationLd, websiteLd]} />
-      <HomePageClient seoSlot={<HomeSeoContent />} />
+      <JsonLd data={faqLd ? [organizationLd, websiteLd, faqLd] : [organizationLd, websiteLd]} />
+      <HomePageClient seoSlot={<HomeSeoContent />} faqSlot={<FaqSection items={faqs} />}
+        howItWorksSlot={<HowItWorksSection />}
+      />
     </>
   );
 }
