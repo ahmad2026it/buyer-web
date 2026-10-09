@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import Script from "next/script";
 import "./globals.css";
 import ScrollAnimator from "@/components/ScrollAnimator";
 import Providers from "@/components/Providers";
@@ -72,6 +73,9 @@ export const viewport: Viewport = {
 
 const PRELOADED_FONT_WEIGHTS = [400, 500, 600, 700, 800] as const;
 
+const GA_MEASUREMENT_ID =
+  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-DC2BGNTL30";
+
 export default function RootLayout({
   children,
 }: {
@@ -93,6 +97,22 @@ export default function RootLayout({
         ))}
       </head>
       <body>
+        {GA_MEASUREMENT_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}');
+              `}
+            </Script>
+          </>
+        )}
         <Providers>
           <AuthProvider>
             <Suspense fallback={null}>
