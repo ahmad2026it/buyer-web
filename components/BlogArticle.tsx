@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import FavorImage from '@/components/FavorImage';
 import BlogListingCard, { BlogCardSkeleton } from '@/components/BlogListingCard';
 import WhoCanMark from '@/components/WhoCanMark';
+import type { PublicBlog } from '@/app/buyer/store/buyerBlogsTypes';
 import {
   useGetPublicBlogBySlugQuery,
   useGetPublicBlogsQuery,
@@ -112,10 +113,17 @@ function BlogArticleSkeleton() {
   );
 }
 
-export default function BlogArticle({ slug }: { slug: string }) {
+export default function BlogArticle({
+  slug,
+  initialBlog,
+}: {
+  slug: string;
+  initialBlog?: PublicBlog | null;
+}) {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useGetPublicBlogBySlugQuery(slug);
-  const blog = data?.data;
+  // Use the server-fetched blog first so the article body is in the initial HTML (SEO).
+  const blog = data?.data ?? initialBlog ?? undefined;
   const html = blog?.content ? sanitizeBlogHtml(blog.content) : '';
 
   const { data: relatedResponse } = useGetPublicBlogsQuery(
@@ -126,7 +134,7 @@ export default function BlogArticle({ slug }: { slug: string }) {
     .filter((item) => item.id !== blog?.id)
     .slice(0, 3);
 
-  if (isLoading) {
+  if (isLoading && !initialBlog) {
     return (
       <>
         <Navbar />
@@ -136,7 +144,7 @@ export default function BlogArticle({ slug }: { slug: string }) {
     );
   }
 
-  if (isError || !blog?.slug) {
+  if ((isError && !initialBlog) || !blog?.slug) {
     return (
       <>
         <Navbar />
