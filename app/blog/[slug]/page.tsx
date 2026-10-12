@@ -34,5 +34,5 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const { slug } = await params;
   const blog = await fetchPublicBlogBySlug(slug);
   if (!blog) notFound();
-  return <BlogArticle slug={slug} />;
+  return <BlogArticle slug={slug} initialBlog={blog} />;
 }
