@@ -74,7 +74,7 @@ export const viewport: Viewport = {
 const PRELOADED_FONT_WEIGHTS = [400, 500, 600, 700, 800] as const;
 
 const GA_MEASUREMENT_ID =
-  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-DC2BGNTL30";
+  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-K17D4P1652";
 
 export default function RootLayout({
   children,
