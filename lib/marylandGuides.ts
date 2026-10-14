@@ -3,6 +3,11 @@ export type GuideSection = {
   paragraphs: string[];
 };
 
+export type GuideFaq = {
+  question: string;
+  answer: string;
+};
+
 export type GuideLink = {
   href: string;
   label: string;
@@ -15,6 +20,8 @@ export type MarylandGuide = {
   heading: string;
   lede: string;
   sections: GuideSection[];
+  /** Optional. Rendered on the page and emitted as FAQPage JSON-LD. */
+  faqs?: GuideFaq[];
 };
 
 export const MARYLAND_HUB_PATH = "/maryland";
@@ -86,12 +93,12 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
   },
   {
     slug: "handyman",
-    title: "Handyman Services in Maryland",
+    title: "Handyman Services in Maryland: Book Local Help",
     description:
-      "How to book a handyman on WhoCan in Maryland for assembly, fixture swaps, and small repairs, and which jobs need a licensed trade.",
-    heading: "Handyman services in Maryland",
+      "Book a handyman online in Maryland for assembly, mounting, fixture swaps and small repairs. Describe the job, compare local offers, chat first and pay through the app.",
+    heading: "Book a handyman in Maryland",
     lede:
-      "Handyman work on WhoCan is for defined repairs and assembly: mounting, furniture, door hardware, and similar jobs. It is not a catch-all for unlicensed electrical or plumbing.",
+      "Looking for a handyman app in Maryland? On WhoCan you describe the job, compare offers from local Providers, chat before you book and pay through the app. It is built for defined repairs and assembly, not for unlicensed electrical or plumbing.",
     sections: [
       {
         heading: "Jobs that fit a handyman listing",
@@ -113,6 +120,33 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
           "Include the address, the room, and a photo. For assembly, the product name is enough if the box is unopened. For a repair, describe what failed: a door that rubs, a loose towel bar, a leak under a sink that you want inspected before anyone opens the wall.",
           "Pick a time when someone can be there if the job needs a decision, such as where a shelf should sit. If you will not be home, say where the items are and how the Provider should leave the space.",
         ],
+      },
+    ],
+    faqs: [
+      {
+        question: "How do I book a handyman in Maryland on WhoCan?",
+        answer:
+          "Describe the job with a photo, browse handyman listings or post a request, compare the offers you get, chat with the Provider, and pay through the app.",
+      },
+      {
+        question: "What jobs can a handyman do?",
+        answer:
+          "Typical jobs are furniture assembly, TV and shelf mounting, door hardware, caulking and swapping a similar fixture. Electrical, plumbing, gas and structural work usually needs a licensed trade.",
+      },
+      {
+        question: "Does my handyman job need a license in Maryland?",
+        answer:
+          "Some home improvement and trade work in Maryland requires a license. Ask the Provider what they are licensed to do and check the current rules with the Maryland Home Improvement Commission before booking larger work.",
+      },
+      {
+        question: "How do I get a clear price?",
+        answer:
+          "Ask for a price for the whole job, not only an hourly rate, and confirm what is included and who buys the materials in the chat before the visit.",
+      },
+      {
+        question: "How does payment work?",
+        answer:
+          "You pay through the app, and the payment is held in escrow until the job is done.",
       },
     ],
   },
@@ -150,12 +184,12 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
   },
   {
     slug: "car-detailing",
-    title: "Car Detailing in Maryland",
+    title: "Mobile Car Detailing in Maryland: Book at Home",
     description:
-      "How to book mobile car detailing on WhoCan in Maryland, including what to agree on for interior, exterior, and winter road film.",
-    heading: "Car detailing in Maryland",
+      "Book mobile car detailing in Maryland at your home or driveway. Agree the package, compare local offers, chat first and pay through the app.",
+    heading: "Mobile car detailing in Maryland",
     lede:
-      "Detailing goes better when the package, the vehicle, and the place to work are agreed before the Provider arrives. WhoCan connects Buyers with detailing Providers, starting in Maryland.",
+      "Want car detailing at home in Maryland? Agree the package, the vehicle and the place to work, then compare offers from local Providers and pay through the app on WhoCan.",
     sections: [
       {
         heading: "Pick a package, not a vague “full detail”",
@@ -177,6 +211,28 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
           "List the packages you actually offer and the vehicles you turn down. If you are mobile, say what you bring and what the Buyer must provide, such as a hose bib or a covered space in bad weather.",
           "Be specific about add-ons: pet hair, child seats, ceramic spray, and headlight haze. A listing that only says “detail” produces requests you then have to re-quote.",
         ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Can I get my car detailed at home in Maryland?",
+        answer:
+          "Many mobile detailers work in a driveway. Check that the listing says the Provider comes to you, and tell them about water access and space in the request.",
+      },
+      {
+        question: "What is the difference between interior, exterior and a full detail?",
+        answer:
+          "Interior usually means vacuum, surfaces and glass. Exterior usually means a wash and dry. Paint correction, pet hair and stain removal take longer and should be named in the request.",
+      },
+      {
+        question: "How much does mobile car detailing cost?",
+        answer:
+          "It depends on vehicle size, condition and package. Published local ranges for a standard interior and exterior service vary widely, so compare the offers you receive and what each includes.",
+      },
+      {
+        question: "What should I tell the detailer before booking?",
+        answer:
+          "Say the vehicle type, the package, any add-ons such as pet hair, and where the car will be parked.",
       },
     ],
   },

@@ -7,6 +7,7 @@ import {
   MARYLAND_GUIDES,
   MARYLAND_HUB_PATH,
   marylandGuidePath,
+  type GuideFaq,
   type GuideLink,
   type GuideSection,
 } from "@/lib/marylandGuides";
@@ -18,6 +19,7 @@ type MarylandGuidePageProps = {
   lede: string;
   path: string;
   sections: GuideSection[];
+  faqs?: GuideFaq[];
   links: GuideLink[];
   crumbLabel: string;
 };
@@ -27,6 +29,7 @@ export default function MarylandGuidePage({
   lede,
   path,
   sections,
+  faqs,
   links,
   crumbLabel,
 }: MarylandGuidePageProps) {
@@ -60,6 +63,19 @@ export default function MarylandGuidePage({
     ],
   };
 
+  const faqLd =
+    faqs && faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((faq) => ({
+            "@type": "Question",
+            name: faq.question,
+            acceptedAnswer: { "@type": "Answer", text: faq.answer },
+          })),
+        }
+      : null;
+
   const otherGuides = MARYLAND_GUIDES.filter(
     (guide) => marylandGuidePath(guide.slug) !== path,
   );
@@ -67,6 +83,7 @@ export default function MarylandGuidePage({
   return (
     <>
       <JsonLd data={breadcrumbLd} />
+      {faqLd ? <JsonLd data={faqLd} /> : null}
       <Navbar />
       <main style={{ minHeight: "100dvh", background: "#FAFAFA" }}>
         <header className="listing-page-hero">
@@ -144,6 +161,49 @@ export default function MarylandGuidePage({
               ))}
             </section>
           ))}
+          {faqs && faqs.length > 0 ? (
+            <section aria-labelledby="guide-faq" style={{ marginBottom: 36 }}>
+              <h2
+                id="guide-faq"
+                style={{
+                  fontFamily: FONT,
+                  fontWeight: 700,
+                  fontSize: 22,
+                  color: "#101828",
+                  letterSpacing: "-0.02em",
+                  margin: "0 0 12px",
+                }}
+              >
+                Frequently asked questions
+              </h2>
+              {faqs.map((faq) => (
+                <div key={faq.question} style={{ marginBottom: 18 }}>
+                  <h3
+                    style={{
+                      fontFamily: FONT,
+                      fontWeight: 600,
+                      fontSize: 17,
+                      color: "#101828",
+                      margin: "0 0 6px",
+                    }}
+                  >
+                    {faq.question}
+                  </h3>
+                  <p
+                    style={{
+                      fontFamily: FONT,
+                      fontSize: 16,
+                      lineHeight: 1.75,
+                      color: "#475467",
+                      margin: 0,
+                    }}
+                  >
+                    {faq.answer}
+                  </p>
+                </div>
+              ))}
+            </section>
+          ) : null}
           <nav aria-label="Related pages" style={{ marginTop: 12 }}>
             <h2
               style={{

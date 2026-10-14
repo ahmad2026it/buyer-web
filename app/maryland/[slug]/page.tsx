@@ -69,6 +69,7 @@ export default async function MarylandGuideRoute({
       heading={guide.heading}
       lede={guide.lede}
       sections={guide.sections}
+      faqs={guide.faqs}
       links={[
         { href: MARYLAND_HUB_PATH, label: "Local services in Maryland" },
         ...(searchLink ? [searchLink] : []),
