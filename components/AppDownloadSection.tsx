@@ -37,7 +37,7 @@ const APP_DOWNLOADS: AppDownload[] = [
     playHref: APP_STORE_LINKS.buyer.play,
   },
   {
-    audience: 'Sellers',
+    audience: 'Providers',
     description: 'Grow your service business and reach more customers.',
     icon: WrenchIcon,
     iconColor: '#A54AFF',

@@ -1,690 +1,394 @@
-'use client';
-
-import { useState, useEffect, useRef, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import Footer from '@/components/Footer';
-import { SellerStoreLinks } from '@/components/StoreBadge';
+import JsonLd from '@/components/JsonLd';
+import { APP_STORE_LINKS } from '@/lib/appStores';
+import ProviderEffects from './ProviderEffects';
+import './provider.css';
 
-const BRAND = '#A54AFF';
-const BRAND_GRAD = 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)';
+const IOS = APP_STORE_LINKS.seller.apple;
+const ANDROID = APP_STORE_LINKS.seller.play;
 
-const BENEFITS = [
+const FAQS = [
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    title: 'Set your own rates',
-    desc: 'You decide what to charge. WhoCan does not set your prices.',
+    q: 'What is WhoCan Provider?',
+    a: 'WhoCan Provider is the app for service providers. You list a service, set your own price, receive booking requests from local buyers, and get paid through the app.',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="4" width="18" height="18" rx="2" stroke={BRAND} strokeWidth="2"/>
-        <path d="M16 2v4M8 2v4M3 10h18" stroke={BRAND} strokeWidth="2" strokeLinecap="round"/>
-      </svg>
-    ),
-    title: 'Work on your schedule',
-    desc: 'Set your own hours and availability. Accept only the jobs that fit your life.',
+    q: 'Is this a job?',
+    a: 'No. You work for yourself and choose which requests to accept. WhoCan does not employ you.',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    title: 'Your own profile',
-    desc: 'List your skills, describe your work, and add photos so people can see what you offer.',
+    q: 'Can I set my own price?',
+    a: 'Yes. You create price plans and describe what each one includes.',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke={BRAND} strokeWidth="2"/>
-        <path d="M12 8v4l3 3" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    title: 'Start when you are ready',
-    desc: 'Create a profile, then accept the requests that fit your schedule.',
+    q: 'Do I have to accept every request?',
+    a: 'No. You accept the requests that fit your work and schedule, and decline the rest.',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <circle cx="9" cy="7" r="4" stroke={BRAND} strokeWidth="2"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    title: 'People nearby',
-    desc: 'Your profile can be shown to people in your area who are looking for the services you offer.',
+    q: 'How do I get paid?',
+    a: 'Buyers pay in the app and the payment is held in escrow. After you mark the job completed and the buyer approves it, the payment is released to you.',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    title: 'Support when you need it',
-    desc: 'Contact the WhoCan team if a booking needs help. We can look into the request with you.',
+    q: 'Do I need a license?',
+    a: 'Some work, such as electrical, plumbing, gas and larger home improvement projects, requires a license in Maryland. You are responsible for meeting the rules for the services you offer.',
   },
 ];
 
-const STEPS = [
-  {
-    num: '01',
-    title: 'Create your profile',
-    desc: 'List your skills, set your rates, and add photos of past work.',
-  },
-  {
-    num: '02',
-    title: 'Get found nearby',
-    desc: 'WhoCan can show your profile to people in your area who are looking for your services.',
-  },
-  {
-    num: '03',
-    title: 'Complete the job',
-    desc: 'Do the work and keep in touch with the customer in the Provider app.',
-  },
-];
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 
-const CATEGORIES = [
-  'Cleaning', 'Electrical', 'Plumbing', 'Carpentry',
-  'Painting', 'Gardening', 'Moving', 'Appliance Repair',
-  'HVAC', 'Roofing', 'Flooring', 'Handyman',
-];
-
-function ChevronDown({ open }: { open: boolean }) {
+function Check() {
   return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 12 12"
-      fill="none"
-      aria-hidden="true"
-      style={{ transition: 'transform 0.2s ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}
-    >
-      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 12l5 5L20 7" />
     </svg>
   );
 }
 
-function SellerStoreMenu({
-  open,
-  onOpen,
-  onClose,
-  label,
-  ariaLabel,
-  buttonStyle,
-  onMouseEnter,
-  onMouseLeave,
-}: {
-  open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-  label: ReactNode;
-  ariaLabel: string;
-  buttonStyle: CSSProperties;
-  onMouseEnter?: (e: MouseEvent<HTMLButtonElement>) => void;
-  onMouseLeave?: (e: MouseEvent<HTMLButtonElement>) => void;
-}) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onDoc = (event: Event) => {
-      if (wrapRef.current && !wrapRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-
-    document.addEventListener('mousedown', onDoc);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open, onClose]);
-
+function AppleIcon() {
   return (
-    <div ref={wrapRef} style={{ position: 'relative' }}>
-      <button
-        type="button"
-        aria-label={ariaLabel}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => (open ? onClose() : onOpen())}
-        style={buttonStyle}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-      >
-        {label}
-        <ChevronDown open={open} />
-      </button>
-      {open && (
-        <div
-          role="menu"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 10px)',
-            right: 0,
-            zIndex: 110,
-            width: 'min(240px, calc(100vw - 32px))',
-            background: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #EAECF0',
-            boxShadow: '0 12px 32px rgba(16,24,40,0.18)',
-            padding: '14px',
-          }}
-        >
-          <p
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 700,
-              fontSize: '13px',
-              color: '#101828',
-              marginBottom: '4px',
-            }}
-          >
-            WhoCan Seller app
-          </p>
-          <p
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontSize: '12px',
-              color: '#667085',
-              marginBottom: '12px',
-              lineHeight: 1.45,
-            }}
-          >
-            Register and manage jobs on iOS or Android.
-          </p>
-          <SellerStoreLinks stacked />
-        </div>
-      )}
-    </div>
+    <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+      <path d="M16.4 12.6c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.6.8-3.3.8s-1.7-.8-2.8-.8c-1.4 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.1 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7 1.9-1 2.6-2.1c.8-1.2 1.1-2.3 1.2-2.4-.1 0-2.3-.9-2.3-3.2zM14.3 6.2c.6-.7 1-1.7.9-2.7-.9 0-1.9.6-2.5 1.3-.5.6-1 1.6-.9 2.6 1 .1 1.9-.5 2.5-1.2z" />
+    </svg>
   );
 }
 
-function SellerNav() {
-  const [scrolled, setScrolled] = useState(false);
-  const [registerOpen, setRegisterOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
+function PlayIcon() {
   return (
-    <header
-      className="seller-nav"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        display: 'flex',
-        alignItems: 'center',
-        background: scrolled ? 'rgba(13,1,32,0.92)' : '#0D0120',
-        backdropFilter: scrolled ? 'blur(12px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(165,74,255,0.15)' : '1px solid transparent',
-        transition: 'background 0.25s ease, border-color 0.25s ease, backdrop-filter 0.25s ease',
-      }}
-    >
-      <div
-        className="container"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-      >
-        {/* Logo */}
-        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <svg width="108" height="22" viewBox="0 0 159 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19.3728 2.47801C20.6978 0.134223 23.6737 -0.692738 26.0197 0.630946C28.3657 1.95464 29.1935 4.9277 27.8685 7.27149L15.5022 29.1471C14.1772 31.4909 11.2013 32.3179 8.8553 30.9942C6.50929 29.6705 5.68154 26.6974 7.00648 24.3536L19.3728 2.47801Z" fill="#A54AFF"/>
-            <path d="M1.26277 2.15119C3.04388 -0.22362 6.41297 -0.704966 8.7878 1.07612C11.1626 2.85723 11.644 6.22632 9.86287 8.60114L9.67537 8.85114C7.89426 11.226 4.52517 11.7073 2.15034 9.92622C-0.224467 8.14511 -0.705813 4.77601 1.07527 2.40119L1.26277 2.15119Z" fill="#A54AFF"/>
-            <path d="M10.625 3.62592C10.9375 4.81342 11.0625 6.18842 12.8125 6.50092C14.125 6.68842 15.5833 6.52175 16.1875 6.31342C17.6547 5.84183 18.785 4.82845 19.3208 4.04669L19.5625 3.62592C19.5053 3.75387 19.4241 3.89597 19.3208 4.04669L14.908 11.7282C14.7975 11.9949 14.65 12.2399 14.5 12.4384L14.908 11.7282C15.3193 10.7352 15.2167 9.44123 12.8125 9.12592C9.76248 8.72592 9.1875 9.56342 8.3125 10.1259L10.625 3.62592Z" fill="#A54AFF"/>
-            <path d="M34.8734 2.47769C36.1984 0.134178 39.174 -0.692603 41.5198 0.631014C43.8658 1.95472 44.6934 4.92787 43.3685 7.27164L31.0023 29.1466C29.6774 31.4903 26.7017 32.3177 24.3558 30.9943C22.0099 29.6707 21.1814 26.6974 22.5062 24.3537L34.8734 2.47769ZM28.722 23.8859C27.3108 22.8335 25.3087 23.1174 24.2503 24.5207L24.139 24.6681C23.0806 26.0713 23.3666 28.062 24.7777 29.1144C26.1888 30.1668 28.1909 29.8827 29.2493 28.4796L29.3607 28.3322C30.419 26.929 30.1331 24.9383 28.722 23.8859Z" fill="#A54AFF"/>
-            <path d="M60.1314 11.1925C61.5301 11.1925 62.7957 11.4848 63.928 12.0694C65.0604 12.6316 65.9485 13.5086 66.5924 14.7004C67.2585 15.8922 67.5915 17.4325 67.5915 19.3214V29.7778H61.2637V20.3671C61.2637 19.0628 60.9973 18.1184 60.4644 17.5337C59.9537 16.9266 59.2322 16.623 58.2996 16.623C57.6336 16.623 57.023 16.7804 56.4679 17.0952C55.9128 17.3876 55.4799 17.8485 55.169 18.4782C54.8582 19.1078 54.7028 19.9286 54.7028 20.9405V29.7778H48.375V4.75H54.7028V16.6905L53.2374 15.1726C53.9257 13.8459 54.8693 12.8565 56.0683 12.2044C57.2672 11.5298 58.6216 11.1925 60.1314 11.1925Z" fill="white"/>
-            <path d="M80.8507 30.0814C78.8747 30.0814 77.1206 29.6766 75.5887 28.8671C74.0567 28.0575 72.8466 26.9444 71.9585 25.5278C71.0926 24.0886 70.6596 22.4471 70.6596 20.6032C70.6596 18.7593 71.0926 17.129 71.9585 15.7123C72.8466 14.2956 74.0567 13.1938 75.5887 12.4067C77.1206 11.5972 78.8747 11.1925 80.8507 11.1925C82.8268 11.1925 84.5808 11.5972 86.1128 12.4067C87.667 13.1938 88.877 14.2956 89.7429 15.7123C90.6088 17.129 91.0418 18.7593 91.0418 20.6032C91.0418 22.4471 90.6088 24.0886 89.7429 25.5278C88.877 26.9444 87.667 28.0575 86.1128 28.8671C84.5808 29.6766 82.8268 30.0814 80.8507 30.0814ZM80.8507 24.9881C81.5834 24.9881 82.2273 24.8194 82.7823 24.4821C83.3596 24.1448 83.8148 23.6501 84.1478 22.998C84.4809 22.3234 84.6474 21.5251 84.6474 20.6032C84.6474 19.6812 84.4809 18.9054 84.1478 18.2758C83.8148 17.6237 83.3596 17.129 82.7823 16.7917C82.2273 16.4544 81.5834 16.2857 80.8507 16.2857C80.1402 16.2857 79.4963 16.4544 78.9191 16.7917C78.364 17.129 77.9088 17.6237 77.5536 18.2758C77.2206 18.9054 77.054 19.6812 77.054 20.6032C77.054 21.5251 77.2206 22.3234 77.5536 22.998C77.9088 23.6501 78.364 24.1448 78.9191 24.4821C79.4963 24.8194 80.1402 24.9881 80.8507 24.9881Z" fill="white"/>
-            <path d="M105.896 30.25C104.053 30.25 102.344 29.9577 100.767 29.373C99.2129 28.7659 97.8585 27.9114 96.704 26.8095C95.5717 25.7077 94.6836 24.4147 94.0397 22.9306C93.3958 21.4239 93.0739 19.7712 93.0739 17.9722C93.0739 16.1733 93.3958 14.5317 94.0397 13.0476C94.6836 11.541 95.5717 10.2368 96.704 9.13492C97.8585 8.03307 99.2129 7.18982 100.767 6.60516C102.344 5.99802 104.053 5.69444 105.896 5.69444C108.05 5.69444 109.97 6.07672 111.658 6.84127C113.367 7.60582 114.788 8.70767 115.92 10.1468L111.724 13.9921C110.969 13.0926 110.137 12.4067 109.226 11.9345C108.338 11.4623 107.339 11.2262 106.229 11.2262C105.274 11.2262 104.397 11.3836 103.598 11.6984C102.799 12.0132 102.11 12.4742 101.533 13.0813C100.978 13.666 100.534 14.3743 100.201 15.2063C99.8901 16.0384 99.7347 16.9603 99.7347 17.9722C99.7347 18.9841 99.8901 19.9061 100.201 20.7381C100.534 21.5701 100.978 22.2897 101.533 22.8968C102.11 23.4815 102.799 23.9312 103.598 24.246C104.397 24.5608 105.274 24.7183 106.229 24.7183C107.339 24.7183 108.338 24.4821 109.226 24.0099C110.137 23.5377 110.969 22.8519 111.724 21.9524L115.92 25.7976C114.788 27.2143 113.367 28.3161 111.658 29.1032C109.97 29.8677 108.05 30.25 105.896 30.25Z" fill="white"/>
-            <path d="M129.52 29.7778V26.371L129.087 25.5278V19.254C129.087 18.2421 128.776 17.4663 128.154 16.9266C127.555 16.3644 126.589 16.0833 125.257 16.0833C124.391 16.0833 123.514 16.2295 122.626 16.5218C121.737 16.7917 120.983 17.1739 120.361 17.6687L118.229 13.3175C119.251 12.6429 120.472 12.1257 121.893 11.7659C123.336 11.3836 124.768 11.1925 126.189 11.1925C129.12 11.1925 131.385 11.8783 132.983 13.25C134.604 14.5992 135.414 16.7242 135.414 19.625V29.7778H129.52ZM124.191 30.0814C122.748 30.0814 121.527 29.834 120.527 29.3393C119.528 28.8446 118.762 28.17 118.229 27.3155C117.719 26.461 117.463 25.5053 117.463 24.4484C117.463 23.3241 117.741 22.3571 118.296 21.5476C118.873 20.7156 119.75 20.086 120.927 19.6587C122.104 19.209 123.625 18.9841 125.49 18.9841H129.753V22.3234H126.356C125.334 22.3234 124.613 22.4921 124.191 22.8294C123.791 23.1667 123.591 23.6164 123.591 24.1786C123.591 24.7407 123.802 25.1905 124.224 25.5278C124.646 25.8651 125.223 26.0337 125.956 26.0337C126.644 26.0337 127.266 25.8651 127.821 25.5278C128.398 25.168 128.82 24.6283 129.087 23.9087L129.952 26.2698C129.619 27.5291 128.964 28.4848 127.988 29.1369C127.033 29.7665 125.767 30.0814 124.191 30.0814Z" fill="white"/>
-            <path d="M151.165 11.1925C152.564 11.1925 153.829 11.4848 154.962 12.0694C156.094 12.6316 156.982 13.5086 157.626 14.7004C158.292 15.8922 158.625 17.4325 158.625 19.3214V29.7778H152.297V20.3671C152.297 19.0628 152.031 18.1184 151.498 17.5337C150.987 16.9266 150.266 16.623 149.333 16.623C148.667 16.623 148.056 16.7804 147.501 17.0952C146.946 17.3876 146.513 17.8485 146.203 18.4782C145.892 19.1078 145.736 19.9286 145.736 20.9405V29.7778H139.409V11.496H145.437V16.6905L144.271 15.1726C144.959 13.8459 145.903 12.8565 147.102 12.2044C148.301 11.5298 149.655 11.1925 151.165 11.1925Z" fill="white"/>
-          </svg>
-        </a>
-
-        {/* Right actions */}
-        <div className="seller-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <SellerStoreMenu
-            open={registerOpen}
-            onOpen={() => setRegisterOpen(true)}
-            onClose={() => setRegisterOpen(false)}
-            ariaLabel="Register as a Seller"
-            label={
-              <>
-                <span className="seller-nav-label-full">Register as a Seller</span>
-                <span className="seller-nav-label-short">Register</span>
-              </>
-            }
-            buttonStyle={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 600,
-              fontSize: '14px',
-              color: '#ffffff',
-              background: BRAND_GRAD,
-              border: 'none',
-              padding: '10px 18px',
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              transition: 'all 0.18s ease',
-              boxShadow: '0 1px 2px rgba(16,24,40,0.05)',
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget;
-              el.style.transform = 'translateY(-1px)';
-              el.style.boxShadow = '0 4px 16px rgba(165,74,255,0.4)';
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget;
-              el.style.transform = 'translateY(0)';
-              el.style.boxShadow = '0 1px 2px rgba(16,24,40,0.05)';
-            }}
-          />
-        </div>
-      </div>
-    </header>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#34A853" d="M4 3.2v17.6c0 .4.4.6.8.4l9.4-8.8z" />
+      <path fill="#FBBC04" d="m18.5 9.4-4.3 3.4-9.4-8.8c.2-.2.6-.2.9 0z" />
+      <path fill="#EA4335" d="m14.2 12.8 4.3 3.4-12.8 4.8c-.3.1-.7.1-.9 0z" />
+      <path fill="#4285F4" d="m21 11.1-2.5-1.7-4.3 3.4 4.3 3.4 2.5-1.7c.7-.5.7-2.2 0-2.7z" />
+    </svg>
   );
 }
 
-function useAnimateOnScroll() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  return { ref, visible };
+function StoreButtons({ withIcons = true }: { withIcons?: boolean }) {
+  return (
+    <>
+      <a className="store" href={IOS} target="_blank" rel="noopener noreferrer" aria-label="Download WhoCan Provider on the App Store">
+        {withIcons && <AppleIcon />}
+        <span><small>Download on the</small><b>App Store</b></span>
+      </a>
+      <a className="store" href={ANDROID} target="_blank" rel="noopener noreferrer" aria-label="Get WhoCan Provider on Google Play">
+        {withIcons && <PlayIcon />}
+        <span><small>Get it on</small><b>Google Play</b></span>
+      </a>
+    </>
+  );
 }
+
+const NAV = [
+  { href: '#what', label: 'What is it' },
+  { href: '#guide', label: 'Guide' },
+  { href: '#expect', label: 'Expectations' },
+  { href: '#faq', label: 'FAQ' },
+];
 
 export default function SellersPage() {
-  const heroAnim = useAnimateOnScroll();
-  const benefitsAnim = useAnimateOnScroll();
-  const stepsAnim = useAnimateOnScroll();
-  const categoriesAnim = useAnimateOnScroll();
-  const ctaAnim = useAnimateOnScroll();
-
   return (
-    <div className="seller-page" style={{ fontFamily: 'Poppins, sans-serif', background: '#ffffff', minHeight: '100dvh' }}>
-      <SellerNav />
+    <>
+    <div className="pv">
+      <JsonLd data={faqLd} />
+      <ProviderEffects />
+      <div className="prog" id="pv-prog" />
 
-      {/* ── Hero ──────────────────────────────────────────── */}
-      <section
-        className="seller-hero"
-        style={{
-          background: '#0D0120',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Glow blobs */}
-        <div style={{ position: 'absolute', top: '-120px', right: '-80px', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(165,74,255,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '-100px', left: '-60px', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(165,74,255,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div className="annbar">
+        <span className="dot" />
+        <span><b>Now launching in Maryland.</b> List your service on WhoCan Provider.</span>
+        <a href="#get">Download</a>
+      </div>
 
-        <div
-          ref={heroAnim.ref}
-          className="container"
-          style={{
-            maxWidth: '760px',
-            margin: '0 auto',
-            textAlign: 'center',
-            opacity: heroAnim.visible ? 1 : 0,
-            transform: heroAnim.visible ? 'translateY(0)' : 'translateY(32px)',
-            transition: 'opacity 0.65s ease, transform 0.65s ease',
-          }}
-        >
-          <div
-            className="seller-hero-badge"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: 'rgba(165,74,255,0.12)',
-              border: '1px solid rgba(165,74,255,0.3)',
-              borderRadius: '9999px',
-              padding: '6px 16px',
-              marginBottom: '28px',
-              maxWidth: '100%',
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#A54AFF" stroke="none"/>
-            </svg>
-            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '13px', fontWeight: 600, color: '#BF75FF', letterSpacing: '0.04em' }}>
-              Offer your services on WhoCan
-            </span>
-          </div>
-
-          <h1
-            className="seller-hero-title"
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 800,
-              fontSize: 'clamp(28px, 8.5vw, 58px)',
-              lineHeight: '1.15',
-              color: '#ffffff',
-              letterSpacing: '-0.02em',
-              marginBottom: '20px',
-              textWrap: 'balance',
-            }}
-          >
-            Turn your skills into{' '}
-            <span
-              style={{
-                background: BRAND_GRAD,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              local work
-            </span>
-          </h1>
-
-          <p
-            className="seller-hero-copy"
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontSize: '18px',
-              lineHeight: '1.65',
-              color: 'rgba(255,255,255,0.6)',
-              marginBottom: '40px',
-              maxWidth: '580px',
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              textWrap: 'pretty',
-            }}
-          >
-            WhoCan connects people who offer services with people nearby who need them.
-            Set your own rates and choose the jobs that fit your schedule.
-          </p>
-
-          <div className="seller-hero-cta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-            <p
-              style={{
-                fontFamily: 'Poppins, sans-serif',
-                fontWeight: 700,
-                fontSize: '16px',
-                color: '#ffffff',
-                margin: 0,
-                textAlign: 'center',
-              }}
-            >
-              Register in the Provider app
-            </p>
-            <SellerStoreLinks onDark justify="center" className="seller-store-row" />
+      <header id="pv-hd">
+        <div className="nav">
+          <a className="logo" href="/" aria-label="WhoCan home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/provider/app-icon.webp" width={38} height={38} alt="" />
+            WhoCan<small>Provider</small>
+          </a>
+          <nav className="menu" aria-label="Page sections">
+            {NAV.map((n) => <a key={n.href} href={n.href}>{n.label}</a>)}
+          </nav>
+          <div className="right">
+            <span className="loc">Maryland</span>
+            <a className="pill" href="#get">Download the app</a>
+            <button className="burger" id="pv-bg" aria-label="Menu" aria-expanded="false" type="button"><i /></button>
           </div>
         </div>
-      </section>
+      </header>
+      <div className="mmenu" id="pv-mm">
+        {NAV.map((n) => <a key={n.href} href={n.href}>{n.label}</a>)}
+        <a href="#get" style={{ background: 'var(--b500)', marginTop: 14 }}>Download the app</a>
+      </div>
 
-      {/* ── Benefits grid ─────────────────────────────────── */}
-      <section className="seller-section" style={{ padding: '96px 0', background: '#ffffff' }}>
-        <div className="container">
-          <div
-            ref={benefitsAnim.ref}
-            style={{
-              opacity: benefitsAnim.visible ? 1 : 0,
-              transform: benefitsAnim.visible ? 'translateY(0)' : 'translateY(28px)',
-              transition: 'opacity 0.6s ease, transform 0.6s ease',
-            }}
-          >
-            <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: BRAND, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', textAlign: 'center' }}>
-              Why sell on WhoCan
-            </p>
-            <h2
-              className="seller-section-title"
-              style={{
-                fontFamily: 'Poppins, sans-serif',
-                fontWeight: 700,
-                fontSize: 'clamp(26px, 6vw, 40px)',
-                color: '#101828',
-                letterSpacing: '-0.01em',
-                textAlign: 'center',
-                marginBottom: '12px',
-                textWrap: 'balance',
-              }}
-            >
-              Everything you need to grow
-            </h2>
-            <p className="seller-section-lead" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', textAlign: 'center', marginBottom: '56px', maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
-              List what you do so people nearby can find you and request your help.
-            </p>
+      <main>
+        <div className="hero">
+          <div className="mesh"><i /><i /><i /></div>
+          <div className="gridl" />
+          <div className="wrap">
+            <div>
+              <span className="tag"><i />FOR PROVIDERS IN MARYLAND</span>
+              <h1>
+                Get booked for your<br />
+                <span className="rline">
+                  <span className="rot">
+                    <span>cleaning</span>
+                    <span aria-hidden="true">handyman</span>
+                    <span aria-hidden="true">lawn care</span>
+                    <span aria-hidden="true">car detailing</span>
+                    <span aria-hidden="true">cleaning</span>
+                  </span>
+                  <span className="wk">work</span>
+                </span>
+              </h1>
+              <p className="def">
+                <b>WhoCan Provider</b> is the app where you list your service, set your own price and get booking
+                requests from people nearby. You accept the jobs you want, do the work, and are paid through the app.
+              </p>
+              <div className="chiprow">
+                <span><Check />Set your own price</span>
+                <span><Check />Accept or decline</span>
+                <span><Check />Escrow payments</span>
+              </div>
+              <div className="cta-row">
+                <StoreButtons />
+                <a className="ghost" href="#guide">Read the guide ↓</a>
+              </div>
+            </div>
 
-            <div
-              className="rs-grid-3"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '24px',
-              }}
-            >
-              {BENEFITS.map((b, i) => (
-                <div
-                  key={b.title}
-                  style={{
-                    background: '#ffffff',
-                    border: '1.5px solid #EAECF0',
-                    borderRadius: '20px',
-                    padding: '28px',
-                    transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
-                    animationDelay: `${i * 60}ms`,
-                  }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = 'rgba(165,74,255,0.35)';
-                    el.style.boxShadow = '0 8px 28px rgba(165,74,255,0.1)';
-                    el.style.transform = 'translateY(-3px)';
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = '#EAECF0';
-                    el.style.boxShadow = 'none';
-                    el.style.transform = 'translateY(0)';
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#F9F5FF',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '16px',
-                    }}
-                  >
-                    {b.icon}
+            <div className="flow">
+              <h3>HOW WHOCAN WORKS</h3>
+              <div style={{ marginTop: 20 }}>
+                <div className="node">
+                  <div className="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg></div>
+                  <div><b>A buyer needs help</b><small>Posts a request or books a listing near them</small></div>
+                </div>
+              </div>
+              <div className="link" />
+              <div className="node mid">
+                <div className="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /><path d="M9 12l2 2 4-4" /></svg></div>
+                <div><b>WhoCan connects you</b><small>Chat, compare offers, pay in the app. Payment is held in escrow</small></div>
+              </div>
+              <div className="link" />
+              <div className="node you">
+                <div className="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z" /></svg></div>
+                <div><b>You, the provider</b><small>Accept the job, do the work, get paid after the buyer approves</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section id="what">
+          <div className="wrap">
+            <div className="rv">
+              <span className="eyebrow">What is WhoCan Provider?</span>
+              <h2>A simple way to find local customers</h2>
+              <p className="sub">
+                WhoCan is a platform that connects people who need a service with independent providers near them.
+                WhoCan Provider is the app for the provider side: you.
+              </p>
+            </div>
+            <div className="three">
+              <div className="c rv"><span className="k">IT IS</span><h3>Your listing and booking tool</h3><p>Create a service with a clear title, photos and your own price, then manage requests, chat and job status in one app.</p></div>
+              <div className="c rv" style={{ transitionDelay: '.1s' }}><span className="k">IT IS FOR</span><h3>People who work for themselves</h3><p>Cleaners, handymen, lawn and car detailing providers, and anyone with a skill neighbors need.</p></div>
+              <div className="c rv" style={{ transitionDelay: '.2s' }}><span className="k">IT IS NOT</span><h3>A job or a salary</h3><p>WhoCan does not employ you or guarantee income. You choose the work, and the work is yours.</p></div>
+            </div>
+            <div className="chips rv">
+              <span>Cleaning</span><span>Handyman</span><span>Lawn care</span><span>Car detailing</span><span>+ more in the app</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="alt">
+          <div className="wrap">
+            <div className="rv"><span className="eyebrow">Before you start</span><h2>What you need</h2></div>
+            <div className="need">
+              <div className="rv"><i>1</i><b>A phone</b><p>iPhone or Android with the WhoCan Provider app.</p></div>
+              <div className="rv" style={{ transitionDelay: '.08s' }}><i>2</i><b>A service you offer</b><p>One clear thing you do well, such as deep cleaning.</p></div>
+              <div className="rv" style={{ transitionDelay: '.16s' }}><i>3</i><b>Your service area</b><p>The location you can actually reach on time.</p></div>
+              <div className="rv" style={{ transitionDelay: '.24s' }}><i>4</i><b>Photos of your work</b><p>Clear photos help buyers choose you.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="guide">
+          <div className="wrap">
+            <div className="rv">
+              <span className="eyebrow">Step by step guide</span>
+              <h2>How to use WhoCan Provider</h2>
+              <p className="sub">From download to your first completed job.</p>
+            </div>
+            <div className="guide">
+              <nav className="toc" id="pv-toc" aria-label="Guide steps">
+                <a href="#s1" className="on">1. Sign up</a>
+                <a href="#s2">2. Add your location</a>
+                <a href="#s3">3. Create your service</a>
+                <a href="#s4">4. Handle requests</a>
+                <a href="#s5">5. Do the job</a>
+                <a href="#s6">6. Get paid</a>
+              </nav>
+              <div>
+                <div className="gs rv" id="s1">
+                  <div>
+                    <span className="n"><b>1</b>STEP ONE</span>
+                    <h3>Download and sign up</h3>
+                    <p>Install WhoCan Provider from the App Store or Google Play and create your account.</p>
+                    <ul><li>Use the name and phone number buyers can recognize</li><li>Complete the verification the app asks for</li></ul>
                   </div>
-                  <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '17px', color: '#101828', marginBottom: '8px' }}>
-                    {b.title}
-                  </h3>
-                  <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', lineHeight: '1.65', margin: 0 }}>
-                    {b.desc}
-                  </p>
+                  <div className="shot ill" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5" /><path d="M11 18h2" /></svg>
+                  </div>
+                </div>
+
+                <div className="gs rv" id="s2">
+                  <div>
+                    <span className="n"><b>2</b>STEP TWO</span>
+                    <h3>Add your location</h3>
+                    <p>Tell the app where you work so nearby buyers can find you.</p>
+                    <ul><li>Choose the area you can reach on time</li><li>Only list areas you can actually serve</li></ul>
+                  </div>
+                  <div className="shot ill" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="10" r="2.6" /></svg>
+                  </div>
+                </div>
+
+                <div className="gs rv" id="s3">
+                  <div>
+                    <span className="n"><b>3</b>STEP THREE</span>
+                    <h3>Create your service</h3>
+                    <p>This is your listing. Buyers compare it with others before they book.</p>
+                    <ul>
+                      <li>Pick the category and sub categories that fit</li>
+                      <li>Write a clear title that starts with &quot;I will…&quot;</li>
+                      <li>Add cover photos or a video of real work</li>
+                      <li>Create your price plans and say what each includes</li>
+                    </ul>
+                    <div className="tip"><b>Tip:</b> specific beats vague. &quot;I will deep clean your kitchen&quot; gets more requests than &quot;cleaning&quot;.</div>
+                  </div>
+                  <div className="shot">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/provider/s_create.webp" width={520} height={1583} loading="lazy" alt="Create service screen in the WhoCan Provider app" />
+                    <span>Create new favor</span>
+                  </div>
+                </div>
+
+                <div className="gs rv" id="s4">
+                  <div>
+                    <span className="n"><b>4</b>STEP FOUR</span>
+                    <h3>Review and accept requests</h3>
+                    <p>A buyer&apos;s request shows the job, the place, the date and what they need.</p>
+                    <ul><li>Check the details and the location</li><li>Chat with the buyer if something is unclear</li><li>Accept what you can do well, decline the rest</li></ul>
+                  </div>
+                  <div className="shot">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/provider/s_request.webp" width={520} height={1126} loading="lazy" alt="Booking request screen in the WhoCan Provider app" />
+                    <span>Booking request</span>
+                  </div>
+                </div>
+
+                <div className="gs rv" id="s5">
+                  <div>
+                    <span className="n"><b>5</b>STEP FIVE</span>
+                    <h3>Do the job and mark it completed</h3>
+                    <p>Track the favor in the app while you work.</p>
+                    <ul><li>Arrive on time and follow what was agreed</li><li>Raise any change in scope in the chat first</li><li>Mark the favor completed when it is done, so the buyer can review and approve it</li></ul>
+                  </div>
+                  <div className="shot">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/provider/s_progress.webp" width={520} height={1126} loading="lazy" alt="Favor in progress screen in the WhoCan Provider app" />
+                    <span>Favor in progress</span>
+                  </div>
+                </div>
+
+                <div className="gs rv" id="s6">
+                  <div>
+                    <span className="n"><b>6</b>STEP SIX</span>
+                    <h3>Get paid after the buyer approves</h3>
+                    <p>The buyer pays through the app and the payment is held in escrow. Once you mark the job completed and the buyer approves it, the payment is released to you.</p>
+                    <ul><li>No cash handling needed</li><li>Payment is released after the buyer&apos;s approval</li></ul>
+                  </div>
+                  <div className="shot">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/provider/s_home.webp" width={520} height={1393} loading="lazy" alt="Home screen in the WhoCan Provider app" />
+                    <span>Provider home</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="alt" id="expect">
+          <div className="wrap">
+            <div className="rv"><span className="eyebrow">Be clear on what this is</span><h2>Honest expectations</h2></div>
+            <div className="hgrid">
+              <div className="box yes rv">
+                <h3>What WhoCan gives you</h3>
+                <ul>
+                  <li>A place to list your service and set your price</li>
+                  <li>Requests from local buyers that you accept or decline</li>
+                  <li>In-app chat and job tracking</li>
+                  <li>Payments held in escrow and released after the buyer approves the job</li>
+                </ul>
+              </div>
+              <div className="box no rv" style={{ transitionDelay: '.1s' }}>
+                <h3>What it is not</h3>
+                <ul>
+                  <li>Not a job or a salary</li>
+                  <li>No guaranteed income or number of bookings</li>
+                  <li>Not a license: you are responsible for any license your work needs</li>
+                  <li>WhoCan is a platform that connects you with buyers</li>
+                </ul>
+              </div>
+            </div>
+            <div className="lic rv">
+              <b>Licensing in Maryland.</b> Some work, such as electrical, plumbing, gas and larger home improvement,
+              requires a license. Check the current rules with the Maryland Home Improvement Commission before you offer it.
+            </div>
+          </div>
+        </section>
+
+        <section id="faq">
+          <div className="wrap">
+            <div className="rv"><span className="eyebrow">FAQ</span><h2>Questions providers ask</h2></div>
+            <div className="faq">
+              {FAQS.map((f, i) => (
+                <div key={f.q} className={`q${i === 0 ? ' open' : ''}`}>
+                  <button type="button" aria-expanded={i === 0}>{f.q}<i aria-hidden="true">+</i></button>
+                  <div className="a">{f.a}</div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── How it works ──────────────────────────────────── */}
-      <section className="seller-section" style={{ padding: '96px 0', background: '#0D0120', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '800px', height: '400px', background: 'radial-gradient(ellipse, rgba(165,74,255,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div
-          ref={stepsAnim.ref}
-          className="container"
-          style={{
-            opacity: stepsAnim.visible ? 1 : 0,
-            transform: stepsAnim.visible ? 'translateY(0)' : 'translateY(28px)',
-            transition: 'opacity 0.6s ease, transform 0.6s ease',
-          }}
-        >
-          <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px', color: '#BF75FF', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', textAlign: 'center' }}>
-            Getting started
-          </p>
-          <h2
-            className="seller-section-title"
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 700,
-              fontSize: 'clamp(26px, 6vw, 40px)',
-              color: '#ffffff',
-              letterSpacing: '-0.01em',
-              textAlign: 'center',
-              marginBottom: '56px',
-              textWrap: 'balance',
-            }}
-          >
-            Up and running in three steps
-          </h2>
-
-          <div className="rs-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
-            {STEPS.map((step) => (
-              <div
-                key={step.num}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(165,74,255,0.2)',
-                  borderRadius: '20px',
-                  padding: '32px',
-                  transition: 'border-color 0.2s ease',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(165,74,255,0.5)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(165,74,255,0.2)'; }}
-              >
-                <div
-                  style={{
-                    fontFamily: 'Poppins, sans-serif',
-                    fontWeight: 800,
-                    fontSize: '48px',
-                    letterSpacing: '-0.03em',
-                    lineHeight: 1,
-                    background: BRAND_GRAD,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    marginBottom: '20px',
-                  }}
-                >
-                  {step.num}
-                </div>
-                <h3 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', color: '#ffffff', marginBottom: '10px' }}>
-                  {step.title}
-                </h3>
-                <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.55)', lineHeight: '1.65', margin: 0 }}>
-                  {step.desc}
-                </p>
+        <section id="get" style={{ paddingTop: 0 }}>
+          <div className="wrap">
+            <div className="cta rv">
+              <div>
+                <h2 style={{ color: '#fff' }}>Ready to list your first service?</h2>
+                <p className="sub" style={{ color: '#EDE0FF' }}>Download WhoCan Provider and set up in minutes.</p>
+                <div className="cta-row" style={{ animation: 'none' }}><StoreButtons withIcons={false} /></div>
               </div>
-            ))}
+              <div className="qr">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/provider/qr-provider.svg" width={152} height={152} alt="QR code that opens this page on your phone" />
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── Categories ────────────────────────────────────── */}
-      <section className="seller-categories" style={{ padding: '80px 0', background: '#ffffff' }}>
-        <div
-          ref={categoriesAnim.ref}
-          className="container"
-          style={{
-            opacity: categoriesAnim.visible ? 1 : 0,
-            transform: categoriesAnim.visible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'opacity 0.55s ease, transform 0.55s ease',
-          }}
-        >
-          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '15px', color: '#667085', textAlign: 'center', marginBottom: '28px' }}>
-            Services people look for on WhoCan
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
-            {CATEGORIES.map((cat) => (
-              <span
-                key={cat}
-                style={{
-                  fontFamily: 'Poppins, sans-serif',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: '#6941C6',
-                  background: '#F9F5FF',
-                  border: '1px solid #E9D7FE',
-                  borderRadius: '9999px',
-                  padding: '8px 18px',
-                }}
-              >
-                {cat}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Bottom CTA ────────────────────────────────────── */}
-      <section
-        className="seller-cta"
-        style={{
-          padding: '96px 0',
-          background: '#0D0120',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(165,74,255,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div
-          ref={ctaAnim.ref}
-          className="container"
-          style={{
-            maxWidth: '640px',
-            margin: '0 auto',
-            textAlign: 'center',
-            opacity: ctaAnim.visible ? 1 : 0,
-            transform: ctaAnim.visible ? 'translateY(0)' : 'translateY(28px)',
-            transition: 'opacity 0.65s ease, transform 0.65s ease',
-          }}
-        >
-          <h2
-            className="seller-section-title"
-            style={{
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 800,
-              fontSize: 'clamp(26px, 7vw, 44px)',
-              color: '#ffffff',
-              letterSpacing: '-0.02em',
-              lineHeight: '1.2',
-              marginBottom: '16px',
-              textWrap: 'balance',
-            }}
-          >
-            Ready to offer your services?
-          </h2>
-          <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: 'rgba(255,255,255,0.55)', marginBottom: '40px', lineHeight: '1.65' }}>
-            Create a profile in the WhoCan Provider app and list the services you offer.
-          </p>
-          <SellerStoreLinks onDark justify="center" className="seller-store-row" />
-        </div>
-      </section>
-
-      <Footer />
+        </section>
+      </main>
     </div>
+    {/* Outside .pv so the scoped reset does not touch the shared footer */}
+    <Footer />
+    </>
   );
 }

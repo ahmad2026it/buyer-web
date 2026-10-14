@@ -81,7 +81,7 @@ function toFavorCard(favor: BuyerFavor, categories: BuyerCategory[]): FavorCard 
     reviews: String(favor.reviewCount ?? 0),
     category: displayCategory(favor.type, categories),
     sellerAvatar: pickFavorImage(favor.seller?.profileImageUrl, favor.seller?.profileImage),
-    seller: favor.seller?.fullName || 'Seller',
+    seller: favor.seller?.fullName || 'Provider',
     isFavorite: Boolean(favor.isFavorite),
   };
 }
@@ -94,7 +94,7 @@ function toSellerCard(seller: BuyerSeller): SellerCard | null {
   return {
     id,
     image: pickFavorImage(seller.profileImageUrl, seller.profileImage),
-    name: seller.name?.trim() || seller.fullName?.trim() || 'Seller',
+    name: seller.name?.trim() || seller.fullName?.trim() || 'Provider',
     badge: seller.isPro ? 'Pro' : getSellerIsTeam(seller) ? 'Team' : '',
     rating: Number.isFinite(ratingValue) ? ratingValue.toFixed(1) : '—',
     ratingValue: Number.isFinite(ratingValue) ? ratingValue : 0,
@@ -281,7 +281,7 @@ function SearchContent() {
 
   const catList = activeCategory !== 'All' ? [activeCategory] : [];
   const searchPlaceholder = searchType === 'sellers'
-    ? 'Search sellers...'
+    ? 'Search providers...'
     : catList.length > 0
       ? `Search ${catList.map(c => c.toLowerCase()).join(', ')} favors...`
       : `Search favors, services...`;
@@ -357,7 +357,7 @@ function SearchContent() {
                   ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="#667085" strokeWidth="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="#667085" strokeWidth="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="#667085" strokeWidth="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="#667085" strokeWidth="2"/></svg> All</>
                   : searchType === 'favors'
                     ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg> Favors</>
-                    : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="7" r="4" stroke="#667085" strokeWidth="2" /></svg> Sellers</>
+                    : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="7" r="4" stroke="#667085" strokeWidth="2" /></svg> Providers</>
                 }
                 <svg width="14" height="14" viewBox="0 0 12 12" fill="none" style={{ transition: 'transform 0.2s', transform: typeDropOpen ? 'rotate(180deg)' : 'none' }}><path d="M3 4.5L6 7.5L9 4.5" stroke="#667085" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </button>
@@ -446,7 +446,7 @@ function SearchContent() {
             </div>
           ) : searchType === 'sellers' && sellersError ? (
             <div style={{ textAlign: 'center', padding: '80px 0' }}>
-              <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: 600, color: '#344054', marginBottom: '8px' }}>Unable to load sellers</p>
+              <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '18px', fontWeight: 600, color: '#344054', marginBottom: '8px' }}>Unable to load providers</p>
               <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#667085' }}>Please try again in a moment.</p>
             </div>
           ) : searchType !== 'sellers' && favorsLoading ? (

@@ -14,9 +14,9 @@ const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
     links: [
       { label: 'Browse favors', href: '/explore/favors' },
       { label: 'Marketplace', href: '/marketplace' },
-      { label: 'Find sellers', href: '/explore/search?type=sellers' },
+      { label: 'Find providers', href: '/explore/search?type=sellers' },
       { label: 'Categories', href: '/categories' },
-      { label: 'Become a seller', href: '/sellers' },
+      { label: 'Become a provider', href: '/sellers' },
     ],
   },
   {

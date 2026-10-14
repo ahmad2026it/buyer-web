@@ -21,7 +21,7 @@ export function sellerId(seller: BuyerSeller): number | null {
 }
 
 function sellerName(seller: BuyerSeller): string {
-  return seller.name?.trim() || seller.fullName?.trim() || 'Seller';
+  return seller.name?.trim() || seller.fullName?.trim() || 'Provider';
 }
 
 function sellerImage(seller: BuyerSeller): string | null {

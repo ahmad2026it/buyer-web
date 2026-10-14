@@ -53,7 +53,7 @@ const CANCEL_REASONS = [
   'Booked by mistake',
   'Found another option',
   'Emergency on my end',
-  'Seller is not responding',
+  'Provider is not responding',
   'Other',
 ];
 const WITHDRAW_REASONS = [
@@ -98,7 +98,7 @@ function toBookingCard(item: BuyerBooking, tab: BuyerBookingListTab): Booking {
     id: String(item.id),
     title: item.favor?.title || 'Booking',
     image: pickFavorImage(item.images, item.favor?.images, item.favor?.favorImage),
-    seller: item.seller?.fullName || 'Seller',
+    seller: item.seller?.fullName || 'Provider',
     sellerAvatar: pickFavorImage(item.seller?.profileImageUrl, item.seller?.profileImage),
     badge: favorType.includes('team') ? 'Team' : 'Pro',
     price: Number(item.totalPrice) || 0,
@@ -351,7 +351,7 @@ function WithdrawRequestModal({
           </div>
           <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 20, color: '#101828', marginBottom: 8 }}>Request withdrawn</h2>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 28 }}>
-            This request has been withdrawn. The seller will no longer see it.
+            This request has been withdrawn. The provider will no longer see it.
           </p>
           <button
             type="button"
@@ -385,7 +385,7 @@ function WithdrawRequestModal({
 
         <div style={{ padding: 24 }}>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#667085', lineHeight: 1.6, marginBottom: 20 }}>
-            This will cancel your pending booking request. The seller will no longer see it.
+            This will cancel your pending booking request. The provider will no longer see it.
           </p>
 
           <div style={{ marginBottom: reason === 'Other' ? 18 : 0 }}>
@@ -669,8 +669,8 @@ export default function BookingsPage() {
   ];
 
   const emptyProps: Record<typeof tab, { icon: 'calendar'|'request'|'history'; title: string; description: string }> = {
-    upcoming: { icon: 'calendar', title: 'No upcoming bookings',  description: 'Accepted bookings will appear here once a seller confirms your request.' },
-    requests: { icon: 'request',  title: 'No booking requests',   description: 'Requests you send will appear here until a seller responds.' },
+    upcoming: { icon: 'calendar', title: 'No upcoming bookings',  description: 'Accepted bookings will appear here once a provider confirms your request.' },
+    requests: { icon: 'request',  title: 'No booking requests',   description: 'Requests you send will appear here until a provider responds.' },
     history:  { icon: 'history',  title: 'No history yet',        description: 'Completed and cancelled bookings will appear here.' },
   };
 

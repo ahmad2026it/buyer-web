@@ -252,7 +252,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       </div>
       <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 20, color: '#101828', marginBottom: 10 }}>No custom favors yet</h3>
       <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', marginBottom: 28, maxWidth: 360, margin: '0 auto 28px' }}>
-        Post a task and let sellers come to you with their offers.
+        Post a task and let providers come to you with their offers.
       </p>
       <button
         onClick={onCreate}
@@ -365,7 +365,7 @@ export default function CustomFavorsPage() {
                   My Custom Favors
                 </h1>
                 <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085' }}>
-                  Post tasks and let sellers apply — you pick who does the job.
+                  Post tasks and let providers apply — you pick who does the job.
                 </p>
               </div>
               <button

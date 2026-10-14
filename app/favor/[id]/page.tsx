@@ -136,7 +136,7 @@ function relatedReviews(favor: BuyerRelatedFavor): number {
 }
 
 function relatedSellerName(favor: BuyerRelatedFavor): string {
-  return favor.seller?.fullName || favor.user?.fullName || "Seller";
+  return favor.seller?.fullName || favor.user?.fullName || "Provider";
 }
 
 function relatedSellerAvatar(favor: BuyerRelatedFavor): string | null {
@@ -207,7 +207,7 @@ export default function FavorDetailPage() {
   const total = startingPrice;
 
   const sellerName =
-    favor?.seller?.fullName || favor?.user?.fullName || "Seller";
+    favor?.seller?.fullName || favor?.user?.fullName || "Provider";
   const sellerAvatar = pickProfileImage(favor?.seller, favor?.user);
   const sellerId = favor?.seller?.id || favor?.user?.id;
   const sellerBadge = favor?.seller?.isOnline ? "Online" : "";
