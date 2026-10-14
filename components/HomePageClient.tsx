@@ -40,9 +40,9 @@ const STATUS_CFG: Record<HomeBookingStatus, { label: string; bg: string; color: 
   InProgress:        { label: 'In Progress',         bg: '#FFF4ED', color: '#C4320A', border: '#F9DBAF', dot: '#C4320A' },
   Upcoming:          { label: 'Upcoming',            bg: '#ECFDF3', color: '#079455', border: '#A9EFC5', dot: '#079455' },
   Pending:           { label: 'Pending',             bg: '#FFFAEB', color: '#B54708', border: '#FEDF89', dot: '#B54708' },
-  DeclinedBySeller:  { label: 'Declined by seller',  bg: '#FEF3F2', color: '#B42318', border: '#FECDCA', dot: '#B42318' },
+  DeclinedBySeller:  { label: 'Declined by provider',  bg: '#FEF3F2', color: '#B42318', border: '#FECDCA', dot: '#B42318' },
   CancelledByBuyer:  { label: 'Cancelled by buyer',  bg: '#F2F4F7', color: '#667085', border: '#D0D5DD', dot: '#667085' },
-  CancelledBySeller: { label: 'Cancelled by seller', bg: '#F2F4F7', color: '#667085', border: '#D0D5DD', dot: '#667085' },
+  CancelledBySeller: { label: 'Cancelled by provider', bg: '#F2F4F7', color: '#667085', border: '#D0D5DD', dot: '#667085' },
   Cancelled:         { label: 'Cancelled',           bg: '#F2F4F7', color: '#667085', border: '#D0D5DD', dot: '#667085' },
   Complete:          { label: 'Complete',            bg: '#F9F5FF', color: '#6941C6', border: '#E9D7FE', dot: '#6941C6' },
   Completed:         { label: 'Completed',           bg: '#EEF4FF', color: '#3538CD', border: '#C7D7FE', dot: '#3538CD' },
@@ -83,7 +83,7 @@ function toHomeBooking(item: BuyerBooking) {
     image: pickFavorImage(item.images, item.favor?.images, item.favor?.favorImage),
     date: formatFavorDate(item.favorDate),
     time: formatFavorTime(item.favorTime),
-    sellerName: item.seller?.fullName || 'Seller',
+    sellerName: item.seller?.fullName || 'Provider',
     sellerAvatar: pickFavorImage(item.seller?.profileImageUrl, item.seller?.profileImage),
     price: Number(item.totalPrice) || 0,
   };
@@ -225,7 +225,7 @@ export default function HomePageClient({ seoSlot, faqSlot, howItWorksSlot }: Hom
                       value={query}
                       onChange={e => setQuery(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
-                      placeholder="Search favors, services, sellers..."
+                      placeholder="Search favors, services, providers..."
                       style={{ flex: 1, border: 'none', outline: 'none', fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#101828', background: 'transparent' }}
                     />
                     {query && (
@@ -244,7 +244,7 @@ export default function HomePageClient({ seoSlot, faqSlot, howItWorksSlot }: Hom
                       ) : searchType === 'favors' ? (
                         <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Favors</>
                       ) : (
-                        <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="#667085" strokeWidth="2"/></svg> Sellers</>
+                        <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="#667085" strokeWidth="2"/></svg> Providers</>
                       )}
                       <svg width="14" height="14" viewBox="0 0 12 12" fill="none" style={{ transition: 'transform 0.2s', transform: typeDropOpen ? 'rotate(180deg)' : 'none' }}><path d="M3 4.5L6 7.5L9 4.5" stroke="#667085" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </button>
@@ -328,7 +328,7 @@ export default function HomePageClient({ seoSlot, faqSlot, howItWorksSlot }: Hom
                   ) : homeBookings.length === 0 ? (
                     <div style={{ gridColumn: '1 / -1', background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '48px 24px', textAlign: 'center' }}>
                       <h3 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 16, color: '#101828', margin: '0 0 8px' }}>No upcoming bookings</h3>
-                      <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', margin: 0 }}>Accepted bookings will appear here once a seller confirms your request.</p>
+                      <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', margin: 0 }}>Accepted bookings will appear here once a provider confirms your request.</p>
                     </div>
                   ) : homeBookings.map(bk => {
                     const cfg = STATUS_CFG[bk.status];

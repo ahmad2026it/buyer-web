@@ -97,10 +97,10 @@ export default function AllSellersPage() {
                   Our Providers
                 </p>
                 <h1 className="listing-page-title">
-                  All Sellers
+                  All Providers
                 </h1>
                 <p style={{ fontFamily: FONT, fontSize: '15px', color: '#667085' }}>
-                  Hire the top talent from our pool of sellers.
+                  Hire the top talent from our pool of providers.
                 </p>
               </div>
 
@@ -125,7 +125,7 @@ export default function AllSellersPage() {
 
             <ListingSearchBar
               value={query}
-              placeholder="Search sellers..."
+              placeholder="Search providers..."
               onChange={setQuery}
               onSubmit={applySearch}
               onClear={clearSearch}
@@ -141,10 +141,10 @@ export default function AllSellersPage() {
           ) : isError ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px', textAlign: 'center' }}>
               <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>
-                Could not load sellers
+                Could not load providers
               </h3>
               <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085', marginBottom: 20 }}>
-                There was a problem fetching sellers. Please try again.
+                There was a problem fetching providers. Please try again.
               </p>
               <button
                 type="button"
@@ -161,7 +161,7 @@ export default function AllSellersPage() {
           ) : visibleSellers.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px', textAlign: 'center' }}>
               <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: '#101828', marginBottom: 8 }}>
-                {searching ? 'No matching sellers' : 'No sellers yet'}
+                {searching ? 'No matching providers' : 'No providers yet'}
               </h3>
               <p style={{ fontFamily: FONT, fontSize: 14, color: '#667085' }}>
                 {searching

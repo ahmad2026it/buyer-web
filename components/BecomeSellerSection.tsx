@@ -100,7 +100,7 @@ export default function BecomeSellerSection() {
                   textTransform: 'uppercase',
                 }}
               >
-                Join as Seller
+                Join as Provider
               </span>
             </div>
 
@@ -181,7 +181,7 @@ export default function BecomeSellerSection() {
                   el.style.color = 'rgba(255,255,255,0.8)';
                 }}
               >
-                Learn more about becoming a seller
+                Learn more about becoming a provider
               </a>
             </div>
 
@@ -295,7 +295,7 @@ export default function BecomeSellerSection() {
                       marginTop: '4px',
                     }}
                   >
-                    Earned by top sellers last month
+                    Earned by top providers last month
                   </p>
                 </div>
 

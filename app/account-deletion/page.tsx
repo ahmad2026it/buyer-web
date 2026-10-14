@@ -8,7 +8,7 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = buildPageMetadata({
   title: "Account Deletion",
   description:
-    "Request permanent deletion of your WhoCan Buyer or WhoCan Seller account and related data.",
+    "Request permanent deletion of your WhoCan Buyer or WhoCan Provider account and related data.",
   path: "/account-deletion",
 });
 
@@ -22,7 +22,7 @@ const buyerSteps = [
 ];
 
 const sellerSteps = [
-  "Open the WhoCan Seller app.",
+  "Open the WhoCan Provider app.",
   "Go to Profile → Settings.",
   "Choose Delete account and follow the confirmation steps.",
 ];
@@ -125,7 +125,7 @@ export default function AccountDeletionPage() {
             }}
           >
             You can request permanent deletion of a WhoCan Buyer account or a
-            WhoCan Seller account. Buyer and Seller are separate apps. If you
+            WhoCan Provider account. Buyer and Provider are separate apps. If you
             use both, delete each account or say so in your email.
           </p>
 
@@ -142,17 +142,17 @@ export default function AccountDeletionPage() {
             playLabel="Buyer app on Google Play"
           />
 
-          <h2 style={headingStyle}>WhoCan Seller app</h2>
+          <h2 style={headingStyle}>WhoCan Provider app</h2>
           <p style={bodyStyle}>
-            Use these steps in the Seller app, which people use to offer
+            Use these steps in the Provider app, which people use to offer
             services and manage jobs.
           </p>
           <StepList steps={sellerSteps} />
           <StoreLinks
             apple={APP_STORE_LINKS.seller.apple}
             play={APP_STORE_LINKS.seller.play}
-            appleLabel="Seller app on the App Store"
-            playLabel="Seller app on Google Play"
+            appleLabel="Provider app on the App Store"
+            playLabel="Provider app on Google Play"
           />
 
           <h2 style={headingStyle}>Request by email</h2>
@@ -166,15 +166,15 @@ export default function AccountDeletionPage() {
             </a>{" "}
             with the subject line &quot;Account deletion request&quot;. Include
             the email or phone number on the account, and say whether the
-            request is for the Buyer app, the Seller app, or both.
+            request is for the Buyer app, the Provider app, or both.
           </p>
 
           <h2 style={headingStyle}>What we delete</h2>
           <p style={bodyStyle}>
             After we confirm the request is yours, we permanently delete or
             anonymize the profile data for that account. For a Buyer account
-            that includes your buyer profile. For a Seller account that
-            includes your seller profile and the services you listed. Some
+            that includes your buyer profile. For a Provider account that
+            includes your provider profile and the services you listed. Some
             records may be kept when the law requires it, including records
             needed for disputes, payments, or regulatory compliance.
           </p>

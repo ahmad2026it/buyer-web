@@ -210,7 +210,7 @@ function toDetailedBooking(
     lat: parseCoord(item.lat) ?? parseCoord(item.favor?.lat),
     lng: parseCoord(item.lng) ?? parseCoord(item.favor?.lng),
     isTeam,
-    sellerName: item.seller?.fullName || "Seller",
+    sellerName: item.seller?.fullName || "Provider",
     sellerAvatar: pickSellerProfileImage(item.seller),
     sellerBadge: isTeam ? "Team" : "Pro",
     teamName: isTeam ? item.seller?.fullName : undefined,
@@ -258,7 +258,7 @@ function getDaysUntil(dateStr: string) {
 }
 const CANCEL_REASONS = [
   "Service not started on time",
-  "Seller is not responding",
+  "Provider is not responding",
   "Emergency on my end",
   "Changed plans",
   "Not satisfied with the service",
@@ -841,7 +841,7 @@ function SellerSummary({
   messagingDisabled?: boolean;
 }) {
   return (
-    <Section title={booking.isTeam ? "Team" : "Seller"}>
+    <Section title={booking.isTeam ? "Team" : "Provider"}>
       {booking.isTeam ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div
@@ -1332,7 +1332,7 @@ function ThreeDotMenu({ onReport }: { onReport: () => void }) {
                   strokeLinecap="round"
                 />
               </svg>
-              Report Seller
+              Report Provider
             </button>
           </div>
         </>
@@ -1443,7 +1443,7 @@ function MarkCompleteModal({
                 margin: 0,
               }}
             >
-              {isRateMode ? "Rate seller" : "Mark favor completed"}
+              {isRateMode ? "Rate provider" : "Mark favor completed"}
             </h2>
             <ModalCloseBtn onClose={isSubmitting ? () => undefined : onClose} />
           </div>
@@ -1464,8 +1464,8 @@ function MarkCompleteModal({
             }}
           >
             {isRateMode
-              ? "Please provide your valuable feedback about the seller and the service."
-              : "You can mark this favor complete now. Rating the seller is optional and can be done later."}
+              ? "Please provide your valuable feedback about the provider and the service."
+              : "You can mark this favor complete now. Rating the provider is optional and can be done later."}
           </p>
 
           <p
@@ -1698,7 +1698,7 @@ function MarkCompleteModal({
             onClick={async () => {
               if (ratingRequired && rating < 1) {
                 showToast(
-                  "Please rate the seller before submitting.",
+                  "Please rate the provider before submitting.",
                   "warning",
                 );
                 return;
@@ -1862,7 +1862,7 @@ function CompletedSuccessModal({
         >
           {didReview
             ? "Thanks for your feedback. Your review has been submitted."
-            : "This favor is complete. You can rate the seller anytime from this booking."}
+            : "This favor is complete. You can rate the provider anytime from this booking."}
         </p>
         <button
           onClick={onClose}
@@ -2650,7 +2650,7 @@ function ReportModal({
               value={message}
               disabled={isSubmitting}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Seller behaved inappropriately"
+              placeholder="Provider behaved inappropriately"
               style={{
                 width: "100%",
                 minHeight: 90,
@@ -2940,7 +2940,7 @@ function WithdrawModal({
               marginBottom: 20,
             }}
           >
-            This will cancel your pending booking request. The seller will no
+            This will cancel your pending booking request. The provider will no
             longer see it.
           </p>
           <div style={{ marginBottom: reason === "Other" ? 18 : 0 }}>
@@ -3301,7 +3301,7 @@ export default function BookingDetailPage() {
               marginBottom: 20,
             }}
           >
-            Sign in to see booking details, status, and seller information.
+            Sign in to see booking details, status, and provider information.
           </p>
           <button
             type="button"
@@ -3558,7 +3558,7 @@ export default function BookingDetailPage() {
   };
   const handleAddReview = async (review: CompleteReviewPayload) => {
     if (review.rating < 1) {
-      showToast("Please rate the seller before submitting.", "warning");
+      showToast("Please rate the provider before submitting.", "warning");
       return false;
     }
     try {
@@ -3761,14 +3761,14 @@ export default function BookingDetailPage() {
         bg: "#FFFAEB",
         border: "#FEDF89",
         color: "#B54708",
-        text: "Awaiting seller response",
+        text: "Awaiting provider response",
         iconPath: "M12 8v4M12 16h.01",
       },
       DeclinedBySeller: {
         bg: "#FEF3F2",
         border: "#FECDCA",
         color: "#B42318",
-        text: "The seller declined this request",
+        text: "The provider declined this request",
         iconPath: "M15 9l-6 6M9 9l6 6",
       },
       CancelledByBuyer: {
@@ -3782,7 +3782,7 @@ export default function BookingDetailPage() {
         bg: "#F2F4F7",
         border: "#D0D5DD",
         color: "#667085",
-        text: bk.cancelledReason || "The seller cancelled this booking",
+        text: bk.cancelledReason || "The provider cancelled this booking",
         iconPath: "M15 9l-6 6M9 9l6 6",
       },
       Cancelled: {
@@ -3796,7 +3796,7 @@ export default function BookingDetailPage() {
         bg: "#F9F5FF",
         border: "#E9D7FE",
         color: "#6941C6",
-        text: "Seller marked this favor complete. Approve or reject to finish.",
+        text: "Provider marked this favor complete. Approve or reject to finish.",
         iconPath: "M8 12l3 3 5-5",
       },
       Completed: {
@@ -4150,7 +4150,7 @@ export default function BookingDetailPage() {
                             isReviewing ? "0.7" : "1";
                         }}
                       >
-                        Rate seller
+                        Rate provider
                       </button>
                     )}
                     {booking.status !== "Pending" && canReportSeller && (
@@ -4434,7 +4434,7 @@ export default function BookingDetailPage() {
                       margin: 0,
                     }}
                   >
-                    Seller marked this favor complete. Approve or reject to
+                    Provider marked this favor complete. Approve or reject to
                     finish.
                   </p>
                 </div>
@@ -4755,7 +4755,7 @@ export default function BookingDetailPage() {
                               margin: "0 0 16px",
                             }}
                           >
-                            You haven't rated this seller yet. Your feedback
+                            You haven't rated this provider yet. Your feedback
                             helps other buyers.
                           </p>
                           <button
@@ -4775,7 +4775,7 @@ export default function BookingDetailPage() {
                               opacity: isReviewing ? 0.7 : 1,
                             }}
                           >
-                            Rate seller
+                            Rate provider
                           </button>
                         </div>
                       )}

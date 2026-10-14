@@ -156,7 +156,7 @@ function toRequestItem(item: BuyerCustomFavorRequest): RequestItem {
   return {
     id: item.id,
     sellerId: item.seller?.id ?? item.sellerUserId,
-    name: item.seller?.fullName || 'Seller',
+    name: item.seller?.fullName || 'Provider',
     avatar: item.seller?.profileImage ?? null,
     shortText: details,
     fullText: details,
@@ -348,7 +348,7 @@ function RequestModal({ req, onClose, onHire, onDecline }: { req: RequestItem; o
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
             >
-              Hire seller
+              Hire provider
             </button>
           </div>
         </div>
@@ -357,7 +357,7 @@ function RequestModal({ req, onClose, onHire, onDecline }: { req: RequestItem; o
   );
 }
 
-const DECLINE_REASONS = ['Price too high', 'Seller not a good fit', 'Changed my mind', 'Other'];
+const DECLINE_REASONS = ['Price too high', 'Provider not a good fit', 'Changed my mind', 'Other'];
 
 function DeclineModal({
   req,
@@ -589,7 +589,7 @@ function PaymentModal({
       }).unwrap();
 
       if (response.success === false) {
-        showToast(response.message || 'Could not hire this seller. Please try again.', 'error');
+        showToast(response.message || 'Could not hire this provider. Please try again.', 'error');
         return;
       }
 
@@ -663,7 +663,7 @@ function PaymentModal({
               ) : (
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                    <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Seller's offer</span>
+                    <span style={{ fontFamily: FONT, fontSize: 13, color: '#667085' }}>Provider's offer</span>
                     <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: '#344054' }}>{formatMoney(sellerOffer)}</span>
                   </div>
                   {addOns.map((addon, index) => (
@@ -1071,7 +1071,7 @@ export default function CustomFavorDetailPage() {
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="7" r="4" stroke={BRAND} strokeWidth="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke={BRAND} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </div>
                       <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#101828', marginBottom: 6 }}>No requests yet</p>
-                      <p style={{ fontFamily: FONT, fontSize: 13, color: '#98A2B3', lineHeight: 1.5 }}>Sellers will apply once they see your favor.</p>
+                      <p style={{ fontFamily: FONT, fontSize: 13, color: '#98A2B3', lineHeight: 1.5 }}>Providers will apply once they see your favor.</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

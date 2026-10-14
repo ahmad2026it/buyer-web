@@ -211,7 +211,7 @@ function ComingSoonOverlay({ label }: { label: string }) {
         {label}
       </p>
       <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', margin: 0, maxWidth: 320, lineHeight: 1.5, textWrap: 'pretty' }}>
-        Seller invites are not available yet. You can still create this favor without inviting anyone.
+        Provider invites are not available yet. You can still create this favor without inviting anyone.
       </p>
     </div>
   );
@@ -366,7 +366,7 @@ export default function NewCustomFavorPage() {
       setInvitedList(invitedIds.map((id) => ({
         id: String(id),
         sellerId: id,
-        name: `Seller #${id}`,
+        name: `Provider #${id}`,
         email: String(id),
       })));
     }
@@ -460,7 +460,7 @@ export default function NewCustomFavorPage() {
     if (!val) return;
     const sellerId = parseSellerId(val);
     if (!sellerId) {
-      showToast('Enter a numeric seller ID to invite.', 'error');
+      showToast('Enter a numeric provider ID to invite.', 'error');
       return;
     }
     const alreadyInvited = invitedList.some(i => i.email === val || i.name === val || i.sellerId === sellerId);
@@ -469,7 +469,7 @@ export default function NewCustomFavorPage() {
     setInvitedList(prev => [...prev, {
       id: sellerId ? String(sellerId) : `manual-${Date.now()}`,
       sellerId: sellerId ?? undefined,
-      name: sellerId ? `Seller #${sellerId}` : (val.includes('@') ? '' : val),
+      name: sellerId ? `Provider #${sellerId}` : (val.includes('@') ? '' : val),
       email: val,
     }]);
     if (sellerId) {
@@ -566,8 +566,8 @@ export default function NewCustomFavorPage() {
           </h2>
           <p style={{ fontFamily: FONT, fontSize: 15, color: '#667085', lineHeight: 1.7, marginBottom: 32 }}>
             {isEditing
-              ? 'Your custom favor has been updated. Sellers will see the latest details.'
-              : 'Your custom favor has been created. Sellers will start sending requests soon.'}
+              ? 'Your custom favor has been updated. Providers will see the latest details.'
+              : 'Your custom favor has been created. Providers will start sending requests soon.'}
           </p>
           <button
             onClick={() => router.push(isEditing ? `/custom-favors/${editId}` : '/custom-favors')}
@@ -648,7 +648,7 @@ export default function NewCustomFavorPage() {
       <div style={{ height: 2, flex: 1, background: step > 2 ? '#A9EFC5' : '#EAECF0', borderRadius: 1, margin: '0 8px', marginBottom: 18 }} />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
         <StepDot n={3} active={step === 3} done={false} />
-        <StepLabel label="Invite Sellers" active={step === 3} done={false} />
+        <StepLabel label="Invite Providers" active={step === 3} done={false} />
       </div>
     </div>
     </>
@@ -785,7 +785,7 @@ export default function NewCustomFavorPage() {
               {/* Photos / videos */}
               <SectionCard>
                 <p style={{ fontFamily: FONT, fontWeight: 600, fontSize: 14, color: '#101828', marginBottom: 4 }}>
-                  Add photos/videos of place/objects to help seller know more about the service requirements.
+                  Add photos/videos of place/objects to help provider know more about the service requirements.
                 </p>
                 <p style={{ fontFamily: FONT, fontSize: 13, color: '#98A2B3', marginBottom: 16, lineHeight: 1.5 }}>
                   Optional but recommended.
@@ -859,7 +859,7 @@ export default function NewCustomFavorPage() {
 
               <div style={{ background: '#F4EBFF', border: '1px solid rgba(165,74,255,0.2)', borderRadius: 14, padding: '16px 18px' }}>
                 <p style={{ fontFamily: FONT, fontWeight: 600, fontSize: 13, color: BRAND, marginBottom: 6 }}>How it works</p>
-                {['Post your task with a budget', 'Sellers apply with their offers', 'You review and pick the best fit', 'Favor is confirmed and scheduled'].map((s, i) => (
+                {['Post your task with a budget', 'Providers apply with their offers', 'You review and pick the best fit', 'Favor is confirmed and scheduled'].map((s, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: i < 3 ? 8 : 0 }}>
                     <div style={{ width: 18, height: 18, borderRadius: '50%', background: BRAND, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                       <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700, color: '#fff' }}>{i + 1}</span>
@@ -1072,9 +1072,9 @@ export default function NewCustomFavorPage() {
             {/* Left: search + invited */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <SectionCard>
-                <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 17, color: '#101828', marginBottom: 6 }}>Invite a seller <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 14, color: '#98A2B3' }}>(optional)</span></h3>
+                <h3 style={{ fontFamily: FONT, fontWeight: 700, fontSize: 17, color: '#101828', marginBottom: 6 }}>Invite a provider <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 14, color: '#98A2B3' }}>(optional)</span></h3>
                 <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', marginBottom: 16, lineHeight: 1.5 }}>
-                  Invite seller(s) to apply for this favor. Enter a seller ID.
+                  Invite provider(s) to apply for this favor. Enter a provider ID.
                 </p>
 
                 {/* Search row */}
@@ -1086,7 +1086,7 @@ export default function NewCustomFavorPage() {
                       readOnly
                       onChange={e => setInviteInput(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleInviteByInput(); }}
-                      placeholder="Type seller ID here"
+                      placeholder="Type provider ID here"
                       style={{ width: '100%', fontFamily: FONT, fontSize: 14, color: '#101828', background: '#fff', border: '1.5px solid #D0D5DD', borderRadius: PILL, padding: '11px 40px 11px 16px', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
                       onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = BRAND; }}
                       onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = '#D0D5DD'; }}
@@ -1108,7 +1108,7 @@ export default function NewCustomFavorPage() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 14, color: '#101828', marginBottom: 2 }}>
-                          {parseSellerId(inviteInput) ? `Seller #${parseSellerId(inviteInput)}` : 'Invite seller'}
+                          {parseSellerId(inviteInput) ? `Provider #${parseSellerId(inviteInput)}` : 'Invite provider'}
                         </p>
                         <p style={{ fontFamily: FONT, fontSize: 12, color: '#667085' }}>{inviteInput}</p>
                       </div>
@@ -1155,10 +1155,10 @@ export default function NewCustomFavorPage() {
             {/* Right: recommended sellers */}
             <div>
               <SectionCard>
-                <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#101828', marginBottom: 16 }}>Recommended sellers</p>
+                <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 15, color: '#101828', marginBottom: 16 }}>Recommended providers</p>
                 {recSellers.length === 0 ? (
                   <p style={{ fontFamily: FONT, fontSize: 13, color: '#667085', lineHeight: 1.6 }}>
-                    No recommended sellers yet. You can still post this favor or invite a seller by ID.
+                    No recommended providers yet. You can still post this favor or invite a provider by ID.
                   </p>
                 ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -1204,7 +1204,7 @@ export default function NewCustomFavorPage() {
               </SectionCard>
             </div>
           </div>
-          <ComingSoonOverlay label="Seller invites coming soon" />
+          <ComingSoonOverlay label="Provider invites coming soon" />
           </div>
 
           <div style={{ display: 'flex', gap: 12, maxWidth: 520 }}>

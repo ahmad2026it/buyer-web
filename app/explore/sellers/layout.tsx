@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "All Sellers",
-  description: "Browse every seller on WhoCan and hire local service providers.",
+  title: "All Providers",
+  description: "Browse every provider on WhoCan and hire local service providers.",
   path: "/explore/sellers",
 });
 

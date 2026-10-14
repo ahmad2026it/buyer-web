@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Become a Seller",
+  title: "Become a Provider",
   description:
-    "Join WhoCan as a seller, reach local customers, and grow your home-service business.",
+    "Join WhoCan as a provider, reach local customers, and grow your home-service business.",
   path: "/sellers",
 });
 

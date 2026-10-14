@@ -540,13 +540,13 @@ export default function RegisterPage() {
           >
             <img
               src={IMG_WORKER_SINGLE}
-              alt="Individual seller"
+              alt="Individual provider"
               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
             />
           </div>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '18px', color: '#101828', marginBottom: '6px' }}>Pro</p>
-            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', margin: 0 }}>I will work as an individual seller</p>
+            <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', color: '#475467', margin: 0 }}>I will work as an individual provider</p>
           </div>
         </div>
 
@@ -582,7 +582,7 @@ export default function RegisterPage() {
           >
             <img
               src={IMG_WORKER_SINGLE}
-              alt="Team of sellers"
+              alt="Team of providers"
               style={{ width: '160%', height: '100%', objectFit: 'cover', objectPosition: '-50px top', transform: 'scale(1.1)' }}
             />
           </div>

@@ -289,7 +289,7 @@ export default function FiltersModal({ onClose, onApply, initial }: Props) {
           {/* Online sellers toggle */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', gap: '16px' }}>
             <div>
-              <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 600, color: '#101828', display: 'block', lineHeight: '1.4' }}>Online sellers only</span>
+              <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 600, color: '#101828', display: 'block', lineHeight: '1.4' }}>Online providers only</span>
               <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '12px', color: '#667085' }}>See who's available right now</span>
             </div>
             <button
@@ -415,7 +415,7 @@ export default function FiltersModal({ onClose, onApply, initial }: Props) {
           <SelectField label="Sort by relevancy" value={sort} onChange={v => setSort(v as FavorSortOption)}
             options={['Recommended', 'Price: Low to High', 'Price: High to Low', 'Highest Rated', 'Most Reviews']} />
 
-          <SelectField label="Seller type" value={sellerType} onChange={setSellerType}
+          <SelectField label="Provider type" value={sellerType} onChange={setSellerType}
             options={['Any', 'Pro', 'Team']} />
 
           <SelectField label="Filter by rating" value={rating} onChange={v => setRating(v as FavorRatingOption)}

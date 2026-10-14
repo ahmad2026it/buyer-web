@@ -607,7 +607,7 @@ function RecommendedFavorCard({
           >
             <ProfileAvatar
               src={seller?.profileImageUrl}
-              name={seller?.name || "Seller"}
+              name={seller?.name || "Provider"}
               size={30}
               border="2px solid #DFBAFF"
             />
@@ -622,7 +622,7 @@ function RecommendedFavorCard({
                 whiteSpace: "nowrap",
               }}
             >
-              {seller?.name || "Seller"}
+              {seller?.name || "Provider"}
             </span>
             {badge ? (
               <span
@@ -1130,7 +1130,7 @@ export default function SellerProfilePage() {
                 marginBottom: "8px",
               }}
             >
-              Unable to load this seller
+              Unable to load this provider
             </h1>
             <p
               style={{
@@ -1479,7 +1479,7 @@ export default function SellerProfilePage() {
                             color: "#667085",
                           }}
                         >
-                          This seller has no favors yet.
+                          This provider has no favors yet.
                         </p>
                       </div>
                     ) : (

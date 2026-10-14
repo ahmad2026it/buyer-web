@@ -82,7 +82,7 @@ function toBillingTransaction(item: BuyerBillingTransaction): Transaction {
     date: formatInvoiceDate(item.createdAt),
     status: mapBillingStatus(item.status || item.paymentStatus),
     refNumber: item.referenceNumber,
-    seller: item.seller?.fullName || 'Seller',
+    seller: item.seller?.fullName || 'Provider',
     sellerAvatar: pickFavorImage(item.seller?.profileImageUrl, item.seller?.profileImage),
   };
 }

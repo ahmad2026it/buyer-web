@@ -691,7 +691,7 @@ export default function BookingPage() {
                 )}
 
                 {/* Additional notes */}
-                <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', marginBottom: 8 }}>Add any additional information you want to share with the seller.</p>
+                <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', marginBottom: 8 }}>Add any additional information you want to share with the provider.</p>
                 <textarea
                   value={note}
                   onChange={e => setNote(e.target.value)}
@@ -705,7 +705,7 @@ export default function BookingPage() {
               {/* Attach media */}
               <div className="booking-card" style={{ background: '#fff', border: '1.5px solid #EAECF0', borderRadius: 20, padding: '24px' }}>
                 <p style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: '#101828', marginBottom: 6 }}>Attach photos/videos</p>
-                <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', marginBottom: 14, lineHeight: 1.6 }}>Add photos/videos to help the seller know more about the service requirements.</p>
+                <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#667085', marginBottom: 14, lineHeight: 1.6 }}>Add photos/videos to help the provider know more about the service requirements.</p>
                 <button onClick={() => fileRef.current?.click()}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 14, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={BRAND} strokeWidth="2.5" strokeLinecap="round"/></svg>
@@ -1090,7 +1090,7 @@ export default function BookingPage() {
           </div>
           <h2 style={{ fontFamily: 'Poppins,sans-serif', fontWeight: 800, fontSize: 22, color: '#101828', marginBottom: 10, overflowWrap: 'anywhere' }}>Booking Request Sent!</h2>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#475467', lineHeight: 1.75, marginBottom: 28 }}>
-            Your booking request has been sent to <strong>{favorCard.seller}</strong>. You will be notified once the seller responds. Check the status in the <strong>Bookings</strong> tab under Requests.
+            Your booking request has been sent to <strong>{favorCard.seller}</strong>. You will be notified once the provider responds. Check the status in the <strong>Bookings</strong> tab under Requests.
           </p>
           <button onClick={() => router.push('/bookings')}
             style={{ width: '100%', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', background: GRAD, border: 'none', borderRadius: PILL, padding: 14, cursor: 'pointer', boxShadow: '0 4px 16px rgba(165,74,255,0.3)', marginBottom: 10, transition: 'opacity 0.15s' }}

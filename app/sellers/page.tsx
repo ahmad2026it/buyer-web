@@ -188,7 +188,7 @@ function SellerStoreMenu({
               marginBottom: '4px',
             }}
           >
-            WhoCan Seller app
+            WhoCan Provider app
           </p>
           <p
             style={{
@@ -260,10 +260,10 @@ function SellerNav() {
             open={registerOpen}
             onOpen={() => setRegisterOpen(true)}
             onClose={() => setRegisterOpen(false)}
-            ariaLabel="Register as a Seller"
+            ariaLabel="Register as a Provider"
             label={
               <>
-                <span className="seller-nav-label-full">Register as a Seller</span>
+                <span className="seller-nav-label-full">Register as a Provider</span>
                 <span className="seller-nav-label-short">Register</span>
               </>
             }

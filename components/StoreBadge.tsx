@@ -151,14 +151,14 @@ export function SellerStoreLinks({
       <StoreBadge
         store="apple"
         href={APP_STORE_LINKS.seller.apple}
-        label="Download the WhoCan seller app on the App Store"
+        label="Download the WhoCan provider app on the App Store"
         onDark={onDark}
         fullWidth={stacked}
       />
       <StoreBadge
         store="google"
         href={APP_STORE_LINKS.seller.play}
-        label="Get the WhoCan seller app on Google Play"
+        label="Get the WhoCan provider app on Google Play"
         onDark={onDark}
         fullWidth={stacked}
       />

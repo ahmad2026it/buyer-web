@@ -64,7 +64,7 @@ export default function FavorListingCard({
   const router = useRouter();
   const badge = sellerBadge(favor);
   const isPro = badge === 'Pro';
-  const sellerName = favor.seller?.fullName || 'Seller';
+  const sellerName = favor.seller?.fullName || 'Provider';
   const sellerAvatar = pickFavorImage(
     favor.seller?.profileImageUrl,
     favor.seller?.profileImage,

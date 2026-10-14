@@ -84,7 +84,7 @@ function conversationListingStatus(conv: BuyerConversation): string {
 
 function conversationSubtitle(conv: BuyerConversation): string {
   if (isListingConversation(conv)) return listingTitle(conv);
-  return conv.booking?.favor?.title || 'Seller';
+  return conv.booking?.favor?.title || 'Provider';
 }
 
 function messagingUnavailableCopy(conv: BuyerConversation): { banner: string; placeholder: string } {
@@ -676,7 +676,7 @@ export default function BuyerChatCenter() {
               </p>
             ) : filtered.map((conv) => {
               const isActive = conv.id === activeId;
-              const name = conv.otherParticipant?.fullName || (isListingConversation(conv) ? 'Buyer' : 'Seller');
+              const name = conv.otherParticipant?.fullName || (isListingConversation(conv) ? 'Buyer' : 'Provider');
               const handle = isListingConversation(conv)
                 ? conversationSubtitle(conv)
                 : toHandle(name);
