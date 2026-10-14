@@ -243,8 +243,10 @@ export default function SellersPage() {
                     <p>Install WhoCan Provider from the App Store or Google Play and create your account.</p>
                     <ul><li>Use the name and phone number buyers can recognize</li><li>Complete the verification the app asks for</li></ul>
                   </div>
-                  <div className="shot ill" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5" /><path d="M11 18h2" /></svg>
+                  <div className="shot">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/provider/s_signup.webp" width={520} height={1127} loading="lazy" alt="Sign up screen in the WhoCan Provider app" />
+                    <span>Sign up screen</span>
                   </div>
                 </div>
 
@@ -255,8 +257,10 @@ export default function SellersPage() {
                     <p>Tell the app where you work so nearby buyers can find you.</p>
                     <ul><li>Choose the area you can reach on time</li><li>Only list areas you can actually serve</li></ul>
                   </div>
-                  <div className="shot ill" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="10" r="2.6" /></svg>
+                  <div className="shot">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/provider/s_location.webp" width={520} height={1138} loading="lazy" alt="Add location screen in the WhoCan Provider app" />
+                    <span>Add location</span>
                   </div>
                 </div>
 
