@@ -28,7 +28,7 @@ interface AppDownload {
 
 const APP_DOWNLOADS: AppDownload[] = [
   {
-    audience: 'Buyers',
+    audience: 'Requesters',
     description: 'Hire local experts for everyday tasks.',
     icon: SearchIcon,
     iconColor: '#1570EF',
@@ -53,7 +53,7 @@ const FEATURES = [
     iconColor: '#1570EF',
     iconBg: '#EFF6FF',
     title: 'Find Local Services Instantly',
-    desc: 'Search from hundreds of verified service providers in your neighbourhood.',
+    desc: 'Search local service providers in your neighbourhood and compare what each one offers.',
   },
   {
     icon: ShieldCheckIcon,
@@ -335,7 +335,7 @@ export default function AppDownloadSection() {
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {[
-                'Browse 500+ verified service providers',
+                'Browse local service providers',
                 'Real-time booking confirmation',
                 'In-app messaging with your provider',
                 'Secure escrow payments',

@@ -55,9 +55,8 @@ export default function WhyChooseUsSection() {
 
           <div>
             <p style={{ fontFamily: FONT, fontSize: '16px', color: '#475467', lineHeight: '1.7', margin: showCards ? '0 0 20px' : 0 }}>
-              Our platform connects you with verified, background-checked local
-              service providers — so you can book with confidence, every time.
-              Quality guaranteed or your money back.
+              Compare local providers, chat before you book, and pay through the app.
+              Payment is held in escrow until the job is done.
             </p>
             {showCards && (
               <Link

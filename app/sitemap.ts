@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { loadIndexableUrls } from "@/lib/indexableUrls";
 import { absoluteUrl, PUBLIC_SITEMAP_PATHS } from "@/lib/seo";
 
+/** Update this date when the static public pages change in a meaningful way. */
+const STATIC_PAGES_LAST_MODIFIED = new Date("2026-11-03");
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const indexable = await loadIndexableUrls();
@@ -9,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = PUBLIC_SITEMAP_PATHS.map(
     ({ path, changeFrequency, priority }) => ({
       url: absoluteUrl(path),
-      lastModified: now,
+      lastModified: STATIC_PAGES_LAST_MODIFIED,
       changeFrequency,
       priority,
     }),

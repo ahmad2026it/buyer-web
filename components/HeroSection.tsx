@@ -203,7 +203,7 @@ export default function HeroSection() {
                   backgroundClip: 'text',
                 }}
               >
-                Buyers and Providers
+                Requesters and Providers
               </span>
             </h1>
 
@@ -219,7 +219,7 @@ export default function HeroSection() {
                 maxWidth: '480px',
               }}
             >
-              WhoCan connects Buyers with Providers for local services, starting
+              WhoCan connects Requesters with Providers for local services, starting
               in Maryland. Book cleaning, handyman work, lawn care, and car
               detailing, or offer your own services.
             </p>
@@ -404,9 +404,9 @@ export default function HeroSection() {
               }}
             >
               {[
-                { value: '1,000+', label: 'App Downloads' },
-                { value: '751+', label: 'Active Users' },
-                { value: '4.8★', label: 'Avg. Rating' },
+                { value: 'Maryland', label: 'Now launching' },
+                { value: 'iOS + Android', label: 'Two apps' },
+                { value: 'Escrow', label: 'Secure payments' },
               ].map((stat) => (
                 <div key={stat.label}>
                   <div

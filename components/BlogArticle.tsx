@@ -359,7 +359,7 @@ export default function BlogArticle({
                 Ready to book a service?
               </h3>
               <p style={{ fontFamily: FONT, fontSize: 14, color: 'rgba(255,255,255,0.82)', lineHeight: 1.6 }}>
-                Find verified providers near you and get the job done right, the first time.
+                Find local providers near you, compare what is included, and request a time.
               </p>
             </div>
             <button

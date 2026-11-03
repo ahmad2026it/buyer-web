@@ -7,7 +7,7 @@ export const SITE_DEFAULT_TITLE =
   "WhoCan — Local Services Marketplace in Maryland";
 
 export const SITE_DEFAULT_DESCRIPTION =
-  "WhoCan connects Buyers with Providers on a local services marketplace, starting in Maryland. Find cleaning, handyman help, lawn care, and car detailing.";
+  "WhoCan connects Requesters with Providers on a local services marketplace, starting in Maryland. Find cleaning, handyman help, lawn care, and car detailing.";
 
 export const ORGANIZATION_ALTERNATE_NAME = "WhoCan App";
 
