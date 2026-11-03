@@ -121,6 +121,26 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
           "Pick a time when someone can be there if the job needs a decision, such as where a shelf should sit. If you will not be home, say where the items are and how the Provider should leave the space.",
         ],
       },
+      {
+        heading: "What affects the price of a handyman job",
+        paragraphs: [
+          "The price usually depends on how long the job takes, whether the Provider brings parts or tools, how far they travel, and how easy the work is to reach. A boxed bookshelf on the ground floor is a different job from a mounted TV on a brick wall.",
+          "Ask for a price for the whole job rather than only an hourly rate, and agree in the chat what is included. WhoCan does not set Provider prices, so compare the offers you receive and read each description.",
+        ],
+      },
+      {
+        heading: "Handyman help around Maryland",
+        paragraphs: [
+          "WhoCan is launching in Maryland, and which Providers you see depends on your area. Requesters in places such as Baltimore, Annapolis, Columbia, Frederick and Rockville can post a request and see who responds, but availability varies by town and by week.",
+          "If nobody is listed near you yet, post the job anyway with a clear description and photo. Local Providers can respond when they are free, and you can compare before you choose.",
+        ],
+      },
+      {
+        heading: "Before the visit",
+        paragraphs: [
+          "Clear the space around the work, keep pets away from tools, and have the hardware, instructions or product box ready. Confirm the arrival window in the chat and agree what to do if the job turns out to need a licensed trade.",
+        ],
+      },
     ],
     faqs: [
       {
@@ -210,6 +230,26 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
         paragraphs: [
           "List the packages you actually offer and the vehicles you turn down. If you are mobile, say what you bring and what the Requester must provide, such as a hose bib or a covered space in bad weather.",
           "Be specific about add-ons: pet hair, child seats, ceramic spray, and headlight haze. A listing that only says “detail” produces requests you then have to re-quote.",
+        ],
+      },
+      {
+        heading: "What affects the price of car detailing",
+        paragraphs: [
+          "The size of the vehicle, its condition, the services you pick (interior, exterior, or both) and whether the Provider travels to you all change the price. Heavy pet hair, stains and odors take longer than a regular clean.",
+          "Ask for a price for the exact package you want, confirm what is included, and compare the offers you receive. WhoCan does not set Provider prices.",
+        ],
+      },
+      {
+        heading: "Car detailing around Maryland",
+        paragraphs: [
+          "WhoCan is launching in Maryland, and which Providers you see depends on your area. Requesters in places such as Baltimore, Annapolis, Columbia, Frederick and Rockville can post a request and see who responds, but availability varies by town and by week.",
+          "Mobile detailing needs a safe place to work, and some Providers need access to water or power. Say in the request if you park on the street, in a driveway or in a shared lot.",
+        ],
+      },
+      {
+        heading: "Before the appointment",
+        paragraphs: [
+          "Remove personal items, loose papers and valuables from the car. Tell the Provider about any existing scratches or damage and take dated photos beforehand. Confirm the time window in the chat.",
         ],
       },
     ],
