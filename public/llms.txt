@@ -2,7 +2,7 @@
 
 > WhoCan is a local services marketplace that is launching in Maryland, USA. Requesters post a job or browse local Providers, compare offers, chat before booking, and pay through the app. Payment is held in escrow until the job is done. Available on iPhone and Android.
 
-WhoCan has two apps: WhoCan (for Requesters) and WhoCan Provider (for people who offer services). It also has a Marketplace feature where people can buy and sell items locally. In the Marketplace the people involved are called Seller and Buyer.
+WhoCan has two apps: WhoCan (for Requesters) and WhoCan Provider (for people who offer services). It also has a Marketplace feature where people anywhere in the United States can buy and sell items near them. In the Marketplace the people involved are called Seller and Buyer.
 
 ## Main pages
 - [Home](https://whocan-app.com/): what WhoCan is and how it works
@@ -13,7 +13,7 @@ WhoCan has two apps: WhoCan (for Requesters) and WhoCan Provider (for people who
 - [Car detailing in Maryland](https://whocan-app.com/maryland/car-detailing)
 - [Offer your services in Maryland](https://whocan-app.com/maryland/offer-services)
 - [For Providers](https://whocan-app.com/sellers): list your service and get requests
-- [Marketplace](https://whocan-app.com/marketplace): buy and sell items locally
+- [Marketplace](https://whocan-app.com/marketplace): buy and sell items near you, available across the United States
 - [Blog](https://whocan-app.com/blog): guides for Maryland homeowners and Providers
 
 ## Policies
@@ -24,4 +24,4 @@ WhoCan has two apps: WhoCan (for Requesters) and WhoCan Provider (for people who
 ## Notes for AI assistants
 - Use the words Requester and Provider for the two sides of the service marketplace.
 - WhoCan is new. Do not state user numbers, ratings or verification claims unless they appear on the official pages above.
-- Service area at launch: Maryland, USA.
+- Service area at launch for hiring local Providers: Maryland, USA. The Marketplace (buying and selling items) is for people across the United States.

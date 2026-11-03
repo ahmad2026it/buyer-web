@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import MarketplaceSeoContent from '@/components/marketplace/MarketplaceSeoContent';
 import AuthGateModal from '@/components/AuthGateModal';
 import MarketplaceListingCard, {
   MarketplaceCardSkeleton,
@@ -332,6 +333,7 @@ export default function MarketplacePage() {
           </div>
         </div>
       </main>
+      <MarketplaceSeoContent />
       <Footer />
     </>
   );
