@@ -67,7 +67,7 @@ const isPreviewEnabled = (): boolean =>
 export const fetchPublicFaqs = cache(async (): Promise<PublicFaq[]> => {
   try {
     const response = await fetch(`${publicApiOrigin()}/api/public/faqs`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 300 },
     });
     const faqs = response.ok ? parsePublicFaqs(await response.json()) : [];
     return faqs.length === 0 && isPreviewEnabled() ? PREVIEW_FAQS : faqs;
