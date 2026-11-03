@@ -97,7 +97,7 @@ export default function HomeSeoContent() {
                 margin: "0 0 14px",
               }}
             >
-              WhoCan connects Buyers with Providers for local services. Buyers
+              WhoCan connects Requesters with Providers for local services. Requesters
               search favors, compare what is included, and request a time.
               Providers publish the work they do and the area they cover,
               starting in Maryland.

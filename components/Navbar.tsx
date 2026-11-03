@@ -631,7 +631,7 @@ function EditLocationModal({
 const EXPLORE_ITEMS = [
   { label: 'Marketplace', Icon: StoreIcon,      desc: 'Buy & sell items near you', href: '/marketplace' },
   { label: 'Providers',    Icon: UserIcon,        desc: 'Browse service providers', href: '/explore/search?type=sellers' },
-  { label: 'Buyers',     Icon: ShoppingBagIcon, desc: 'Find what you need',       href: '/explore/search'             },
+  { label: 'Services',   Icon: ShoppingBagIcon, desc: 'Find what you need',       href: '/explore/search'             },
   { label: 'Categories', Icon: GridIcon,        desc: 'All service categories',   href: '/categories'                 },
   { label: 'Blog',       Icon: FileTextIcon,    desc: 'Guides and how-tos',       href: '/blog'                        },
 ];

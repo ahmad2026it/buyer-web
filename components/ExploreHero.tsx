@@ -79,7 +79,7 @@ export default function ExploreHero() {
           <br />for every job
         </h1>
         <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', color: '#475467', marginBottom: '40px', lineHeight: '1.6' }}>
-          Browse thousands of verified service providers and favors — ready to hire today.
+          Browse local service providers and favors in Maryland, compare what is included, and request a time.
         </p>
 
         {/* Search bar */}

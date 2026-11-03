@@ -31,22 +31,22 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
     slug: "offer-services",
     title: "Offer Services in Maryland",
     description:
-      "How Providers list cleaning, handyman, lawn care, and car detailing on WhoCan and get booked by Buyers in Maryland.",
+      "How Providers list cleaning, handyman, lawn care, and car detailing on WhoCan and get booked by Requesters in Maryland.",
     heading: "Offer local services in Maryland",
     lede:
-      "WhoCan is where Providers publish a service and Buyers book it. If you already do the work around Maryland, a clear listing is more useful than a vague profile.",
+      "WhoCan is where Providers publish a service and Requesters book it. If you already do the work around Maryland, a clear listing is more useful than a vague profile.",
     sections: [
       {
         heading: "What to put in a listing",
         paragraphs: [
-          "Name the job in plain language: house cleaning, furniture assembly, lawn mowing, or interior car detailing. Say what is included, what is not, and the area you can actually reach. Buyers compare listings before they book, so a specific description saves a round of messages.",
-          "Add the details a Buyer cannot guess. For cleaning, say whether you bring supplies. For handyman work, list the repairs you take and the ones you refer out. For lawn care, say if you haul clippings. For detailing, say whether you come to the driveway or need a garage.",
+          "Name the job in plain language: house cleaning, furniture assembly, lawn mowing, or interior car detailing. Say what is included, what is not, and the area you can actually reach. Requesters compare listings before they book, so a specific description saves a round of messages.",
+          "Add the details a Requester cannot guess. For cleaning, say whether you bring supplies. For handyman work, list the repairs you take and the ones you refer out. For lawn care, say if you haul clippings. For detailing, say whether you come to the driveway or need a garage.",
         ],
       },
       {
         heading: "How a booking starts",
         paragraphs: [
-          "A Buyer searches favors, opens a listing, and requests a time. You see the request with the address, the date, and whatever they wrote about the job. Accept work you can finish, and decline work that is outside your tools, your license, or your travel range.",
+          "A Requester searches favors, opens a listing, and requests a time. You see the request with the address, the date, and whatever they wrote about the job. Accept work you can finish, and decline work that is outside your tools, your license, or your travel range.",
           "Keep the service area honest. Maryland includes dense neighborhoods and long drives between towns. A listing that says you cover the whole state will collect requests you cannot reach on time.",
         ],
       },
@@ -63,10 +63,10 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
     slug: "cleaning",
     title: "House Cleaning in Maryland",
     description:
-      "How to book house cleaning on WhoCan in Maryland, and what Buyers and Providers should agree on before the visit.",
+      "How to book house cleaning on WhoCan in Maryland, and what Requesters and Providers should agree on before the visit.",
     heading: "House cleaning in Maryland",
     lede:
-      "A useful cleaning booking names the home, the rooms, and who brings the supplies. WhoCan connects Buyers with cleaning Providers, starting in Maryland.",
+      "A useful cleaning booking names the home, the rooms, and who brings the supplies. WhoCan connects Requesters with cleaning Providers, starting in Maryland.",
     sections: [
       {
         heading: "What to tell a cleaner before you book",
@@ -103,7 +103,7 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
       {
         heading: "Jobs that fit a handyman listing",
         paragraphs: [
-          "Furniture assembly, TV mounting, curtain rods, shelf installs, door adjustments, caulking, and replacing a similar fixture are the kinds of tasks a Buyer can describe in one request. Photos of the item, the wall, and the hardware help the Provider bring the right tools.",
+          "Furniture assembly, TV mounting, curtain rods, shelf installs, door adjustments, caulking, and replacing a similar fixture are the kinds of tasks a Requester can describe in one request. Photos of the item, the wall, and the hardware help the Provider bring the right tools.",
           "Say what you already own. If the shelf, the bracket, or the new faucet is on site, the visit is labor. If the Provider is expected to buy parts, that has to be in the request, including who pays for the materials.",
         ],
       },
@@ -157,7 +157,7 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
       "What to agree on before booking lawn mowing, edging, or leaf cleanup with a WhoCan Provider in Maryland.",
     heading: "Lawn care in Maryland",
     lede:
-      "Lawn care bookings work when the yard, the schedule, and the cleanup are specific. WhoCan connects Buyers with lawn Providers, starting in Maryland.",
+      "Lawn care bookings work when the yard, the schedule, and the cleanup are specific. WhoCan connects Requesters with lawn Providers, starting in Maryland.",
     sections: [
       {
         heading: "Match the job to the season",
@@ -167,7 +167,7 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
         ],
       },
       {
-        heading: "What Buyers should specify",
+        heading: "What Requesters should specify",
         paragraphs: [
           "Describe the yard: front only, back only, or both, and whether there are gates, slopes, or a fenced dog. Say if clippings should be bagged, left on the lawn, or taken away. Mention irrigation heads, invisible fencing, and toys that should not be mowed over.",
           "If this is a one-time catch-up after weeks of growth, say so. Tall grass takes longer and can need a different mower setting than a maintained lawn. A Provider can price that only if the request is honest.",
@@ -208,7 +208,7 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
       {
         heading: "What detailing Providers should publish",
         paragraphs: [
-          "List the packages you actually offer and the vehicles you turn down. If you are mobile, say what you bring and what the Buyer must provide, such as a hose bib or a covered space in bad weather.",
+          "List the packages you actually offer and the vehicles you turn down. If you are mobile, say what you bring and what the Requester must provide, such as a hose bib or a covered space in bad weather.",
           "Be specific about add-ons: pet hair, child seats, ceramic spray, and headlight haze. A listing that only says “detail” produces requests you then have to re-quote.",
         ],
       },

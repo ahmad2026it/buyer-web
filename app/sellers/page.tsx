@@ -10,7 +10,7 @@ const ANDROID = APP_STORE_LINKS.seller.play;
 const FAQS = [
   {
     q: 'What is WhoCan Provider?',
-    a: 'WhoCan Provider is the app for service providers. You list a service, set your own price, receive booking requests from local buyers, and get paid through the app.',
+    a: 'WhoCan Provider is the app for service providers. You list a service, set your own price, receive booking requests from local Requesters, and get paid through the app.',
   },
   {
     q: 'Is this a job?',
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: 'How do I get paid?',
-    a: 'Buyers pay in the app and the payment is held in escrow. After you mark the job completed and the buyer approves it, the payment is released to you.',
+    a: 'Requesters pay in the app and the payment is held in escrow. After you mark the job completed and the Requester approves it, the payment is released to you.',
   },
   {
     q: 'Do I need a license?',
@@ -169,7 +169,7 @@ export default function SellersPage() {
               <div style={{ marginTop: 20 }}>
                 <div className="node">
                   <div className="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg></div>
-                  <div><b>A buyer needs help</b><small>Posts a request or books a listing near them</small></div>
+                  <div><b>A Requester needs help</b><small>Posts a request or books a listing near them</small></div>
                 </div>
               </div>
               <div className="link" />
@@ -180,7 +180,7 @@ export default function SellersPage() {
               <div className="link" />
               <div className="node you">
                 <div className="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z" /></svg></div>
-                <div><b>You, the provider</b><small>Accept the job, do the work, get paid after the buyer approves</small></div>
+                <div><b>You, the provider</b><small>Accept the job, do the work, get paid after the Requester approves</small></div>
               </div>
             </div>
           </div>
@@ -214,7 +214,7 @@ export default function SellersPage() {
               <div className="rv"><i>1</i><b>A phone</b><p>iPhone or Android with the WhoCan Provider app.</p></div>
               <div className="rv" style={{ transitionDelay: '.08s' }}><i>2</i><b>A service you offer</b><p>One clear thing you do well, such as deep cleaning.</p></div>
               <div className="rv" style={{ transitionDelay: '.16s' }}><i>3</i><b>Your service area</b><p>The location you can actually reach on time.</p></div>
-              <div className="rv" style={{ transitionDelay: '.24s' }}><i>4</i><b>Photos of your work</b><p>Clear photos help buyers choose you.</p></div>
+              <div className="rv" style={{ transitionDelay: '.24s' }}><i>4</i><b>Photos of your work</b><p>Clear photos help Requesters choose you.</p></div>
             </div>
           </div>
         </section>
@@ -241,7 +241,7 @@ export default function SellersPage() {
                     <span className="n"><b>1</b>STEP ONE</span>
                     <h3>Download and sign up</h3>
                     <p>Install WhoCan Provider from the App Store or Google Play and create your account.</p>
-                    <ul><li>Use the name and phone number buyers can recognize</li><li>Complete the verification the app asks for</li></ul>
+                    <ul><li>Use the name and phone number Requesters can recognize</li><li>Complete the verification the app asks for</li></ul>
                   </div>
                   <div className="shot">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -254,7 +254,7 @@ export default function SellersPage() {
                   <div>
                     <span className="n"><b>2</b>STEP TWO</span>
                     <h3>Add your location</h3>
-                    <p>Tell the app where you work so nearby buyers can find you.</p>
+                    <p>Tell the app where you work so nearby Requesters can find you.</p>
                     <ul><li>Choose the area you can reach on time</li><li>Only list areas you can actually serve</li></ul>
                   </div>
                   <div className="shot">
@@ -268,7 +268,7 @@ export default function SellersPage() {
                   <div>
                     <span className="n"><b>3</b>STEP THREE</span>
                     <h3>Create your service</h3>
-                    <p>This is your listing. Buyers compare it with others before they book.</p>
+                    <p>This is your listing. Requesters compare it with others before they book.</p>
                     <ul>
                       <li>Pick the category and sub categories that fit</li>
                       <li>Write a clear title that starts with &quot;I will…&quot;</li>
@@ -288,8 +288,8 @@ export default function SellersPage() {
                   <div>
                     <span className="n"><b>4</b>STEP FOUR</span>
                     <h3>Review and accept requests</h3>
-                    <p>A buyer&apos;s request shows the job, the place, the date and what they need.</p>
-                    <ul><li>Check the details and the location</li><li>Chat with the buyer if something is unclear</li><li>Accept what you can do well, decline the rest</li></ul>
+                    <p>A Requester&apos;s request shows the job, the place, the date and what they need.</p>
+                    <ul><li>Check the details and the location</li><li>Chat with the Requester if something is unclear</li><li>Accept what you can do well, decline the rest</li></ul>
                   </div>
                   <div className="shot">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -303,7 +303,7 @@ export default function SellersPage() {
                     <span className="n"><b>5</b>STEP FIVE</span>
                     <h3>Do the job and mark it completed</h3>
                     <p>Track the favor in the app while you work.</p>
-                    <ul><li>Arrive on time and follow what was agreed</li><li>Raise any change in scope in the chat first</li><li>Mark the favor completed when it is done, so the buyer can review and approve it</li></ul>
+                    <ul><li>Arrive on time and follow what was agreed</li><li>Raise any change in scope in the chat first</li><li>Mark the favor completed when it is done, so the Requester can review and approve it</li></ul>
                   </div>
                   <div className="shot">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -315,9 +315,9 @@ export default function SellersPage() {
                 <div className="gs rv" id="s6">
                   <div>
                     <span className="n"><b>6</b>STEP SIX</span>
-                    <h3>Get paid after the buyer approves</h3>
-                    <p>The buyer pays through the app and the payment is held in escrow. Once you mark the job completed and the buyer approves it, the payment is released to you.</p>
-                    <ul><li>No cash handling needed</li><li>Payment is released after the buyer&apos;s approval</li></ul>
+                    <h3>Get paid after the Requester approves</h3>
+                    <p>The Requester pays through the app and the payment is held in escrow. Once you mark the job completed and the Requester approves it, the payment is released to you.</p>
+                    <ul><li>No cash handling needed</li><li>Payment is released after the Requester&apos;s approval</li></ul>
                   </div>
                   <div className="shot">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -338,9 +338,9 @@ export default function SellersPage() {
                 <h3>What WhoCan gives you</h3>
                 <ul>
                   <li>A place to list your service and set your price</li>
-                  <li>Requests from local buyers that you accept or decline</li>
+                  <li>Requests from local Requesters that you accept or decline</li>
                   <li>In-app chat and job tracking</li>
-                  <li>Payments held in escrow and released after the buyer approves the job</li>
+                  <li>Payments held in escrow and released after the Requester approves the job</li>
                 </ul>
               </div>
               <div className="box no rv" style={{ transitionDelay: '.1s' }}>
@@ -349,7 +349,7 @@ export default function SellersPage() {
                   <li>Not a job or a salary</li>
                   <li>No guaranteed income or number of bookings</li>
                   <li>Not a license: you are responsible for any license your work needs</li>
-                  <li>WhoCan is a platform that connects you with buyers</li>
+                  <li>WhoCan is a platform that connects you with Requesters</li>
                 </ul>
               </div>
             </div>
