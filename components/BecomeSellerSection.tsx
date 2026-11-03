@@ -126,7 +126,7 @@ export default function BecomeSellerSection() {
                   backgroundClip: 'text',
                 }}
               >
-                into earnings
+                into bookings
               </span>
             </h2>
 
@@ -142,9 +142,8 @@ export default function BecomeSellerSection() {
                 maxWidth: '440px',
               }}
             >
-              Join thousands of skilled service providers on WhoCan. Set your
-              own rates, manage your schedule, and grow your business — on your
-              own terms.
+              Offer your service on WhoCan. Set your own rates, manage your
+              schedule, and grow your business on your own terms.
             </p>
 
             {/* CTAs */}
@@ -270,7 +269,7 @@ export default function BecomeSellerSection() {
                       marginBottom: '6px',
                     }}
                   >
-                    This month
+                    Example only
                   </p>
                   <p
                     style={{
@@ -285,7 +284,7 @@ export default function BecomeSellerSection() {
                       backgroundClip: 'text',
                     }}
                   >
-                    $2,840
+                    Example
                   </p>
                   <p
                     style={{
@@ -295,7 +294,7 @@ export default function BecomeSellerSection() {
                       marginTop: '4px',
                     }}
                   >
-                    Earned by top providers last month
+                    Illustration. Not real earnings or results.
                   </p>
                 </div>
 
@@ -326,7 +325,7 @@ export default function BecomeSellerSection() {
                     marginTop: '-12px',
                   }}
                 >
-                  Weekly earnings trend
+                  Weekly activity (illustration)
                 </p>
 
                 {/* Stats row */}
@@ -340,8 +339,8 @@ export default function BecomeSellerSection() {
                   }}
                 >
                   {[
-                    { label: 'Jobs completed', value: '24' },
-                    { label: 'Avg. rating', value: '4.9 ★' },
+                    { label: 'Requests', value: 'In your inbox' },
+                    { label: 'Chat', value: 'In the app' },
                   ].map((stat) => (
                     <div key={stat.label}>
                       <p
