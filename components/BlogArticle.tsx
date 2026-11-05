@@ -22,6 +22,16 @@ const BRAND = '#A54AFF';
 const FONT = 'Poppins, sans-serif';
 const GRAD = 'linear-gradient(135deg, #BF75FF 0%, #A54AFF 50%, #8430E0 100%)';
 
+const EXPLORE_LINKS = [
+  { href: '/maryland/cleaning', label: 'House cleaning in Maryland' },
+  { href: '/maryland/handyman', label: 'Handyman in Maryland' },
+  { href: '/maryland/lawn-care', label: 'Lawn care in Maryland' },
+  { href: '/maryland/car-detailing', label: 'Car detailing in Maryland' },
+  { href: '/sellers', label: 'List your service as a Provider' },
+  { href: '/marketplace', label: 'Buy and sell items near you' },
+  { href: '/blog', label: 'All guides' },
+];
+
 function ShareButton({ title }: { title: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -382,6 +392,53 @@ export default function BlogArticle({
               Browse Services
             </button>
           </div>
+
+          {/* Plain links in the server HTML, so crawlers can follow them even
+              before the related-articles query runs in the browser. */}
+          <nav aria-label="Explore WhoCan" style={{ marginTop: 56 }}>
+            <h2
+              style={{
+                fontFamily: FONT,
+                fontWeight: 700,
+                fontSize: 22,
+                color: '#101828',
+                marginBottom: 16,
+              }}
+            >
+              Explore WhoCan
+            </h2>
+            <ul
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 10,
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+              }}
+            >
+              {EXPLORE_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    style={{
+                      display: 'inline-block',
+                      fontFamily: FONT,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: '#344054',
+                      background: '#fff',
+                      border: '1px solid #EAECF0',
+                      borderRadius: 9999,
+                      padding: '9px 16px',
+                    }}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
           {related.length > 0 ? (
             <section style={{ marginTop: 56 }}>

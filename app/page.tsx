@@ -4,6 +4,7 @@ import HomePageClient from "@/components/HomePageClient";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import HomeSeoContent from "@/components/HomeSeoContent";
 import JsonLd from "@/components/JsonLd";
+import { APP_STORE_LINKS } from "@/lib/appStores";
 import { fetchPublicFaqs } from "@/lib/fetchPublicFaqs";
 import {
   ORGANIZATION_ALTERNATE_NAME,
@@ -66,6 +67,32 @@ export default async function HomePage() {
     },
   };
 
+  // The two store apps as entities. No price, rating or review fields: none are confirmed.
+  const appLd = [
+    {
+      name: "WhoCan",
+      description:
+        "Requester app: post a job or browse local Providers in Maryland, compare offers, chat and pay in the app.",
+      links: APP_STORE_LINKS.buyer,
+    },
+    {
+      name: "WhoCan Provider",
+      description:
+        "Provider app: list your service, set your own price and accept the requests you want.",
+      links: APP_STORE_LINKS.seller,
+    },
+  ].map((app) => ({
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    name: app.name,
+    description: app.description,
+    operatingSystem: "iOS, Android",
+    applicationCategory: "LifestyleApplication",
+    url: absoluteUrl("/"),
+    sameAs: [app.links.apple, app.links.play],
+    publisher: { "@type": "Organization", name: SITE_NAME, url: absoluteUrl("/") },
+  }));
+
   const websiteLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -100,7 +127,13 @@ export default async function HomePage() {
         media="(min-width: 901px)"
         fetchPriority="high"
       />
-      <JsonLd data={faqLd ? [organizationLd, websiteLd, faqLd] : [organizationLd, websiteLd]} />
+      <JsonLd
+        data={
+          faqLd
+            ? [organizationLd, websiteLd, ...appLd, faqLd]
+            : [organizationLd, websiteLd, ...appLd]
+        }
+      />
       <HomePageClient seoSlot={<HomeSeoContent />} faqSlot={<FaqSection items={faqs} />}
         howItWorksSlot={<HowItWorksSection />}
       />

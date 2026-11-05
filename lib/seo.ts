@@ -16,12 +16,14 @@ export const ORGANIZATION_PROFILES = {
   instagram: "https://www.instagram.com/whocan.app",
   facebook: "https://www.facebook.com/WhoCanApp",
   pinterest: "https://www.pinterest.com/whocan_online/",
+  threads: "https://www.threads.com/@whocan.app",
 } as const;
 
 export const ORGANIZATION_SAME_AS = [
   ORGANIZATION_PROFILES.instagram,
   ORGANIZATION_PROFILES.facebook,
   ORGANIZATION_PROFILES.pinterest,
+  ORGANIZATION_PROFILES.threads,
 ] as const;
 
 /** Official WhoCan mark, served from a stable public path. */
