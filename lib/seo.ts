@@ -119,6 +119,7 @@ export const PUBLIC_SITEMAP_PATHS: {
   { path: "/categories", changeFrequency: "weekly", priority: 0.8 },
   { path: "/blog", changeFrequency: "daily", priority: 0.8 },
   { path: "/sellers", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/about", changeFrequency: "monthly", priority: 0.6 },
   { path: "/maryland", changeFrequency: "monthly", priority: 0.7 },
   { path: "/maryland/offer-services", changeFrequency: "monthly", priority: 0.6 },
   { path: "/maryland/cleaning", changeFrequency: "monthly", priority: 0.6 },

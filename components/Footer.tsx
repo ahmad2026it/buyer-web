@@ -22,6 +22,7 @@ const FOOTER_GROUPS: { group: string; links: FooterLink[] }[] = [
   {
     group: 'Resources',
     links: [
+      { label: 'About WhoCan', href: '/about' },
       { label: 'Blog', href: '/blog' },
       { label: 'Local services in Maryland', href: '/maryland' },
     ],
@@ -135,8 +136,8 @@ export default function Footer() {
                 maxWidth: '220px',
               }}
             >
-              Your marketplace for local home services — find skilled
-              handymen in your neighbourhood, fast.
+              A local services marketplace, starting in Maryland. Requesters
+              post a job, local Providers send offers.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
