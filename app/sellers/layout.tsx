@@ -3,9 +3,9 @@ import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = {
   ...buildPageMetadata({
-    title: "WhoCan Provider: list your service and get booked in Maryland",
+    title: "WhoCan Provider: App to Find Local Clients in Maryland",
     description:
-      "List your service, set your own price and get booking requests from people nearby with the WhoCan Provider app. Now launching in Maryland.",
+      "An app for cleaners, handymen, lawn care and detailing Providers: list your service, set your own price and get requests from Requesters nearby. Launching in Maryland.",
     path: "/sellers",
   }),
   // Smart App Banner on iPhone points Providers to the Provider app.

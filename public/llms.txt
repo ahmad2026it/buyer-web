@@ -12,6 +12,9 @@ WhoCan has two apps: WhoCan (for Requesters) and WhoCan Provider (for people who
 - [Lawn care in Maryland](https://whocan-app.com/maryland/lawn-care)
 - [Car detailing in Maryland](https://whocan-app.com/maryland/car-detailing)
 - [Offer your services in Maryland](https://whocan-app.com/maryland/offer-services)
+- [How to get clients in Maryland](https://whocan-app.com/maryland/get-clients): for cleaners, lawn care, handymen and detailers
+- [Handyman license in Maryland](https://whocan-app.com/maryland/handyman-license): what the MHIC licenses and what it does not
+- [Side hustles in Maryland](https://whocan-app.com/maryland/side-hustles): local services you can start with your own skills
 - [For Providers](https://whocan-app.com/sellers): list your service and get requests
 - [Marketplace](https://whocan-app.com/marketplace): buy and sell items near you, available across the United States
 - [Blog](https://whocan-app.com/blog): guides for Maryland homeowners and Providers

@@ -332,6 +332,184 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
       },
     ],
   },
+  // Provider-side guides (searches like "how to get cleaning clients", "apps for handyman to find work",
+  // "does a handyman need a license in maryland", "side hustles maryland"). No income or demand claims.
+  {
+    slug: "get-clients",
+    title: "Get Cleaning, Lawn and Handyman Clients in Maryland",
+    description:
+      "Where to post your cleaning, lawn care, handyman or detailing service in Maryland, how to write a listing that gets requests, and how to turn first jobs into repeat clients.",
+    heading: "How to get clients for your local service in Maryland",
+    lede:
+      "Starting out in Maryland? Most small Providers find their first clients in four places: people they already know, local Facebook groups and Nextdoor, a free Google Business Profile, and apps where Requesters post jobs, such as WhoCan Provider. A clear listing and fast replies matter more than any one platform.",
+    sections: [
+      {
+        heading: "Where to post your service",
+        paragraphs: [
+          "Start with people who already trust you: neighbors, friends, church or community groups, and past employers. Ask each happy client to tell two people. Word of mouth is one of the most common ways small cleaners, lawn crews and handymen find work.",
+          "Local Facebook groups and Nextdoor are where Maryland neighbors ask for recommendations. Read each group's rules, answer questions helpfully, and post your service only where promotion is allowed. On Nextdoor, business posts must come from a Business Page, not a personal account.",
+          "A Google Business Profile is free for businesses that serve customers in person, including service-area businesses that travel to clients. It helps you show up when someone nearby searches for your service.",
+          "Apps where Requesters post jobs, such as WhoCan Provider, let you list what you do, set your own price and accept the requests that fit. WhoCan is launching in Maryland, so which requests you see depends on your area.",
+        ],
+      },
+      {
+        heading: "Write a listing that gets requests",
+        paragraphs: [
+          "Name the job, what is included and who it is for: 'I will deep clean 2-bed apartments, supplies included' says more than 'I will clean'. Add real photos of your own work, your service area and the jobs you do not take.",
+          "Price the whole job when you can, and say what changes the price, such as home size, yard size or vehicle condition. Requesters compare offers, and a clear price saves a round of messages.",
+        ],
+      },
+      {
+        heading: "Turn first jobs into repeat clients",
+        paragraphs: [
+          "Reply fast, confirm the time and the scope in writing, and show up when you said. After the job, ask if the client wants a repeat visit: a monthly clean, a weekly mow or a seasonal cleanup.",
+          "Keep a simple list of clients and the date of their last job. A short message before the next season, such as leaf cleanup in fall, can bring the next booking.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Where can I post my cleaning services for free in Maryland?",
+        answer:
+          "Local Facebook groups that allow service posts, a Nextdoor Business Page and a Google Business Profile do not charge to set up. Check each platform's current rules and fees before you rely on it.",
+      },
+      {
+        question: "How do I get my first cleaning or lawn care clients fast?",
+        answer:
+          "Tell everyone you know, answer recommendation requests in local groups, and list your service where Requesters post jobs. Reply quickly and ask every happy client for a referral.",
+      },
+      {
+        question: "Is there an app for handymen and cleaners to find work in Maryland?",
+        answer:
+          "Yes. WhoCan Provider lets you list your service in Maryland, set your own price and accept the requests you want. Payment is held in escrow and released after the Requester approves the job.",
+      },
+      {
+        question: "Do I need a website to get clients?",
+        answer:
+          "No. A clear listing, photos of your work and fast replies are enough to start. A website can come later.",
+      },
+    ],
+  },
+  {
+    slug: "handyman-license",
+    title: "Do You Need a License to Be a Handyman in Maryland?",
+    description:
+      "Maryland has no separate handyman license, but most paid home improvement work needs an MHIC license. What the state says needs a license, what does not, and where to check.",
+    heading: "Do you need a license to be a handyman in Maryland?",
+    lede:
+      "Maryland does not have a separate handyman license. Paid home improvement work on a residence is licensed by the Maryland Home Improvement Commission (MHIC), and the state's own FAQ lists some jobs that are not home improvement, such as mounting a TV or hanging blinds. Check your exact scope with the MHIC before you take paid work.",
+    sections: [
+      {
+        heading: "What the MHIC licenses",
+        paragraphs: [
+          "The Maryland Home Improvement Commission, part of the Maryland Department of Labor, licenses home improvement contractors. The state says home improvement covers work on the residence and improvements to the land next to it.",
+          "The MHIC FAQ lists examples that count as home improvement and need a licensed contractor, including interior and exterior house painting, patios and retaining walls, gravel driveways, and tile, wood or other flooring. It also says landscape contractors are licensed by the MHIC.",
+        ],
+      },
+      {
+        heading: "Jobs the state says are not home improvement",
+        paragraphs: [
+          "According to the MHIC FAQ, mounting a TV on the wall, installing curtains or blinds, carpet installation, carpet cleaning, chimney cleaning, and demolition or clean-up on its own are not home improvement, so an MHIC license is not required for them.",
+          "The line can be narrow. Cleaning a chimney does not need a license, but building or capping one does. Installing carpet does not, but installing tile or wood flooring does. When a job mixes both, ask the MHIC.",
+        ],
+      },
+      {
+        heading: "Trade work needs its own license",
+        paragraphs: [
+          "Electrical work needs a licensed electrician, for example to connect solar panels to a home's electric system. Plumbing, gas and HVAC work also have their own licensing in Maryland. A handyman listing should say clearly which of these jobs you do not take.",
+          "Tree work on trees 20 feet or taller is licensed by the Maryland Department of Natural Resources, not the MHIC.",
+        ],
+      },
+      {
+        heading: "How to check and what to put on your listing",
+        paragraphs: [
+          "The MHIC has a public license search on the Maryland Department of Labor website, and Requesters can use it to check a contractor. If you hold an MHIC license, put the number on your listing.",
+          "If you do not, list only work that does not need one, such as furniture assembly or TV mounting, and decline requests outside that scope. On WhoCan Provider you choose which requests to accept.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Does a handyman need a license in Maryland?",
+        answer:
+          "There is no separate handyman license. Paid home improvement work on a residence needs an MHIC license, while jobs the state lists as not home improvement, such as TV mounting or hanging blinds, do not. Confirm your exact work with the Maryland Home Improvement Commission.",
+      },
+      {
+        question: "Can I mount TVs and assemble furniture without a license in Maryland?",
+        answer:
+          "The MHIC FAQ says mounting a TV on the wall is not home improvement, so an MHIC license is not required. Furniture assembly is not listed on that page, so check with the MHIC if you are unsure.",
+      },
+      {
+        question: "Do I need a license to paint houses in Maryland?",
+        answer:
+          "Yes. The MHIC FAQ says house painting, interior and exterior, is home improvement and needs a licensed contractor.",
+      },
+      {
+        question: "How do I look up an MHIC license?",
+        answer:
+          "Use the License Search on the Maryland Department of Labor website and choose the Home Improvement Commission.",
+      },
+    ],
+  },
+  {
+    slug: "side-hustles",
+    title: "Side Hustles in Maryland Using Your Own Skills",
+    description:
+      "Local side hustles in Maryland: house cleaning, lawn mowing and leaf cleanup, car detailing, furniture assembly and TV mounting. What each needs to start and where to find clients.",
+    heading: "Side hustles in Maryland you can start with your own skills",
+    lede:
+      "Looking for weekend or evening work in Maryland without a boss? Local services you already know how to do, such as cleaning, lawn care, car detailing, furniture assembly or TV mounting, can start with the tools you have. What you earn depends on your prices, your area and how many requests you accept.",
+    sections: [
+      {
+        heading: "House cleaning",
+        paragraphs: [
+          "Start with regular and move-out cleans, and decide whether you bring supplies. State the homes you take and the extras you charge for, such as ovens, fridges or interior windows.",
+        ],
+      },
+      {
+        heading: "Lawn mowing and leaf cleanup",
+        paragraphs: [
+          "Mowing runs from spring to fall in most of Maryland, and leaf cleanup is the fall job. Say whether you bring the mower and whether you haul clippings and leaves away. Landscape contracting is licensed by the MHIC, so check before you take on landscaping projects.",
+        ],
+      },
+      {
+        heading: "Mobile car detailing",
+        paragraphs: [
+          "Offer clear packages: interior, exterior or both. Say whether you need the Requester's water or power and where you can work, such as a driveway.",
+        ],
+      },
+      {
+        heading: "Furniture assembly and TV mounting",
+        paragraphs: [
+          "The Maryland Home Improvement Commission's FAQ says mounting a TV on the wall is not home improvement, so it does not need an MHIC license. Most other home improvement work does. Read our guide on handyman licensing in Maryland before you list repairs.",
+        ],
+      },
+      {
+        heading: "How to start this week",
+        paragraphs: [
+          "Pick one service, write a clear listing with photos of your own work, and tell people you know. Then list it where Requesters post jobs, such as WhoCan Provider, which is launching in Maryland. You set your own price and accept the requests that fit your schedule.",
+          "A side hustle is not a job with a set wage. You are working for yourself, so count supplies, travel time and taxes when you set your price.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "What are good side hustles in Maryland?",
+        answer:
+          "Local services you can do with your own tools: house cleaning, lawn mowing and leaf cleanup, mobile car detailing, furniture assembly and TV mounting. Check whether the work needs a license before you start.",
+      },
+      {
+        question: "Is there an app for local side jobs in Maryland?",
+        answer:
+          "WhoCan Provider lets you list a local service in Maryland, set your own price and accept the requests you want. It is not a job: you work for yourself and choose your own schedule.",
+      },
+      {
+        question: "Do I need a license for a cleaning side hustle in Maryland?",
+        answer:
+          "The Maryland Home Improvement Commission FAQ says carpet cleaning is not home improvement. For other business registration and tax questions, check with the State of Maryland and your county.",
+      },
+    ],
+  },
 ];
 
 export function marylandGuidePath(slug: string): string {

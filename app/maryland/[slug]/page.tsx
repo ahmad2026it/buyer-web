@@ -30,6 +30,9 @@ const SEARCH_LINKS: Record<string, { href: string; label: string }> = {
     href: "/explore/search?type=favors&q=car%20detailing",
     label: "Search car detailing favors",
   },
+  "get-clients": { href: "/sellers", label: "List your service on WhoCan Provider" },
+  "handyman-license": { href: "/sellers", label: "List the work you can take" },
+  "side-hustles": { href: "/sellers", label: "Start with WhoCan Provider" },
 };
 
 type MarylandGuideRouteProps = {
