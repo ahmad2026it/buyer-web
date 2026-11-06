@@ -16,12 +16,16 @@ export const ORGANIZATION_PROFILES = {
   instagram: "https://www.instagram.com/whocan.app",
   facebook: "https://www.facebook.com/WhoCanApp",
   pinterest: "https://www.pinterest.com/whocan_online/",
+  threads: "https://www.threads.com/@whocan.app",
+  youtube: "https://www.youtube.com/@whocan-app",
 } as const;
 
 export const ORGANIZATION_SAME_AS = [
   ORGANIZATION_PROFILES.instagram,
   ORGANIZATION_PROFILES.facebook,
   ORGANIZATION_PROFILES.pinterest,
+  ORGANIZATION_PROFILES.threads,
+  ORGANIZATION_PROFILES.youtube,
 ] as const;
 
 /** Official WhoCan mark, served from a stable public path. */
@@ -115,6 +119,7 @@ export const PUBLIC_SITEMAP_PATHS: {
   { path: "/categories", changeFrequency: "weekly", priority: 0.8 },
   { path: "/blog", changeFrequency: "daily", priority: 0.8 },
   { path: "/sellers", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/about", changeFrequency: "monthly", priority: 0.6 },
   { path: "/maryland", changeFrequency: "monthly", priority: 0.7 },
   { path: "/maryland/offer-services", changeFrequency: "monthly", priority: 0.6 },
   { path: "/maryland/cleaning", changeFrequency: "monthly", priority: 0.6 },

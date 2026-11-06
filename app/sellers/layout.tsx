@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "WhoCan Provider: list your service and get booked in Maryland",
-  description:
-    "List your service, set your own price and get booking requests from people nearby with the WhoCan Provider app. Now launching in Maryland.",
-  path: "/sellers",
-});
+export const metadata: Metadata = {
+  ...buildPageMetadata({
+    title: "WhoCan Provider: list your service and get booked in Maryland",
+    description:
+      "List your service, set your own price and get booking requests from people nearby with the WhoCan Provider app. Now launching in Maryland.",
+    path: "/sellers",
+  }),
+  // Smart App Banner on iPhone points Providers to the Provider app.
+  itunes: { appId: "6759322439" },
+};
 
 export default function SellersLayout({
   children,

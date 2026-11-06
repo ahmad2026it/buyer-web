@@ -61,12 +61,12 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
   },
   {
     slug: "cleaning",
-    title: "House Cleaning in Maryland",
+    title: "House Cleaning in Maryland: Book a Local Cleaner",
     description:
-      "How to book house cleaning on WhoCan in Maryland, and what Requesters and Providers should agree on before the visit.",
+      "Book house cleaning in Maryland: one-time, deep, move-out or recurring. Describe the home, compare offers from local Providers, chat first and pay in the app.",
     heading: "House cleaning in Maryland",
     lede:
-      "A useful cleaning booking names the home, the rooms, and who brings the supplies. WhoCan connects Requesters with cleaning Providers, starting in Maryland.",
+      "Need a house cleaner in Maryland? On WhoCan you describe the home and the rooms, compare offers from local cleaning Providers, chat before you book and pay through the app. Payment is held in escrow until the job is done. A useful request names the type of clean and who brings the supplies.",
     sections: [
       {
         heading: "What to tell a cleaner before you book",
@@ -88,6 +88,54 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
           "State the homes you take, the supplies you bring, and the jobs you do not do. Move-out cleans and recurring maintenance cleans are different listings if the time and price are different.",
           "Maryland summers are humid, and mildew in bathrooms is a common reason people book a deeper clean. If you treat mildew, say which rooms that covers. If you do not, say that too.",
         ],
+      },
+      {
+        heading: "Deep cleaning and move-out cleaning",
+        paragraphs: [
+          "A deep clean covers the places a regular visit skips: inside the oven and fridge, baseboards, cabinet fronts, grout and window tracks. It takes longer, so name the extras in the request instead of adding them on the day.",
+          "A move-out clean is usually an empty home cleaned for the next people. If a landlord or property manager has a checklist, attach it to the request so the Provider can price the same list.",
+        ],
+      },
+      {
+        heading: "What affects the price of a house cleaning",
+        paragraphs: [
+          "The price usually depends on the size of the home, the number of bathrooms, how long since the last clean, pets, add-ons such as the oven, the fridge or interior windows, and whether the Provider brings supplies.",
+          "Ask for a price for the whole visit and confirm in the chat what is included. WhoCan does not set Provider prices, so compare the offers you receive and read each description.",
+        ],
+      },
+      {
+        heading: "House cleaning around Maryland",
+        paragraphs: [
+          "WhoCan is launching in Maryland, and which Providers you see depends on your area. Requesters in places such as Baltimore, Annapolis, Columbia, Towson and Glen Burnie can post a request and see who responds, but availability varies by town and by week.",
+          "If nobody is listed near you yet, post the job anyway with the rooms and the date. Local Providers can respond when they are free, and you can compare before you choose.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "How do I book a house cleaner in Maryland on WhoCan?",
+        answer:
+          "Describe the home, the rooms and the type of clean, browse cleaning listings or post a request, compare the offers you get, chat with the Provider, and pay through the app.",
+      },
+      {
+        question: "What is the difference between a regular clean and a deep clean?",
+        answer:
+          "A regular clean keeps surfaces, floors, kitchen and bathrooms tidy. A deep clean adds the inside of the oven and fridge, baseboards, cabinet fronts and grout, so it takes longer.",
+      },
+      {
+        question: "Do cleaners bring their own supplies?",
+        answer:
+          "Some do and some expect yours. Check the listing and agree in the chat before the visit, especially if a product should not be used in your home.",
+      },
+      {
+        question: "How much does house cleaning cost in Maryland?",
+        answer:
+          "It depends on the size of the home, the type of clean and any add-ons. Published local rates vary widely, so compare the offers you receive and what each includes.",
+      },
+      {
+        question: "How does payment work?",
+        answer:
+          "You pay through the app, and the payment is held in escrow until the job is done.",
       },
     ],
   },
@@ -152,12 +200,12 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
   },
   {
     slug: "lawn-care",
-    title: "Lawn Care in Maryland",
+    title: "Lawn Care and Leaf Cleanup in Maryland",
     description:
-      "What to agree on before booking lawn mowing, edging, or leaf cleanup with a WhoCan Provider in Maryland.",
+      "Book lawn mowing, edging and fall leaf cleanup in Maryland. Describe the yard, compare offers from local Providers, chat first and pay through the app.",
     heading: "Lawn care in Maryland",
     lede:
-      "Lawn care bookings work when the yard, the schedule, and the cleanup are specific. WhoCan connects Requesters with lawn Providers, starting in Maryland.",
+      "Need lawn mowing or leaf cleanup in Maryland? On WhoCan you describe the yard, compare offers from local lawn Providers, chat before you book and pay through the app. Payment is held in escrow until the job is done. In fall, say whether leaves should be hauled away, mulched or left at the curb.",
     sections: [
       {
         heading: "Match the job to the season",
@@ -179,6 +227,54 @@ export const MARYLAND_GUIDES: MarylandGuide[] = [
           "List mowing, edging, trimming, and haul-away as separate items if you charge them separately. State whether you bring the mower and whether you service small town yards, larger lots, or both.",
           "Skip chemical treatments on a mowing listing unless you are set up for them and the product use is legal for that property. Fertilizer and weed control are a different conversation from a cut.",
         ],
+      },
+      {
+        heading: "Fall leaf cleanup",
+        paragraphs: [
+          "Say how big the yard is, whether the leaves are on the lawn, in the beds or both, and what should happen to them: hauled away, mulched into the lawn, or moved to the curb. A yard with many large trees may need a second visit after the last leaves drop.",
+          "Counties and towns in Maryland have their own rules for yard waste and leaf collection. Check your local schedule before asking a Provider to leave piles or bags at the curb.",
+        ],
+      },
+      {
+        heading: "What affects the price of lawn care",
+        paragraphs: [
+          "Lot size, grass height, slopes and obstacles, how often the visit repeats, and whether clippings or leaves are hauled away all change the price. A first cut after weeks of growth takes longer than a regular visit.",
+          "Ask for a price for the exact job and confirm in the chat what is included. WhoCan does not set Provider prices, so compare the offers you receive.",
+        ],
+      },
+      {
+        heading: "Lawn care around Maryland",
+        paragraphs: [
+          "WhoCan is launching in Maryland, and which Providers you see depends on your area. Requesters in places such as Annapolis, Pasadena, Severn, Columbia and Towson can post a request and see who responds, but availability varies by town and by week.",
+          "If nobody is listed near you yet, post the job anyway with a photo of the yard. Local Providers can respond when they are free, and you can compare before you choose.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "How do I book lawn care in Maryland on WhoCan?",
+        answer:
+          "Describe the yard with a photo, browse lawn care listings or post a request, compare the offers you get, chat with the Provider, and pay through the app.",
+      },
+      {
+        question: "When should I book fall leaf cleanup in Maryland?",
+        answer:
+          "Most leaves come down from late October into December, depending on the trees. Book once most have dropped, and ask about a second visit if you have many large trees.",
+      },
+      {
+        question: "Will the Provider haul away clippings and leaves?",
+        answer:
+          "Only if the listing or the request says so. Ask in the chat whether haul-away is included before you book.",
+      },
+      {
+        question: "How much does lawn mowing cost?",
+        answer:
+          "It depends on lot size, grass height and how often the visit repeats. Compare the offers you receive and what each includes.",
+      },
+      {
+        question: "How does payment work?",
+        answer:
+          "You pay through the app, and the payment is held in escrow until the job is done.",
       },
     ],
   },

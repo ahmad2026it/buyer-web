@@ -1,13 +1,14 @@
 'use client';
 
-import { DollarSignIcon, CalendarIcon, ZapIcon, GlobeIcon } from './Icons';
+import { DollarSignIcon, CalendarIcon, LockIcon, MapPinIcon } from './Icons';
 import { SellerStoreLinks } from './StoreBadge';
 
+// Only facts we can stand behind: no fee, payout-speed or user-count claims.
 const BENEFITS = [
-  { icon: DollarSignIcon, label: 'Minimal commission fees' },
-  { icon: CalendarIcon,   label: 'Flexible schedule' },
-  { icon: ZapIcon,        label: 'Instant payouts' },
-  { icon: GlobeIcon,      label: '750+ active buyers' },
+  { icon: DollarSignIcon, label: 'Set your own price' },
+  { icon: CalendarIcon,   label: 'Accept the jobs you want' },
+  { icon: LockIcon,       label: 'Payment held in escrow' },
+  { icon: MapPinIcon,     label: 'Launching in Maryland' },
 ];
 
 export default function BecomeSellerSection() {

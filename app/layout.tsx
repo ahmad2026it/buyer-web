@@ -33,6 +33,8 @@ export const metadata: Metadata = {
     "WhoCan",
   ],
   manifest: "/manifest.json",
+  // Safari's Smart App Banner: offers the Requester app on iPhone. /sellers overrides it with the Provider app.
+  itunes: { appId: "6759322069" },
   alternates: {
     canonical: absoluteUrl("/"),
   },

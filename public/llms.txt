@@ -15,6 +15,17 @@ WhoCan has two apps: WhoCan (for Requesters) and WhoCan Provider (for people who
 - [For Providers](https://whocan-app.com/sellers): list your service and get requests
 - [Marketplace](https://whocan-app.com/marketplace): buy and sell items near you, available across the United States
 - [Blog](https://whocan-app.com/blog): guides for Maryland homeowners and Providers
+- [About WhoCan](https://whocan-app.com/about): the company (WhoCan App LLC), how payment works, where it is available
+
+## Apps
+- [WhoCan for iPhone](https://apps.apple.com/app/whocan/id6759322069) and [Android](https://play.google.com/store/apps/details?id=com.whocanapp.buyer): for Requesters
+- [WhoCan Provider for iPhone](https://apps.apple.com/app/whocan-provider/id6759322439) and [Android](https://play.google.com/store/apps/details?id=com.whocanapp.provider): for Providers
+
+## Official profiles
+- [Instagram](https://www.instagram.com/whocan.app)
+- [Facebook](https://www.facebook.com/WhoCanApp)
+- [Threads](https://www.threads.com/@whocan.app)
+- [YouTube](https://www.youtube.com/@whocan-app)
 
 ## Policies
 - [Privacy policy](https://whocan-app.com/privacy-policy)
