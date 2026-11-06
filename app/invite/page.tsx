@@ -18,12 +18,15 @@ export async function generateMetadata({
   const title = rawCode
     ? `You're Invited to WhoCan (Code: ${rawCode.toUpperCase()})`
     : "You're Invited to Join WhoCan";
+  // Shown in link previews when people share invites: Requester wording, no price claims.
   const description =
-    'Download the WhoCan Buyer app on iPhone or Android to get local tasks and favors done at fixed prices.';
+    'Download the WhoCan app on iPhone or Android: post a job, compare offers from local Providers, chat first and pay in the app.';
 
   return {
     title,
     description,
+    // Each invite code is a separate URL; keep them out of search results.
+    robots: { index: false, follow: true },
     openGraph: {
       title,
       description,

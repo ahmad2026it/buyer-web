@@ -158,8 +158,8 @@ export default function InviteClient({ referralCode }: InviteClientProps) {
         </h1>
 
         <p className="mt-2 text-sm text-[#475467] leading-relaxed">
-          Join WhoCan using your friend&apos;s invite link to book trusted local
-          providers at fixed prices.
+          Join WhoCan with your friend&apos;s invite: post a job, compare offers
+          from local Providers, chat first and pay in the app.
         </p>
 
         {cleanCode && (
