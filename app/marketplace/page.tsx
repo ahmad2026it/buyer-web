@@ -245,9 +245,9 @@ export default function MarketplacePage() {
           <div>
             <section className={mpBanner} aria-label="Sell on WhoCan">
               <div className={mpBannerCopy}>
-                <span className={mpBannerTag}>FREE LISTING</span>
-                <h2 className={mpBannerTitle}>Sell anything in seconds!</h2>
-                <p className={mpBannerText}>Reach thousands of verified buyers in your area.</p>
+                <span className={mpBannerTag}>SELL ON WHOCAN</span>
+                <h2 className={mpBannerTitle}>Sell what you no longer need</h2>
+                <p className={mpBannerText}>Add photos, a price and a pickup spot. Buyers nearby chat with you in the app.</p>
               </div>
               <button type="button" className={mpBannerCta} onClick={goPostAd}>
                 Sell Now
