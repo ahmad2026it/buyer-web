@@ -39,6 +39,9 @@ type MarylandGuideRouteProps = {
   params: Promise<{ slug: string }>;
 };
 
+// Only the guides in MARYLAND_GUIDES exist; any other slug returns a real 404.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return MARYLAND_GUIDES.map((guide) => ({ slug: guide.slug }));
 }
