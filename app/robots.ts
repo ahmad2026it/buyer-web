@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           "/api/",
           "/backend/",
-          "/auth/",
+          // /auth/ is not blocked: its pages carry noindex, and crawlers must be able to read it to drop them.
           "/bookings",
           "/booking/",
           "/billing",
