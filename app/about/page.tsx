@@ -15,7 +15,7 @@ const FONT = "Poppins, sans-serif";
 const CONTACT_EMAIL = "contactus@whocan-app.com";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "About WhoCan",
+  title: "About Us: Local Services App Starting in Maryland",
   description:
     "WhoCan is a local services marketplace starting in Maryland, operated by WhoCan App LLC. How it works, where it is available, and how to reach us.",
   path: "/about",

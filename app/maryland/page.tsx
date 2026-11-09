@@ -3,7 +3,7 @@ import MarylandGuidePage from "@/components/MarylandGuidePage";
 import { buildPageMetadata } from "@/lib/seo";
 import { MARYLAND_HUB_PATH } from "@/lib/marylandGuides";
 
-const TITLE = "Local Services in Maryland";
+const TITLE = "Local Services in Maryland: Cleaning, Handyman, Lawn Care";
 const DESCRIPTION =
   "WhoCan is a local services marketplace connecting Requesters and Providers in Maryland for cleaning, handyman work, lawn care, and car detailing.";
 
